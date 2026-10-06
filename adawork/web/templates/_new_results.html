@@ -1,0 +1,9 @@
+{% include "_live.html" %}
+{% if jobs %}
+  <div hx-swap-oob="afterbegin:#job-list">
+  {% for job in jobs %}
+    {% include "_job.html" %}
+  {% endfor %}
+  </div>
+  <p id="found-count" class="muted small" hx-swap-oob="true">{{ t("search.found", n=total) }}</p>
+{% endif %}

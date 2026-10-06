@@ -1,0 +1,21 @@
+{% if offset == 0 %}
+  {% if result.total %}
+    <p id="found-count" class="muted small">{{ t("search.found", n=result.total) }} · {{ "%.0f" | format(result.took_ms) }} ms</p>
+  {% else %}
+    <p id="found-count" class="muted">{{ t("search.empty") }}</p>
+  {% endif %}
+  {% if since is defined and since is not none %}{% include "_live.html" %}{% endif %}
+<div id="job-list">
+{% endif %}
+{% for job in result.jobs %}
+  {% include "_job.html" %}
+{% endfor %}
+{% if offset + result.jobs | length < result.total %}
+  {# Counted on the page: jobs put on top while a search runs shift the next page. #}
+  <button class="secondary outline more"
+          hx-get="/results?q={{ q | urlencode }}" hx-vals='js:{offset: document.querySelectorAll("#job-list > .job").length}'
+          hx-target="this" hx-swap="outerHTML">{{ t("search.more") }}</button>
+{% endif %}
+{% if offset == 0 %}
+</div>
+{% endif %}

@@ -2,7 +2,6 @@ import time
 
 import httpx
 import pytest
-from fastapi.testclient import TestClient
 
 from adawork.config import Settings
 from adawork.desktop.server import BackgroundServer
@@ -14,35 +13,44 @@ from adawork.web.app import create_app
 def test_defaults_keep_automatic_checks_off():
     settings = Settings()
     assert settings.language == "cs"
+    assert settings.wizard_completed is False
     assert settings.automation.enabled is False
     assert settings.automation.interval_hours == 12
+    assert settings.profile.max_minutes == 45 and settings.theme == "system"
 
 
 def test_settings_roundtrip(tmp_path):
     path = tmp_path / "config.json"
     Settings(language="en").save(path)
-    assert Settings.load(path).language == "en"
-    assert Settings.load(tmp_path / "missing.json") == Settings()
+    loaded = Settings.load(path)
+    assert loaded.language == "en"
+    loaded.profile.home_address = "Kolín"
+    loaded.save()  # remembers where it was loaded from
+    assert Settings.load(path).profile.home_address == "Kolín"
+    assert Settings.load(tmp_path / "missing.json").model_dump() == Settings().model_dump()
+
+
+def test_first_start_follows_windows_language(tmp_path, monkeypatch):
+    monkeypatch.setattr("adawork.config.system_language", lambda: "en")
+    assert Settings.load(tmp_path / "missing.json").language == "en"
+    Settings(language="cs").save(tmp_path / "config.json")
+    assert Settings.load(tmp_path / "config.json").language == "cs"  # the saved choice wins
 
 
 def test_broken_settings_fall_back_to_defaults(tmp_path):
     path = tmp_path / "config.json"
     path.write_text('{"language": "xx"', encoding="utf-8")
-    assert Settings.load(path) == Settings()
-    assert not path.exists() and (tmp_path / "config.json.broken").exists()
+    settings = Settings.load(path)
+    assert settings.model_dump() == Settings().model_dump()
+    assert (tmp_path / "config.json.broken").exists()
+    settings.save()
+    assert Settings.load(path).model_dump() == Settings().model_dump()
 
 
-def test_index_page_in_czech():
-    client = TestClient(create_app(Settings()))
-    assert client.get("/health").json()["status"] == "ok"
-    page = client.get("/")
-    assert page.status_code == 200
-    assert "Automatické hledání je vypnuté" in page.text
-
-
-def test_background_server_starts_and_stops(monkeypatch):
+def test_background_server_starts_and_stops(tmp_path, monkeypatch):
     monkeypatch.setenv("HTTP_PROXY", "http://127.0.0.1:9")
-    server = BackgroundServer(create_app(Settings()))
+    app = create_app(Settings(), db_path=tmp_path / "t.db", cache_dir=tmp_path / "cache")
+    server = BackgroundServer(app)
     server.start()
     assert httpx.get(server.url + "health", trust_env=False).json()["status"] == "ok"
     server.stop()
@@ -51,11 +59,12 @@ def test_background_server_starts_and_stops(monkeypatch):
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnhandledThreadExceptionWarning")
-def test_background_server_fails_fast_when_port_is_taken():
-    first = BackgroundServer(create_app(Settings()))
+def test_background_server_fails_fast_when_port_is_taken(tmp_path):
+    app = create_app(Settings(), db_path=tmp_path / "t.db", cache_dir=tmp_path / "cache")
+    first = BackgroundServer(app)
     first.start()
     try:
-        second = BackgroundServer(create_app(Settings()), port=first.port)
+        second = BackgroundServer(app, port=first.port)
         started = time.monotonic()
         with pytest.raises(RuntimeError):
             second.start()

@@ -1,0 +1,5 @@
+{# A job's sources, each with a link to its original ad (job cards and the whole text). #}
+{% for src in job.sources %}
+  <span class="badge">{{ src.source_id | upper }}</span>
+  {% if src.url %}<a href="{{ src.url }}" target="_blank" rel="noopener">{{ t("job.open") }} ↗</a>{% endif %}
+{% endfor %}

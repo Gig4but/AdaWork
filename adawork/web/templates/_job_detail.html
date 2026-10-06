@@ -1,0 +1,16 @@
+{# A job with its whole text, in the search page's dialog (static/job.js) or as a page. #}
+<header>
+  {% if dialog %}<button type="button" aria-label="{{ t('job.close') }}" rel="prev" onclick="this.closest('dialog').close()"></button>{% endif %}
+  <h3>{{ job.title }}</h3>
+  <p class="meta">
+    {% if job.employer_name %}<strong>{{ job.employer_name }}</strong>{% endif %}
+    {% if job.place_text %}{% if job.employer_name %} · {% endif %}{{ job.place_text }}{% endif %}
+    {% set pay = salary(job) %}
+    {% if pay %}{% if job.employer_name or job.place_text %} · {% endif %}<span class="salary">{{ pay }}</span>{% endif %}
+  </p>
+</header>
+{% if job.description %}<div class="full-text">{{ job.description }}</div>
+{% else %}<p class="muted">{{ t("job.no_text") }}</p>{% endif %}
+<footer class="job-links">
+  {% include "_job_links.html" %}
+</footer>

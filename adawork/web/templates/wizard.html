@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}{{ t("wizard.title") }} – AdaWork{% endblock %}
+{% block content %}
+<article class="wizard">
+  <header>
+    <small class="muted">{{ t("wizard.step", n=step_no, total=step_total) }}</small>
+    <progress value="{{ step_no }}" max="{{ step_total }}"></progress>
+  </header>
+
+  {% if step == "welcome" %}
+    <h2>{{ t("wizard.welcome") }}</h2>
+    <p>{{ t("wizard.welcome.text") }}</p>
+    <form method="post" action="/wizard/welcome">
+      {# Saved as soon as picked, without going through the rest of the wizard. #}
+      <div hx-post="/settings/appearance" hx-trigger="change" hx-swap="none">
+      <fieldset>
+        <legend>{{ t("wizard.language") }}</legend>
+        <label><input type="radio" name="language" value="cs" {% if lang == "cs" %}checked{% endif %}> Čeština</label>
+        <label><input type="radio" name="language" value="en" {% if lang == "en" %}checked{% endif %}> English</label>
+      </fieldset>
+      <fieldset>
+        <legend>{{ t("wizard.theme") }}</legend>
+        <div class="themes">
+          {% for id, base in themes.items() %}
+            <label>
+              <input type="radio" name="theme" value="{{ id }}" data-base="{{ base or '' }}"
+                     {% if settings.theme == id %}checked{% endif %}>
+              <span class="swatch"{% if base %} data-theme="{{ base }}"{% endif %} data-scheme="{{ id }}" aria-hidden="true">Aa<i></i></span>
+              {{ t("theme." ~ id) }}
+            </label>
+          {% endfor %}
+        </div>
+      </fieldset>
+      </div>
+      <script>
+        // Shows the chosen scheme at once.
+        for (const input of document.querySelectorAll("input[name=theme]")) {
+          input.addEventListener("change", () => {
+            const root = document.documentElement;
+            if (input.dataset.base) root.dataset.theme = input.dataset.base;
+            else delete root.dataset.theme;
+            root.dataset.scheme = input.value;
+            if (window.adaworkPaintFrame) window.adaworkPaintFrame();
+          });
+        }
+      </script>
+      <button type="submit">{{ t("wizard.next") }}</button>
+    </form>
+
+  {% elif step == "profile" %}
+    {% set p = settings.profile %}
+    <h2>{{ t("wizard.profile") }}</h2>
+    <form method="post" action="/wizard/profile">
+      <label>{{ t("wizard.home") }}
+        <input name="home_address" value="{{ p.home_address }}" autocomplete="street-address"
+               aria-describedby="home-hint">
+        <small id="home-hint">{{ t("wizard.home.hint") }}</small>
+      </label>
+
+      <fieldset>
+        <legend>{{ t("wizard.mode") }}</legend>
+        {% for m in modes %}
+          <label><input type="radio" name="travel_mode" value="{{ m }}" {% if p.travel_mode == m %}checked{% endif %}> {{ t("mode." ~ m) }}</label>
+        {% endfor %}
+      </fieldset>
+
+      <label>{{ t("wizard.max_minutes") }}: <output id="max-out">{{ p.max_minutes }}</output> {{ t("minutes") }}
+        <input type="range" name="max_minutes" min="5" max="120" step="5" value="{{ p.max_minutes }}"
+               oninput="document.getElementById('max-out').value = this.value">
+      </label>
+
+      <label>{{ t("wizard.kinds") }}
+        <input name="kinds_of_work" value="{{ p.kinds_of_work | join(', ') }}" aria-describedby="kinds-hint">
+        <small id="kinds-hint">{{ t("wizard.kinds.hint") }}</small>
+      </label>
+
+      <div class="grid">
+        <a href="/wizard/welcome" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
+        <button type="submit">{{ t("wizard.next") }}</button>
+      </div>
+    </form>
+
+  {% elif step == "done" %}
+    <h2>{{ t("wizard.done") }}</h2>
+    <p>{{ t("wizard.done.text") }}</p>
+    <p class="muted">{{ t("wizard.auto_off") }}</p>
+    <form method="post" action="/wizard/done">
+      <div class="grid">
+        <a href="/wizard/profile" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
+        <button type="submit">{{ t("wizard.start") }}</button>
+      </div>
+    </form>
+  {% endif %}
+</article>
+{% endblock %}

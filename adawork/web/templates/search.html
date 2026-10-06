@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+{% from "_icons.html" import icon %}
+<section class="toolbar">
+  <div id="status" hx-get="/status" hx-trigger="jobs-updated from:body">
+    {% include "_status.html" %}
+  </div>
+  {# Kept out of #progress, which is replaced every second while a search runs. #}
+  <div class="refresh">
+    <div class="scrape-buttons">
+      <button class="soft" hx-post="/scrape" hx-target="#progress" title="{{ t('scrape.button_hint') }}">{{ icon("refresh") }}{{ t("scrape.button") }}</button>
+      <button class="secondary outline fresh" hx-post="/scrape?fresh=1" hx-target="#progress"
+              hx-confirm="{{ t('scrape.fresh_confirm') }}" title="{{ t('scrape.fresh_hint') }}">{{ icon("trash") }}{{ t("scrape.fresh") }}</button>
+    </div>
+    <div id="progress">{% include "_progress.html" %}</div>
+  </div>
+</section>
+
+<form class="search" role="search" onsubmit="return false">
+  <input type="search" name="q" value="{{ q }}" placeholder="{{ t('search.placeholder') }}"
+         aria-label="{{ t('nav.search') }}" autofocus
+         hx-get="/results" hx-target="#results" hx-push-url="false"
+         hx-trigger="input changed delay:250ms, search, jobs-updated from:body">
+</form>
+
+<div id="results">{% include "_results.html" %}</div>
+<dialog id="job-detail" aria-label="{{ t('job.full_text') }}"><article id="job-detail-body"></article></dialog>
+<button type="button" id="to-top" class="secondary" hidden title="{{ t('page.top') }}" aria-label="{{ t('page.top') }}"
+        onclick="window.scrollTo({top: 0, behavior: 'smooth'})">{{ icon("up") }}</button>
+<script src="/static/job.js" defer></script>
+<script>
+  // Back to the top, once the list is scrolled a screen down.
+  const toTop = document.getElementById("to-top");
+  window.addEventListener("scroll", () => { toTop.hidden = window.scrollY < window.innerHeight; },
+                          { passive: true });
+</script>
+{% endblock %}

@@ -47,7 +47,7 @@ def main(argv: list[str] | None = None) -> int:
             from adawork.desktop.window import run_desktop
 
             # The tray is only needed while automatic searches are on.
-            run_desktop(server, instance, lambda: app.state.settings.automation.enabled)
+            run_desktop(server, instance, lambda: app.state.services.settings.automation.enabled)
     except KeyboardInterrupt:
         pass
     finally:

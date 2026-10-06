@@ -1,0 +1,137 @@
+:root { --pico-font-size: 100%; }
+.app-header nav { padding-block: .25rem; }
+.app-header nav li { padding: .25rem; }
+.brand { font-size: 1.75rem; font-weight: 800; letter-spacing: -.02em; color: var(--pico-color);
+         cursor: default; user-select: none; white-space: nowrap; }
+/* The spark of the app icon, above the "a". */
+.brand .sparked { position: relative; }
+.brand .spark { position: absolute; left: 50%; top: .12em; width: .4em; height: .4em;
+         transform: translateX(-50%); fill: #ffb300; }
+.app-header nav li a.nav-button { display: inline-flex; align-items: center; gap: .45rem; margin: 0;
+         padding: .35rem .8rem; border: 1px solid var(--pico-muted-border-color);
+         border-radius: .6rem; color: var(--pico-color); text-decoration: none; font-size: .95rem;
+         transition: background-color .15s, border-color .15s, color .15s; }
+.app-header nav li a.nav-button:hover { background: var(--pico-primary-background);
+         border-color: var(--pico-primary-background); color: var(--pico-primary-inverse); }
+/* The page already open: marked, and a click does not load it again. */
+.app-header nav li a.nav-button[aria-current="page"] { pointer-events: none;
+         background: color-mix(in srgb, var(--pico-primary-background) 15%, transparent);
+         border-color: var(--pico-primary-background); color: var(--pico-primary); }
+.app-header nav li a.nav-button.secondary { color: var(--pico-muted-color); }
+.app-header nav li a.nav-button.secondary:hover { background: var(--pico-secondary-background);
+         border-color: var(--pico-secondary-background); color: var(--pico-secondary-inverse); }
+.app-header nav li a.nav-button.secondary[aria-current="page"] {
+         background: color-mix(in srgb, var(--pico-muted-color) 15%, transparent);
+         border-color: var(--pico-muted-color); color: var(--pico-color); }
+.icon { width: 1.1em; height: 1.1em; flex: none; }
+button .icon { margin-right: .45rem; vertical-align: -.18em; }
+
+/* Thin scrollbars in the page colours, like other Windows 11 apps. */
+:root { scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--pico-color) 30%, transparent) transparent; }
+.muted { color: var(--pico-muted-color); }
+.small { font-size: .875rem; }
+.error { color: var(--pico-del-color); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
+           justify-content: space-between; margin-bottom: 1rem; }
+.toolbar button { margin: 0; }
+.refresh { display: flex; flex-direction: column; gap: .4rem; align-items: flex-end; }
+.scrape-buttons { display: flex; flex-direction: column; gap: .4rem; align-items: flex-end; }
+.toolbar .fresh { padding: .2rem .6rem; font-size: .8rem; }
+/* A refresh runs: another one would not start. */
+.refresh:has(#progress [aria-busy="true"]) .soft { opacity: .5; pointer-events: none; }
+
+.job { margin-block: .75rem; padding-block: 1rem; border: 1px solid var(--pico-muted-border-color); }
+#job-list { counter-reset: job; }
+#job-list > .job { counter-increment: job; }
+#job-list > .job { cursor: pointer; }  /* a click opens the whole text (static/job.js) */
+#job-list > .job h3::before { content: counter(job) "."; margin-right: .4rem;
+                              color: var(--pico-muted-color); font-weight: 400; }
+.job header { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: baseline;
+              justify-content: space-between; margin-bottom: .5rem; padding-block: .5rem; }
+.job h3 { margin: 0; font-size: 1.15rem; }
+.job h3 a { color: inherit; text-decoration: none; }
+.job h3 a:hover { text-decoration: underline; }
+.job .desc a { white-space: nowrap; }
+.job .salary { font-weight: 600; white-space: nowrap; }
+.job .meta { margin-bottom: .4rem; }
+.job .desc { color: var(--pico-muted-color); margin-bottom: .4rem; }
+.job footer { display: flex; gap: .75rem; align-items: center; padding-block: .5rem;
+              font-size: .875rem; }
+.badge { font-size: .75rem; padding: .1rem .45rem; border-radius: .3rem;
+         background: var(--pico-secondary-background); color: var(--pico-secondary-inverse); }
+.more { width: 100%; }
+#to-top { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 10; margin: 0;
+          padding: .6rem; line-height: 0; box-shadow: 0 .2rem .6rem rgb(0 0 0 / 25%); }
+#to-top .icon { margin: 0; width: 1.4rem; height: 1.4rem; }
+#job-detail article { width: min(52rem, 96vw); max-width: none; }
+#job-detail header h3, .job-detail header h3 { margin: 0 0 .4rem; }
+.full-text { white-space: pre-line; margin-bottom: 1rem; }
+.job-links { display: flex; flex-wrap: wrap; gap: .5rem .75rem; align-items: center; }
+
+.wizard { max-width: 42rem; margin-inline: auto; }
+.wizard fieldset label { display: inline-flex; gap: .35rem; margin-right: 1.25rem; }
+.wizard .grid > * { margin-bottom: 0; }
+
+/* Colour schemes (Settings.theme): each refines Pico's light or dark base. */
+[data-scheme="ocean"][data-theme] {
+  --pico-background-color: #d9ebf5; --pico-color: #0d2b3e; --pico-muted-color: #3f6178;
+  --pico-muted-border-color: #a9cbe0; --pico-card-background-color: #eef6fb;
+  --pico-card-sectioning-background-color: #e3f0f8; --pico-form-element-background-color: #f4f9fc;
+  --pico-form-element-border-color: #8fb8d1; --pico-dropdown-background-color: #eef6fb;
+  --pico-secondary-background: #4f7189; --pico-secondary-border: #4f7189;
+  --pico-primary: #005f8a; --pico-primary-background: #00699a; --pico-primary-border: #00699a;
+  --pico-primary-hover: #003f5c; --pico-primary-hover-background: #00547b;
+  --pico-primary-hover-border: #00547b; --pico-primary-underline: rgba(0, 105, 154, .5);
+  --pico-primary-focus: rgba(0, 105, 154, .35);
+}
+[data-scheme="forest"][data-theme] {
+  --pico-background-color: #f3f6f0; --pico-color: #25311f; --pico-muted-color: #627059;
+  --pico-muted-border-color: #d9e2d1; --pico-card-background-color: #fff;
+  --pico-card-sectioning-background-color: #f8faf6; --pico-form-element-background-color: #fff;
+  --pico-primary: #2b7330; --pico-primary-background: #2f7d32; --pico-primary-hover: #1f5623;
+  --pico-primary-hover-background: #24622a; --pico-primary-underline: rgba(47, 125, 50, .5);
+  --pico-primary-focus: rgba(47, 125, 50, .35);
+}
+[data-scheme="sunset"][data-theme] {
+  --pico-background-color: #fcf5ef; --pico-color: #3b2a22; --pico-muted-color: #7a6355;
+  --pico-muted-border-color: #eedbcb; --pico-card-background-color: #fffaf6;
+  --pico-card-sectioning-background-color: #fff6ef; --pico-form-element-background-color: #fffaf6;
+  --pico-primary: #b44c17; --pico-primary-background: #c4561d; --pico-primary-hover: #8c3a10;
+  --pico-primary-hover-background: #a24515; --pico-primary-underline: rgba(196, 86, 29, .5);
+  --pico-primary-focus: rgba(196, 86, 29, .35);
+}
+[data-scheme="plum"][data-theme] {
+  --pico-background-color: #1c1623; --pico-color: #ddd3e6; --pico-muted-color: #9a8daa;
+  --pico-muted-border-color: #33283e; --pico-card-background-color: #241c2d;
+  --pico-card-sectioning-background-color: #2a2134; --pico-form-element-background-color: #2a2134;
+  --pico-form-element-border-color: #43354f; --pico-dropdown-background-color: #241c2d;
+  --pico-primary: #c39bf2; --pico-primary-background: #7c4dbd; --pico-primary-hover: #dcc4f8;
+  --pico-primary-hover-background: #8d5ed0; --pico-primary-underline: rgba(195, 155, 242, .5);
+  --pico-primary-focus: rgba(195, 155, 242, .35);
+}
+[data-scheme="midnight"][data-theme] {
+  --pico-background-color: #0e1928; --pico-color: #cfd8e6; --pico-muted-color: #8394ac;
+  --pico-muted-border-color: #1e2d42; --pico-card-background-color: #132134;
+  --pico-card-sectioning-background-color: #17263b; --pico-form-element-background-color: #17263b;
+  --pico-form-element-border-color: #2a3c55; --pico-dropdown-background-color: #132134;
+  --pico-primary: #5cc8cd; --pico-primary-background: #13838a; --pico-primary-hover: #9ae0e3;
+  --pico-primary-hover-background: #18969e; --pico-primary-underline: rgba(92, 200, 205, .5);
+  --pico-primary-focus: rgba(92, 200, 205, .35);
+}
+
+.themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: .5rem; }
+.wizard .themes label { display: flex; align-items: center; gap: .5rem; width: auto; margin: 0;
+                        padding: .4rem .5rem;
+                        border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; }
+.wizard .themes label:has(:checked) { border-color: var(--pico-primary-background); }
+.themes input { margin: 0; flex: none; }
+.swatch { position: relative; display: inline-grid; place-items: center; width: 2.4rem; height: 1.8rem;
+          border-radius: .35rem; border: 1px solid var(--pico-muted-border-color);
+          background: var(--pico-background-color); color: var(--pico-color);
+          font-size: .75rem; font-weight: 700; flex: none; }
+.swatch i { position: absolute; right: .2rem; bottom: .2rem; width: .45rem; height: .45rem;
+            border-radius: 50%; background: var(--pico-primary-background); }
+.swatch[data-scheme="system"] { background: linear-gradient(135deg, #fff 50%, #13171f 50%);
+                                color: #888; }

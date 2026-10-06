@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="{{ lang }}"{% if theme_base %} data-theme="{{ theme_base }}"{% endif %} data-scheme="{{ settings.theme }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AdaWork{% endblock %}</title>
+  <link rel="stylesheet" href="/static/vendor/pico.min.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/vendor/htmx.min.js" defer></script>
+  <script src="/static/frame.js" defer></script>
+</head>
+<body>
+  {% from "_icons.html" import icon %}
+  {% macro nav_item(href, name, text, current, kind="") %}
+    <li><a href="{{ href }}" class="nav-button{% if kind %} {{ kind }}{% endif %}"{% if current %} aria-current="page"{% endif %}>{{ icon(name) }}<span>{{ text }}</span></a></li>
+  {% endmacro %}
+  <header class="container app-header">
+    <nav>
+      <ul><li><span class="brand">Ad<span class="sparked">a<svg class="spark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg></span>Work</span></li></ul>
+      <ul>
+        {% if settings.wizard_completed %}
+        {{ nav_item("/", "search", t("nav.search"), path == "/") }}
+        {% endif %}
+        {{ nav_item("/wizard/welcome", "wizard", t("nav.wizard"), path.startswith("/wizard"), "secondary") }}
+      </ul>
+    </nav>
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="container muted small">AdaWork {{ version }}</footer>
+</body>
+</html>

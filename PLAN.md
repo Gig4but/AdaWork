@@ -622,7 +622,7 @@ Every step has defaults; optional steps have "Skip"; downloads run in the backgr
    - usual travel mode (Auto / MHD / Pěšky / Kolo / "nevím, ukaž vše");
    - max travel time slider (default 45 min);
    - usual departure time (default weekdays 7:00);
-   - optional kinds of work (empty = everything).
+   - optional kinds of work (empty = everything; asked only here, prefills the search).
    This drives generated searches, the default travel-time filter and employer prefetching.
 3. **Umělá inteligence** — shows the detected hardware ("16 GB RAM · AMD Radeon · 120 GB
    volného místa"). Below it: **"Automaticky – nejlepší pro tento počítač"** (preselected),
@@ -751,6 +751,7 @@ AdaWork/
   transport).
 
 ### M1 — Data core, MPSV, basic search, wizard v1 (3 days)
+- Job list: a job's title opens its whole text; a button leads back to the top.
 - **Done when:** fresh start → wizard steps 1, 2, 7 → MPSV import → full-text search in
   < 300 ms.
 

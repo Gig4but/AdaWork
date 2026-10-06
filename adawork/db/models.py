@@ -1,0 +1,118 @@
+"""SQLite schema. Changes go through Alembic migrations in db/migrations/versions."""
+
+from datetime import date, datetime
+from typing import Any, cast
+
+from sqlalchemy import JSON, ForeignKey, Index, String, Table, UniqueConstraint
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+from adawork.core import JobStatus, Precision, RunStatus, SalaryUnit
+
+
+class Base(DeclarativeBase):
+    type_annotation_map = {dict[str, Any]: JSON, list[str]: JSON}
+
+
+def table(model: type[Base]) -> Table:
+    """A model's table, for statements that bypass the ORM (bulk updates, fast inserts)."""
+    return cast(Table, model.__table__)
+
+
+class Location(Base):
+    """A place shared by all jobs at the same spot, so travel times are computed once."""
+
+    __tablename__ = "locations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    key: Mapped[str] = mapped_column(String(200), unique=True)  # dedup key, see normalize later
+    lat: Mapped[float | None]
+    lon: Mapped[float | None]
+    precision: Mapped[Precision] = mapped_column(String(20), default="unknown")
+    address_text: Mapped[str | None]
+    municipality: Mapped[str | None]
+    municipality_code: Mapped[str | None] = mapped_column(String(12))
+    okres: Mapped[str | None]
+    kraj: Mapped[str | None]
+
+
+class Job(Base):
+    __tablename__ = "jobs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str]
+    description: Mapped[str] = mapped_column(default="")
+    employer_name: Mapped[str | None]
+    employer_ico: Mapped[str | None] = mapped_column(String(8), index=True)
+    place_text: Mapped[str | None]
+    location_id: Mapped[int | None] = mapped_column(ForeignKey("locations.id"), index=True)
+
+    salary_min: Mapped[int | None]
+    salary_max: Mapped[int | None]
+    salary_unit: Mapped[SalaryUnit | None] = mapped_column(String(10))
+    salary_currency: Mapped[str] = mapped_column(String(3), default="CZK")
+
+    contract_types: Mapped[list[str]] = mapped_column(default=list)
+    shifts: Mapped[list[str]] = mapped_column(default=list)
+    education: Mapped[str | None]
+    isco_code: Mapped[str | None] = mapped_column(String(6), index=True)
+    category: Mapped[str | None] = mapped_column(String(40), index=True)
+    positions_count: Mapped[int | None]
+    start_date: Mapped[date | None]
+    posted_at: Mapped[datetime | None] = mapped_column(index=True)
+    expires_at: Mapped[datetime | None]
+    contact: Mapped[dict[str, Any]] = mapped_column(default=dict)
+    extra: Mapped[dict[str, Any]] = mapped_column(default=dict)  # source-specific leftovers
+
+    status: Mapped[JobStatus] = mapped_column(String(10), default="active", index=True)
+    content_hash: Mapped[str] = mapped_column(String(64))
+    first_seen_at: Mapped[datetime]
+    last_seen_at: Mapped[datetime]
+    updated_at: Mapped[datetime]
+
+    location: Mapped[Location | None] = relationship()
+    sources: Mapped[list["JobSource"]] = relationship(
+        back_populates="job", cascade="all, delete-orphan"
+    )
+
+
+class JobSource(Base):
+    """Where a job was seen. One job can come from several portals (dedup in M3)."""
+
+    __tablename__ = "job_sources"
+    __table_args__ = (UniqueConstraint("source_id", "external_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job_id: Mapped[int] = mapped_column(ForeignKey("jobs.id", ondelete="CASCADE"), index=True)
+    source_id: Mapped[str] = mapped_column(String(40))
+    external_id: Mapped[str] = mapped_column(String(200))
+    url: Mapped[str | None]
+    first_seen_at: Mapped[datetime]
+    last_seen_at: Mapped[datetime]
+
+    job: Mapped[Job] = relationship(back_populates="sources")
+
+
+class SourceState(Base):
+    __tablename__ = "sources"
+
+    source_id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    enabled: Mapped[bool] = mapped_column(default=True)
+    etag: Mapped[str | None]
+    last_modified: Mapped[str | None]
+    last_run_at: Mapped[datetime | None]
+    state: Mapped[dict[str, Any]] = mapped_column(default=dict)
+
+
+class Run(Base):
+    __tablename__ = "runs"
+    __table_args__ = (Index("ix_runs_source_started", "source_id", "started_at"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    source_id: Mapped[str] = mapped_column(String(40))
+    started_at: Mapped[datetime]
+    finished_at: Mapped[datetime | None]
+    status: Mapped[RunStatus] = mapped_column(String(12), default="running")
+    new_count: Mapped[int] = mapped_column(default=0)
+    updated_count: Mapped[int] = mapped_column(default=0)
+    removed_count: Mapped[int] = mapped_column(default=0)
+    error: Mapped[str | None]

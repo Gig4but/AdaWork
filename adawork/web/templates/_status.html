@@ -1,0 +1,7 @@
+<small class="muted">
+  {{ t("status.jobs", n=active_jobs) }}
+  {% if last_run %} · {{ t("status.last_run", when=last_run | datetime) }}{% endif %}
+  ·
+  {% if settings.automation.enabled %}{{ t("status.auto_on", h=settings.automation.interval_hours) }}
+  {% else %}{{ t("status.auto_off") }}{% endif %}
+</small>
