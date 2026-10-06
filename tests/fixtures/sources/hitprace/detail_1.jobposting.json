@@ -1,0 +1,28 @@
+{
+  "@context": "https://schema.org",
+  "@type": "JobPosting",
+  "title": "⭐Vedoucí směny ve výrobě | bez nočních a víkendů | nástup ihned (A14721)",
+  "description": "<p><br>Informace <br>Staňte se Vedoucím směny v našem závodě v Brně-Černovicích a veďte výrobu ve stabilní mezinárodní společnosti s více než 100letou tradicí.<br> Čím se budete zabývat<br>• vedení směny a zajištění plynulého chodu výroby ve dvousměnném provozu<br>• plánování výroby a zakázek<br>• koordinace údržby a dohled nad správným fungováním zařízení<br>• komunikace s ostatními odděleními a spolupráce s laboratoří včetně odběru vzorků<br>• dodržování výrobních postupů, provozních standardů a pořádku na pracovišti<br>• podílení se na zlepšování a optimalizaci výrobních procesů<br>Co od vás očekáváme<br> Co potřebujeme my od Vás<br>• praxi z výrobního prostředí a zkušenosti s vedením týmu<br>• manuální zručnost, fyzickou zdatnost a časovou flexibilitu<br>• uživatelskou znalost práce na PC<br>• samostatnost, spolehlivost, odpovědnost a aktivní přístup k práci<br>• výhodou strojnický průkaz, průkaz řidiče motorového vozíku nebo řidičský průkaz sk. C či T<br>Co vám nabízíme<br>A co získáte vy od nás<br>• mzda 35-40 000 Kč/měsíčně<br>• 25 dnů dovolené<br>• příspěvek na stravování<br>• příspěvek na důchodové spoření<br>• benefitní karty UP nebo Multisport <br>• zvýhodněný paušál na telefon</p>",
+  "datePosted": "2026-10-02",
+  "validThrough": "2026-10-08T11:55:30+00:00",
+  "jobLocation": {
+    "@type": "Place",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Brno",
+      "addressCountry": "CZ"
+    }
+  },
+  "url": "https://www.hitprace.cz/prace-detail/vedouci-smeny-ve-vyrobe-bez-nocnich-a-vikendu-nastup-ihned-a14721-brno-ru6551487/",
+  "identifier": {
+    "@type": "PropertyValue",
+    "name": "HitPrace.cz",
+    "value": "ru6551487"
+  },
+  "hiringOrganization": {
+    "@type": "Organization",
+    "name": "HOFMANN WIZARD s.r.o."
+  },
+  "employmentType": "FULL_TIME",
+  "jobImmediateStart": true
+}

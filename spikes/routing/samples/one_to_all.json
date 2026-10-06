@@ -1,0 +1,67 @@
+{
+  "one": {
+    "name": "",
+    "lat": 49.1951,
+    "lon": 16.6068,
+    "departure": "2026-10-08T05:00:00Z",
+    "vertexType": "NORMAL"
+  },
+  "all": [
+    {
+      "place": {
+        "name": "Brno, Zoologická zahrada",
+        "stopId": "spoj_S13148.P1.ZB101",
+        "parentId": "spoj_S13148",
+        "importance": 0.03137742727994919,
+        "lat": 49.22777200000001,
+        "lon": 16.531578000000003,
+        "tz": "Europe/Prague",
+        "arrival": "2026-10-08T05:30:00Z",
+        "vertexType": "TRANSIT",
+        "modes": [
+          "TRAM",
+          "BUS"
+        ]
+      },
+      "duration": 30,
+      "k": 1
+    },
+    {
+      "place": {
+        "name": "Brno, Zoologická zahrada",
+        "stopId": "spoj_S13148",
+        "importance": 0.03137742727994919,
+        "lat": 49.22777200000001,
+        "lon": 16.531578000000003,
+        "tz": "Europe/Prague",
+        "arrival": "2026-10-08T05:30:00Z",
+        "vertexType": "TRANSIT",
+        "modes": [
+          "TRAM",
+          "BUS"
+        ]
+      },
+      "duration": 30,
+      "k": 1
+    },
+    {
+      "place": {
+        "name": "Brno, Sochorova",
+        "stopId": "spoj_S38023.P1.ZB101",
+        "parentId": "spoj_S38023",
+        "importance": 0.01043082494288683,
+        "lat": 49.213448,
+        "lon": 16.564635999999997,
+        "tz": "Europe/Prague",
+        "arrival": "2026-10-08T05:22:00Z",
+        "vertexType": "TRANSIT",
+        "modes": [
+          "TRAM"
+        ]
+      },
+      "duration": 22,
+      "k": 1
+    },
+    "... 570 more"
+  ]
+}

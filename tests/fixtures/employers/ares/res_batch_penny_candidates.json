@@ -1,0 +1,291 @@
+{
+ "pocetCelkem": 5,
+ "ekonomickeSubjekty": [
+  {
+   "icoId": "01464353",
+   "zaznamy": [
+    {
+     "ico": "01464353",
+     "obchodniJmeno": "ZO Odborového svazu pracovníků obchodu Penny Market, s.r.o.",
+     "sidlo": {
+      "kodStatu": "CZ",
+      "nazevStatu": "Česká republika",
+      "kodKraje": 27,
+      "nazevKraje": "Středočeský kraj",
+      "kodOkresu": 3209,
+      "nazevOkresu": "Praha-východ",
+      "kodObce": 538701,
+      "nazevObce": "Radonice",
+      "kodUlice": 419109,
+      "nazevUlice": "Počernická",
+      "cisloDomovni": 257,
+      "kodCastiObce": 138240,
+      "nazevCastiObce": "Radonice",
+      "kodAdresnihoMista": 26013894,
+      "psc": 25073,
+      "textovaAdresa": "Počernická 257, 25073 Radonice",
+      "standardizaceAdresy": true,
+      "typCisloDomovni": 1
+     },
+     "pravniForma": "707",
+     "pravniFormaRos": "707",
+     "financniUrad": "057",
+     "datumVzniku": "2013-02-05",
+     "datumAktualizace": "2018-02-09",
+     "czNace": [
+      "94200"
+     ],
+     "czNace2008": [
+      "94200"
+     ],
+     "statistickeUdaje": {
+      "institucionalniSektor2010": "15002",
+      "kategoriePoctuPracovniku": "000"
+     },
+     "zakladniUzemniJednotka": "538701",
+     "primarniZaznam": true,
+     "czNacePrevazujici": "94200",
+     "czNacePrevazujici2008": "94200",
+     "okresNutsLau": "CZ0209"
+    }
+   ]
+  },
+  {
+   "icoId": "06283659",
+   "zaznamy": [
+    {
+     "ico": "06283659",
+     "obchodniJmeno": "Penny Lane - jazyková škola, s.r.o.",
+     "sidlo": {
+      "kodStatu": "CZ",
+      "nazevStatu": "Česká republika",
+      "kodKraje": 19,
+      "nazevKraje": "Hlavní město Praha",
+      "kodObce": 554782,
+      "nazevObce": "Praha",
+      "kodSpravnihoObvodu": 27,
+      "nazevSpravnihoObvodu": "Praha 2",
+      "kodMestskehoObvodu": 27,
+      "nazevMestskehoObvodu": "Praha 2",
+      "kodMestskeCastiObvodu": 500089,
+      "kodUlice": 464058,
+      "nazevMestskeCastiObvodu": "Praha 2",
+      "nazevUlice": "Korunní",
+      "cisloDomovni": 957,
+      "kodCastiObce": 490229,
+      "cisloOrientacni": 35,
+      "nazevCastiObce": "Vinohrady",
+      "kodAdresnihoMista": 21749191,
+      "psc": 12000,
+      "textovaAdresa": "Korunní 957/35, Vinohrady, 12000 Praha 2",
+      "standardizaceAdresy": true,
+      "typCisloDomovni": 1
+     },
+     "pravniForma": "112",
+     "pravniFormaRos": "112",
+     "financniUrad": "002",
+     "datumVzniku": "2017-07-20",
+     "datumAktualizace": "2026-02-04",
+     "czNace": [
+      "85591"
+     ],
+     "czNace2008": [
+      "85591"
+     ],
+     "statistickeUdaje": {
+      "institucionalniSektor2010": "11002",
+      "kategoriePoctuPracovniku": "130"
+     },
+     "zakladniUzemniJednotka": "500089",
+     "primarniZaznam": true,
+     "czNacePrevazujici": "85591",
+     "czNacePrevazujici2008": "85591",
+     "okresNutsLau": "CZ0100"
+    }
+   ]
+  },
+  {
+   "icoId": "22770348",
+   "zaznamy": [
+    {
+     "ico": "22770348",
+     "obchodniJmeno": "Základní odborová organizace Odborového svazu pracovníků obchodu Penny Market s.r.o.",
+     "sidlo": {
+      "kodStatu": "CZ",
+      "nazevStatu": "Česká republika",
+      "kodKraje": 35,
+      "nazevKraje": "Jihočeský kraj",
+      "kodOkresu": 3301,
+      "nazevOkresu": "České Budějovice",
+      "kodObce": 544256,
+      "nazevObce": "České Budějovice",
+      "kodUlice": 76554,
+      "nazevUlice": "Rudolfovská tř.",
+      "cisloDomovni": 670,
+      "kodCastiObce": 403890,
+      "nazevCastiObce": "České Budějovice 4",
+      "kodAdresnihoMista": 30994039,
+      "psc": 37001,
+      "textovaAdresa": "Rudolfovská tř. 670, České Budějovice 4, 37001 České Budějovice",
+      "standardizaceAdresy": true,
+      "typCisloDomovni": 1
+     },
+     "pravniForma": "707",
+     "pravniFormaRos": "707",
+     "financniUrad": "077",
+     "datumVzniku": "2011-10-05",
+     "datumAktualizace": "2025-12-05",
+     "czNace": [
+      "94200"
+     ],
+     "czNace2008": [
+      "94200"
+     ],
+     "statistickeUdaje": {
+      "institucionalniSektor2010": "15002",
+      "kategoriePoctuPracovniku": "000"
+     },
+     "zakladniUzemniJednotka": "544256",
+     "primarniZaznam": true,
+     "czNacePrevazujici": "94200",
+     "czNacePrevazujici2008": "94200",
+     "okresNutsLau": "CZ0311"
+    }
+   ]
+  },
+  {
+   "icoId": "64945880",
+   "zaznamy": [
+    {
+     "ico": "64945880",
+     "obchodniJmeno": "Penny Market s.r.o.",
+     "sidlo": {
+      "kodStatu": "CZ",
+      "nazevStatu": "Česká republika",
+      "kodKraje": 27,
+      "nazevKraje": "Středočeský kraj",
+      "kodOkresu": 3209,
+      "nazevOkresu": "Praha-východ",
+      "kodObce": 538701,
+      "nazevObce": "Radonice",
+      "kodUlice": 419109,
+      "nazevUlice": "Počernická",
+      "cisloDomovni": 257,
+      "kodCastiObce": 138240,
+      "nazevCastiObce": "Radonice",
+      "kodAdresnihoMista": 26013894,
+      "psc": 25073,
+      "textovaAdresa": "Počernická 257, 25073 Radonice",
+      "standardizaceAdresy": true,
+      "typCisloDomovni": 1
+     },
+     "pravniForma": "112",
+     "pravniFormaRos": "112",
+     "financniUrad": "057",
+     "datumVzniku": "1996-01-25",
+     "datumAktualizace": "2023-06-29",
+     "czNace": [
+      "62",
+      "471",
+      "47250",
+      "52260",
+      "731",
+      "46900",
+      "77220",
+      "107",
+      "38110",
+      "52100",
+      "68320",
+      "69200",
+      "106",
+      "74990",
+      "82100",
+      "46190",
+      "74200",
+      "82920",
+      "18200"
+     ],
+     "czNace2008": [
+      "106",
+      "107",
+      "182",
+      "3811",
+      "46190",
+      "46900",
+      "471",
+      "4725",
+      "521",
+      "52290",
+      "62",
+      "6832",
+      "69200",
+      "731",
+      "742",
+      "749",
+      "7729",
+      "8211",
+      "82920"
+     ],
+     "statistickeUdaje": {
+      "institucionalniSektor2010": "11003",
+      "kategoriePoctuPracovniku": "470"
+     },
+     "zakladniUzemniJednotka": "538701",
+     "primarniZaznam": true,
+     "czNacePrevazujici": "471",
+     "czNacePrevazujici2008": "471",
+     "okresNutsLau": "CZ0209"
+    }
+   ]
+  },
+  {
+   "icoId": "71188576",
+   "zaznamy": [
+    {
+     "ico": "71188576",
+     "obchodniJmeno": "Základní odborová organizace OSPO, Penny Market s.r.o.",
+     "sidlo": {
+      "kodStatu": "CZ",
+      "nazevStatu": "Česká republika",
+      "kodKraje": 124,
+      "nazevKraje": "Olomoucký kraj",
+      "kodOkresu": 3709,
+      "nazevOkresu": "Prostějov",
+      "kodObce": 589250,
+      "nazevObce": "Prostějov",
+      "kodUlice": 517003,
+      "nazevUlice": "Plumlovská",
+      "cisloDomovni": 4126,
+      "kodCastiObce": 412473,
+      "nazevCastiObce": "Prostějov",
+      "kodAdresnihoMista": 24849162,
+      "psc": 79604,
+      "textovaAdresa": "Plumlovská 4126, 79604 Prostějov",
+      "standardizaceAdresy": true,
+      "typCisloDomovni": 1
+     },
+     "pravniForma": "707",
+     "pravniFormaRos": "707",
+     "financniUrad": "325",
+     "datumVzniku": "2003-08-28",
+     "datumAktualizace": "2018-02-09",
+     "czNace": [
+      "94200"
+     ],
+     "czNace2008": [
+      "94200"
+     ],
+     "statistickeUdaje": {
+      "institucionalniSektor2010": "15002",
+      "kategoriePoctuPracovniku": "000"
+     },
+     "zakladniUzemniJednotka": "589250",
+     "primarniZaznam": true,
+     "czNacePrevazujici": "94200",
+     "czNacePrevazujici2008": "94200",
+     "okresNutsLau": "CZ0713"
+    }
+   ]
+  }
+ ]
+}

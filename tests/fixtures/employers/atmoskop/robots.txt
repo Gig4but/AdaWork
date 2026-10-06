@@ -1,0 +1,13 @@
+# www.robotstxt.org/
+
+User-agent: *
+Disallow: /graphql/
+Disallow: /nahlasit/
+Disallow: /prihlaseni?targetPath
+Disallow: /connect/google
+
+# https://commoncrawl.org/faq
+User-agent: CCBot
+Disallow: /
+
+Sitemap: https://www.atmoskop.cz/sitemap_index.xml

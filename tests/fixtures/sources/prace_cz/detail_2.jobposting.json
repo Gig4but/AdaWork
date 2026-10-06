@@ -1,0 +1,31 @@
+{
+  "@context": "https://schema.org",
+  "@type": "JobPosting",
+  "title": "Všeobecná sestra v Domově pro seniory",
+  "description": "<p>Naše vize spočívá v individuálně pojaté službě založené na přístupu, který je zaměřen na člověka. Naším cílem je hledat způsoby, jak našim klientům umožnit žít život, který bude zdůrazňovat jejich přednosti a který bude vést k jejich maximálnímu začlenění do společnosti.</p>\n<p><strong>Hledáme kolegyni/kolegu do týmu, která/ý:</strong></p>\n<p>- má odbornou způsobilost k výkonu povolání zdravotní sestry</p>\n<p>- má schopnost komunikovat a jednat s různými typy klientů</p>\n<p>- má schopnost pracovat samostatně i v týmu</p>\n<p>- má rád změny, je aktivní a bude se podílet na realizaci naší vize</p>\n<p><strong>Popis práce:</strong></p>\n<p>- poskytování všech činností zdravotní sestry</p>\n<p>- práce v programu Cygnus</p>\n<p>- 12 hodinové směny</p>\n<p><strong>Nabízíme:</strong></p>\n<p>- výborné finanční ohodnocení</p>\n<p>- příplatky za víkendy ( 25% prům. hod. výdělku)</p>\n<p>- příplatky za noční směny (20% prům. hod. výdělku)</p>\n<p>- příplatky za svátky (100% prům. hod. výdělku)</p>\n<p>- dotované stravování</p>\n<p>- vzdělávání a supervize</p>\n<p>- příspěvek na penzijní připojištění</p>\n<p>- po uplynutí zkušební doby:</p>\n<p>- osobní příplatek</p>\n<p>- čtvrtletní odměny</p>\n<p>- 1 bezplatná masáže měsíčně v pracovní době</p>\n<p>- příjemný kolektiv</p>",
+  "identifier": {
+    "@type": "PropertyValue",
+    "name": "Domov Sulická",
+    "value": "dpgjza"
+  },
+  "datePosted": "2026-09-14T09:41:54.239067+02:00",
+  "validThrough": "2026-10-14T23:59:59+02:00T23:59",
+  "employmentType": [
+    "FULL_TIME",
+    "EMPLOYEE"
+  ],
+  "hiringOrganization": {
+    "@type": "Organization",
+    "name": "Domov Sulická"
+  },
+  "jobLocation": {
+    "@type": "Place",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Sulická",
+      "addressLocality": "Praha",
+      "postalCode": "14200",
+      "addressCountry": "CZE"
+    }
+  }
+}

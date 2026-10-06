@@ -1,0 +1,271 @@
+{
+  "Okres": {
+    "file": "okresy.json",
+    "status": 200,
+    "bytes": 12786,
+    "items": 78,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "kodLau",
+      "kraj",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "Obec": {
+    "file": "obce.json",
+    "status": 200,
+    "bytes": 900386,
+    "items": 6258,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev",
+      "okres"
+    ],
+    "id_prefix_matches": true
+  },
+  "Kraj": {
+    "file": "kraje.json",
+    "status": 200,
+    "bytes": 2004,
+    "items": 14,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "kodNuts3",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "CastObce": {
+    "file": "casti-obci.json",
+    "status": 200,
+    "bytes": 2215070,
+    "items": 15106,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev",
+      "obec"
+    ],
+    "id_prefix_matches": true,
+    "fixture": "sample of 50 items (full file > 1 MB)"
+  },
+  "TypStavebnihoObjektu": {
+    "file": "typy-stavebniho-objektu.json",
+    "status": 200,
+    "bytes": 584,
+    "items": 4,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "VhodnostProTypZamestnance": {
+    "file": "vhodnosti-pro-typ-zamestnance.json",
+    "status": 200,
+    "bytes": 1091,
+    "items": 7,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "PracovnepravniVztah": {
+    "file": "pracovnepravni-vztahy.json",
+    "status": 200,
+    "bytes": 753,
+    "items": 5,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "CzIsco": {
+    "file": "cz-isco.json",
+    "status": 200,
+    "bytes": 813597,
+    "items": 1995,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev",
+      "oboryCinnosti",
+      "vhodnostProNevidome",
+      "vhodnostProSlabozrake"
+    ],
+    "id_prefix_matches": true
+  },
+  "VzdelaniDetailniKategorie": {
+    "file": "vzdelani-detailni-kategorie.json",
+    "status": 200,
+    "bytes": 2509,
+    "items": 16,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "Smennost": {
+    "file": "smennosti.json",
+    "status": 200,
+    "bytes": 1311,
+    "items": 10,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "TypMzdy": {
+    "file": "typy-mzdy.json",
+    "status": 200,
+    "bytes": 248,
+    "items": 2,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "ZverejnovatVpm": {
+    "file": "zverejnovat-vpm.json",
+    "status": 200,
+    "bytes": 577,
+    "items": 4,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "KontaktniPracoviste": {
+    "file": "kontaktni-pracoviste.json",
+    "status": 200,
+    "bytes": 40793,
+    "items": 269,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "TypMistaVykonuPrace": {
+    "file": "typy-mista-vykonu-prace.json",
+    "status": 200,
+    "bytes": 811,
+    "items": 6,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "MestskyObvodMestskaCast": {
+    "file": "mestske-obvody-mestske-casti.json",
+    "status": 200,
+    "bytes": 26435,
+    "items": 142,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "mestskyObvodVPraze",
+      "nazev",
+      "obec"
+    ],
+    "id_prefix_matches": true
+  },
+  "MestskyObvodVPraze": {
+    "file": "mestske-obvody-v-praze.json",
+    "status": 200,
+    "bytes": 1474,
+    "items": 10,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev",
+      "obec"
+    ],
+    "id_prefix_matches": true
+  },
+  "VyhodyVolnehoMista": {
+    "file": "vyhody-volneho-mista.json",
+    "status": 200,
+    "bytes": 1365,
+    "items": 10,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "Dovednost": {
+    "file": "dovednosti.json",
+    "status": 200,
+    "bytes": 15546,
+    "items": 103,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "UrovenZnalostiJazyka": {
+    "file": "urovne-znalosti-jazyka.json",
+    "status": 200,
+    "bytes": 401,
+    "items": 3,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "Jazyk": {
+    "file": "jazyky.json",
+    "status": 200,
+    "bytes": 2493,
+    "items": 22,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "VzdelaniKkov": {
+    "file": "vzdelani-kkov.json",
+    "status": 200,
+    "bytes": 223116,
+    "items": 1630,
+    "first_item_keys": [
+      "id",
+      "kod",
+      "nazev"
+    ],
+    "id_prefix_matches": true
+  },
+  "_gzip_variant": {
+    "content-length": "17513767",
+    "last-modified": "Mon, 05 Oct 2026 23:02:47 GMT",
+    "etag": "\"10b3d27-65d1fe1662675\""
+  }
+}

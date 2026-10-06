@@ -1,0 +1,120 @@
+{
+  "requestParameters": {},
+  "debugOutput": {},
+  "from": {
+    "name": "",
+    "lat": 49.1951,
+    "lon": 16.6068,
+    "vertexType": "NORMAL"
+  },
+  "to": {
+    "name": "",
+    "lat": 49.3631,
+    "lon": 16.6444,
+    "vertexType": "NORMAL"
+  },
+  "direct": [
+    {
+      "duration": 1510,
+      "startTime": "2026-10-08T05:00:00Z",
+      "endTime": "2026-10-08T05:25:00Z",
+      "transfers": 0,
+      "id": "",
+      "legs": [
+        {
+          "mode": "CAR",
+          "from": {
+            "name": "START",
+            "lat": 49.1951,
+            "lon": 16.6068,
+            "departure": "2026-10-08T05:00:00Z",
+            "scheduledDeparture": "2026-10-08T05:00:00Z",
+            "vertexType": "NORMAL"
+          },
+          "to": {
+            "name": "END",
+            "lat": 49.3631,
+            "lon": 16.6444,
+            "arrival": "2026-10-08T05:25:00Z",
+            "scheduledArrival": "2026-10-08T05:25:00Z",
+            "vertexType": "NORMAL"
+          },
+          "duration": 1510,
+          "startTime": "2026-10-08T05:00:00Z",
+          "endTime": "2026-10-08T05:25:00Z",
+          "scheduledStartTime": "2026-10-08T05:00:00Z",
+          "scheduledEndTime": "2026-10-08T05:25:00Z",
+          "realTime": false,
+          "scheduled": false,
+          "distance": 29283.0,
+          "legGeometry": {
+            "points": "q~ry|Aerqt^fBuAlTyOhGwDhJkD??vDv@??nEz@rLsD??dLwD??`AY??fFyA...",
+            "precision": 6,
+            "length": 1179
+          },
+          "steps": [
+            {
+              "relativeDirection": "CONTINUE",
+              "distance": 110.0,
+              "fromLevel": 0.0,
+              "toLevel": 0.0,
+              "toOsmNode": 159540127,
+              "polyline": {
+                "points": "q~ry|Aerqt^fBuAlTyOhGwDhJkD",
+                "precision": 6,
+                "length": 5
+              },
+              "streetName": "",
+              "exit": "",
+              "stayOn": false,
+              "area": false,
+              "toll": false
+            },
+            {
+              "relativeDirection": "CONTINUE",
+              "distance": 10.0,
+              "fromLevel": 0.0,
+              "toLevel": 0.0,
+              "osmWay": 359298663,
+              "fromOsmNode": 159540127,
+              "toOsmNode": 559968800,
+              "polyline": {
+                "points": "grqy|Ayprt^vDv@",
+                "precision": 6,
+                "length": 2
+              },
+              "streetName": "Veselá",
+              "exit": "",
+              "stayOn": false,
+              "area": false,
+              "toll": false
+            },
+            {
+              "relativeDirection": "CONTINUE",
+              "distance": 37.0,
+              "fromLevel": 0.0,
+              "toLevel": 0.0,
+              "osmWay": 44048049,
+              "fromOsmNode": 559968800,
+              "toOsmNode": 559968794,
+              "polyline": {
+                "points": "olqy|Aaort^nEz@rLsD",
+                "precision": 6,
+                "length": 3
+              },
+              "streetName": "Dominikánské náměstí",
+              "exit": "",
+              "stayOn": false,
+              "area": false,
+              "toll": false
+            },
+            "... 333 more"
+          ]
+        }
+      ]
+    }
+  ],
+  "itineraries": [],
+  "previousPageCursor": "",
+  "nextPageCursor": ""
+}

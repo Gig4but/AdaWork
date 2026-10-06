@@ -1,0 +1,114 @@
+[
+  {
+    "type": "ADDRESS",
+    "tokens": [],
+    "name": "Veselá 172/6",
+    "id": "",
+    "lat": 49.1950323,
+    "lon": 16.6067027,
+    "street": "Veselá",
+    "houseNumber": "172/6",
+    "country": "CZ",
+    "tz": "Europe/Prague",
+    "areas": [
+      {
+        "name": "Česko",
+        "adminLevel": 2.0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Jihomoravský kraj",
+        "adminLevel": 4.0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "okres Brno-město",
+        "adminLevel": 5.0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      "... 4 more"
+    ],
+    "score": 0.3275108337402344
+  },
+  {
+    "type": "ADDRESS",
+    "tokens": [],
+    "name": "Veselá 94/8",
+    "id": "",
+    "lat": 49.1951276,
+    "lon": 16.6066629,
+    "street": "Veselá",
+    "houseNumber": "94/8",
+    "country": "CZ",
+    "tz": "Europe/Prague",
+    "areas": [
+      {
+        "name": "Česko",
+        "adminLevel": 2.0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Jihomoravský kraj",
+        "adminLevel": 4.0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "okres Brno-město",
+        "adminLevel": 5.0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      "... 4 more"
+    ],
+    "score": 0.4242696762084961
+  },
+  {
+    "type": "ADDRESS",
+    "tokens": [],
+    "name": "Středova 94/1",
+    "id": "",
+    "lat": 49.1952092,
+    "lon": 16.6068351,
+    "street": "Středova",
+    "houseNumber": "94/1",
+    "country": "CZ",
+    "tz": "Europe/Prague",
+    "areas": [
+      {
+        "name": "Česko",
+        "adminLevel": 2.0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Jihomoravský kraj",
+        "adminLevel": 4.0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "okres Brno-město",
+        "adminLevel": 5.0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      "... 4 more"
+    ],
+    "score": 2.4074602127075195
+  },
+  "... 2 more"
+]

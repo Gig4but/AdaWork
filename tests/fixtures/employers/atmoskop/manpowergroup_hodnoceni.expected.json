@@ -1,0 +1,193 @@
+{
+ "id": 2869607,
+ "name": "ManpowerGroup s.r.o.",
+ "address": "Na Florenci 2116/15, Nové Město, Praha 1",
+ "field": "Činnosti agentur zprostředkujících práci",
+ "employees": 240,
+ "count_reviews": 225,
+ "count_comments": 159,
+ "employer_pct": 81,
+ "colleagues_pct": 85,
+ "boss_pct": 81,
+ "praised_for": [
+  [
+   "OPTION_RECOMMEND_ATMOSPHERE",
+   118
+  ],
+  [
+   "OPTION_RECOMMEND_FLEXIBLE",
+   109
+  ],
+  [
+   "OPTION_RECOMMEND_LEARNING",
+   103
+  ]
+ ],
+ "reviews_paginator": {
+  "itemsCount": 128,
+  "currentPage": 1,
+  "lastPage": 13
+ },
+ "reviews": [
+  {
+   "id": 206852,
+   "positive": "Na některých pobočkách přátelská atmosféra, skvělá příležitost pro lidi po SŠ/VŠ nebo s minimální praxí a úspěšný člověk ve vedení.",
+   "negative": "Jednání vedení, které bylo, nejdříve jednat a později myslet, nutnost sedět celý den v kanceláři a minimální možnost HO (při běžném stavu), téměř nulová možnost navýšení základní mzdy za dobré výsledky nebo věrnost firmě, velmi nízké základní platy oproti konkurenci, společnost se tváří, že je založena na důležitosti vlastních zaměstnanců, i to takto prezentuje mezi současné zaměstnance, ale realita je jinde, často se končí právě kvůli neshodám a nekorektnímu jednání (důkazem jsou časté změny v HR, odchází především kvalitní lidi).",
+   "date": "březen 2021",
+   "added": "MORE_THAN_YEAR",
+   "current_employee": false,
+   "tenure": "OPTION_BETWEEN_1_2",
+   "dept": "OPTION_FIELD_HR",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 19,
+    "negative": 2
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 196357,
+   "positive": "Lepší kolektiv jsem si ani nemohl přát a zároveň to bylo to jediné, co mě ve firmě udrželo",
+   "negative": "Je toho dost co by se mohlo zlepšit, nízká transparentnost, nedostatečná a někdy zmatečná komunikace managementu a vedení, navenek firma prosazuje důležitost zaměstnanců (human age) ale realita je někde úplně jinde. Znační organizační změny na samotném oddělení HR hovoří za všechno. Bohužel za celé působení ve společnosti jsem to vnímal tak, že odcházeli hlavně kvalitní zaměstnanci...",
+   "date": "listopad 2020",
+   "added": "MORE_THAN_YEAR",
+   "current_employee": false,
+   "tenure": "OPTION_BETWEEN_6_9",
+   "dept": "OPTION_FIELD_FINANCE",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 32,
+    "negative": 4
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 179767,
+   "positive": "Kolegové\r\nFlexibilní pracovní doba - volnost ",
+   "negative": "Společnost se točí v kruhu a sama neví jak z něho ven \r\nNestabilita, to co platilo včera neplatí dnes \r\nKrátkozraké plánování \r\nNedůvěryhodný management a přímý nadřízení \r\n\r\n ",
+   "date": "květen 2020",
+   "added": "MORE_THAN_YEAR",
+   "current_employee": false,
+   "tenure": "OPTION_BETWEEN_1_2",
+   "dept": "OPTION_FIELD_HR",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 27,
+    "negative": 0
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 184676,
+   "positive": "S kolektivem - dobré vztahy na pracovišti, férovým jednáním, dobrým zaučením. ",
+   "negative": "Mohli bychom mít větší fix po zkušební době. ",
+   "date": "červen 2020",
+   "added": "MORE_THAN_YEAR",
+   "current_employee": true,
+   "tenure": "OPTION_BETWEEN_3_5",
+   "dept": "OPTION_FIELD_HR",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 8,
+    "negative": 1
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 193592,
+   "positive": "Kolektiv, pracovni napln a pristup HR oddeleni",
+   "negative": null,
+   "date": "říjen 2020",
+   "added": "MORE_THAN_YEAR",
+   "current_employee": true,
+   "tenure": "OPTION_BETWEEN_3_5",
+   "dept": "OPTION_FIELD_HR",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 3,
+    "negative": 2
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 184702,
+   "positive": "Výpomoc mezi pobočkami\r\nKolektiv\r\nPracovní prostředí",
+   "negative": null,
+   "date": "červen 2020",
+   "added": "MORE_THAN_YEAR",
+   "current_employee": true,
+   "tenure": "OPTION_APROX_HALF",
+   "dept": "OPTION_FIELD_BUSINESS",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 3,
+    "negative": 1
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 182189,
+   "positive": "Ochota kolegů poskytnout pomoc při řešení pracovních úkolů; důvěra ve schopnosti.",
+   "negative": "Formální prostředí",
+   "date": "červen 2020",
+   "added": "MORE_THAN_YEAR",
+   "current_employee": true,
+   "tenure": "OPTION_APROX_HALF",
+   "dept": "OPTION_FIELD_IT",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 3,
+    "negative": 0
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 182063,
+   "positive": "- vstupní školení bylo skutečně obsáhlé a efektivní\r\n- mám fantastický kolektiv, na který se můžu kdykoli spolehnout",
+   "negative": "- neproplácená multisportka\r\n- stravenky by mohly být ve vyšší hodnotě",
+   "date": "červen 2020",
+   "added": "MORE_THAN_YEAR",
+   "current_employee": true,
+   "tenure": "OPTION_APROX_HALF",
+   "dept": "OPTION_FIELD_HR",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 2,
+    "negative": 0
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 182205,
+   "positive": "Jsem velmi spokojena s kolektivním přístupem zaměstnanců, možnost školení, a různorodost práce. To, co jsem jinde hledala a nenašla, zde naopak společnost Manpower Group poskytla. :)",
+   "negative": null,
+   "date": "červen 2020",
+   "added": "MORE_THAN_YEAR",
+   "current_employee": true,
+   "tenure": "OPTION_APROX_HALF",
+   "dept": "OPTION_FIELD_MANAGEMENT",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 2,
+    "negative": 1
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 152842,
+   "positive": "- v poslední době změny k lepšímu v rámci průzkumů spokojenosti (Home Office, navýšení hodnoty stravenek apod.)\r\n- v Praze velmi dobrá lokalita kanceláří (Praha 1)\r\n- zkušenost v rámci korporátní politiky",
+   "negative": "- platy jsou obecně spíše na středně-nízké hranici\r\n- poměrně neúměrná vytíženost některých kolegů oproti těm, co \"jen proplouvají\" díky favorismu\r\n- těžko se dá na určitých pozicích skloubit pracovní život a jiné společenské závazky (soukromý život, příp. studium)\r\n",
+   "date": "listopad 2019",
+   "added": "MORE_THAN_YEAR",
+   "current_employee": true,
+   "tenure": "OPTION_BETWEEN_3_5",
+   "dept": "OPTION_FIELD_ADMINISTRATION",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 16,
+    "negative": 5
+   },
+   "employer_reply": null
+  }
+ ]
+}

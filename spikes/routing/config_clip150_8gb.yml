@@ -1,0 +1,26 @@
+# MOTIS v2.11.3 spike config for 8 GB machines: 150 km circle, OSM renumbered (osmium renumber),
+# geocoding off (renumbered OSM makes the adr import hang), background tile profile.
+# Import peak working set 1.65 GB, data folder 1.28 GB. Paths relative to spikes/routing/data/clip150
+server:
+  port: 8080
+  web_folder: ../motis/ui
+osm: brno150_renum.osm.pbf
+tiles:
+  profile: ../motis/tiles-profiles/background.lua
+  db_size: 274877906944
+  flush_threshold: 10000
+timetable:
+  first_day: 2026-10-06
+  num_days: 30
+  railviz: true
+  with_shapes: true
+  datasets:
+    spoj:
+      path: spojenka_brno150.zip
+street_routing: true
+osr_footpath: true
+geocoding: false
+reverse_geocoding: false
+limits:
+  onetomany_max_many: 10000
+  onetoall_max_travel_minutes: 120

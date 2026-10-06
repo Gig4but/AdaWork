@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+		
+        <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+            
+            <sitemap>
+                <loc>https://www.dobraprace.cz/sitemap/static/</loc>
+            </sitemap>
+            <sitemap>
+                <loc>https://www.dobraprace.cz/sitemap/regions/</loc>
+            </sitemap>
+            <sitemap>
+                <loc>https://www.dobraprace.cz/sitemap/categories/</loc>
+            </sitemap>
+            <sitemap>
+                <loc>https://www.dobraprace.cz/sitemap/companies/</loc>
+            </sitemap>
+            <sitemap>
+                <loc>https://www.dobraprace.cz/sitemap/articles/</loc>
+            </sitemap>
+            <sitemap>
+                <loc>https://www.dobraprace.cz/sitemap/regions-with-categories/</loc>
+            </sitemap>
+            <sitemap>
+                <loc>https://www.dobraprace.cz/sitemap/tags/</loc>
+            </sitemap>
+            <sitemap>
+                <loc>https://www.dobraprace.cz/sitemap/ads/</loc>
+            </sitemap>
+            <sitemap>
+                <loc>https://www.dobraprace.cz/sitemap/platy/</loc>
+            </sitemap>
+        </sitemapindex>

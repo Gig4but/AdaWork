@@ -1,0 +1,83 @@
+{
+ "icoId": "00177041",
+ "zaznamy": [
+  {
+   "ico": "00177041",
+   "obchodniJmeno": "Škoda Auto a.s.",
+   "sidlo": {
+    "kodStatu": "CZ",
+    "nazevStatu": "Česká republika",
+    "kodKraje": 27,
+    "nazevKraje": "Středočeský kraj",
+    "kodOkresu": 3207,
+    "nazevOkresu": "Mladá Boleslav",
+    "kodObce": 535419,
+    "nazevObce": "Mladá Boleslav",
+    "kodUlice": 292591,
+    "nazevUlice": "tř. Václava Klementa",
+    "cisloDomovni": 869,
+    "kodCastiObce": 402591,
+    "nazevCastiObce": "Mladá Boleslav II",
+    "kodAdresnihoMista": 21249407,
+    "psc": 29301,
+    "textovaAdresa": "tř. Václava Klementa 869, Mladá Boleslav II, 29301 Mladá Boleslav",
+    "standardizaceAdresy": true,
+    "typCisloDomovni": 1
+   },
+   "pravniForma": "121",
+   "pravniFormaRos": "121",
+   "financniUrad": "048",
+   "datumVzniku": "1990-11-13",
+   "datumAktualizace": "2026-06-05",
+   "czNace": [
+    "70200",
+    "471",
+    "77110",
+    "93290",
+    "47740",
+    "8532",
+    "86220",
+    "74300",
+    "8540",
+    "29100",
+    "69200",
+    "72100",
+    "95310",
+    "256",
+    "00",
+    "25400",
+    "25510",
+    "24"
+   ],
+   "czNace2008": [
+    "29100",
+    "45200",
+    "471",
+    "47740",
+    "69200",
+    "702",
+    "7219",
+    "74300",
+    "77110",
+    "8532",
+    "854",
+    "86220",
+    "93290",
+    "257",
+    "25610",
+    "25500",
+    "24",
+    "00"
+   ],
+   "statistickeUdaje": {
+    "institucionalniSektor2010": "11003",
+    "kategoriePoctuPracovniku": "510"
+   },
+   "zakladniUzemniJednotka": "535419",
+   "primarniZaznam": true,
+   "czNacePrevazujici": "29100",
+   "czNacePrevazujici2008": "29100",
+   "okresNutsLau": "CZ0207"
+  }
+ ]
+}

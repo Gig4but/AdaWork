@@ -1,0 +1,74 @@
+{
+  "polozky": [
+    {
+      "id": "VyhodyVolnehoMista/ubyt",
+      "kod": "ubyt",
+      "nazev": {
+        "cs": "Ubytování"
+      }
+    },
+    {
+      "id": "VyhodyVolnehoMista/predsk",
+      "kod": "predsk",
+      "nazev": {
+        "cs": "Předškolní zařízení"
+      }
+    },
+    {
+      "id": "VyhodyVolnehoMista/natur",
+      "kod": "natur",
+      "nazev": {
+        "cs": "Naturální výhody"
+      }
+    },
+    {
+      "id": "VyhodyVolnehoMista/jizdne",
+      "kod": "jizdne",
+      "nazev": {
+        "cs": "Jízdní výhody"
+      }
+    },
+    {
+      "id": "VyhodyVolnehoMista/jine",
+      "kod": "jine",
+      "nazev": {
+        "cs": "Jiné výhody"
+      }
+    },
+    {
+      "id": "VyhodyVolnehoMista/strav",
+      "kod": "strav",
+      "nazev": {
+        "cs": "Podnikové stravování"
+      }
+    },
+    {
+      "id": "VyhodyVolnehoMista/dovol",
+      "kod": "dovol",
+      "nazev": {
+        "cs": "Dovolená navíc"
+      }
+    },
+    {
+      "id": "VyhodyVolnehoMista/premie",
+      "kod": "premie",
+      "nazev": {
+        "cs": "Zvláštní prémie"
+      }
+    },
+    {
+      "id": "VyhodyVolnehoMista/mimo",
+      "kod": "mimo",
+      "nazev": {
+        "cs": "Mimo okres bydliště"
+      }
+    },
+    {
+      "id": "VyhodyVolnehoMista/zahr",
+      "kod": "zahr",
+      "nazev": {
+        "cs": "V zahraničí"
+      }
+    }
+  ]
+}

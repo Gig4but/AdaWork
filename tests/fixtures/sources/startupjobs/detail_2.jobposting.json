@@ -1,0 +1,47 @@
+{
+  "@id": "https://www.startupjobs.cz/nabidka/108325/prodejce-autodiagnostiky-a-zakaznicky-servis-pro-diagstore-cz#job-posting",
+  "@type": "JobPosting",
+  "datePosted": "2026-10-06T08:25:05.000Z",
+  "description": "<p id=\"isPasted\">Máš <strong>zkušenosti s komunikací se zákazníky</strong>, zajímá tě <strong>automotive</strong> a chceš uplatnit své dovednosti v ČR i na zahraničních trzích? Přestěhovali jsme se do nových prostor v Praze 10 - Hostivaři a hledáme do diagstore.cz dalšího člena týmu, který má chuť rozvíjet své dovednosti v oblasti auto-moto, převzít zodpovědnost za poradenství při výběru vhodného diagnostického přístroje, za technickou podporu zákazníkům a zapojit se i do dalších činností spojených s provozem e-shopu i prodejny. Jsi navíc komunikativní, proklientský/á a proaktivní? Pak hledáme právě tebe!</p><p>Diagstore.cz je <strong>e-shop s autodiagnostikou</strong>, který působí po celé EU. Po proškolení budeš mít na starosti činnosti spojené s před- i poprodejním servisem pro zákazníky prostřednictvím emailu, telefonu i osobně na prodejně.</p><p><strong>Co bude hlavní náplní tvojí práce?</strong></p><ul><li>Komunikace se zákazníky (emailová a telefonická)</li><li data-pasted=\"true\">Osobní kontakt se zákazníky na prodejně</li><li>Technická podpora pro další členy týmu</li><li>Pomoc s dalšími odbornými činnostmi - instalace přístrojů, programování ventilků atd.</li></ul><p><strong>Práce u nás není jednotvárná. Jsme kompaktní tým a občas budeme potřebovat pomoct i jinde. S ohledem na tvoje dovednosti a naše potřeby se může jednat o následující činnosti:</strong></p><ul><li>Tvorba obsahu pro e-shop</li><li id=\"isPasted\">Administrativa</li><li>Pomoc se správou e-shopu</li></ul><p><strong>Co očekáváme od tebe?</strong></p><ul><li>Zkušenosti s prací v automotive nebo zájem o&nbsp;obor</li><li>Silné komunikační dovednosti</li><li data-pasted=\"true\">Zkušenosti se zákaznickou podporou nebo e-commerce</li><li data-pasted=\"true\">Plynulou češtinu slovem i písmem</li><li data-pasted=\"true\">Znalost anglického jazyka pro porozumění technickým dokumentacím a dohledání&nbsp;informací</li><li data-pasted=\"true\">Pozitivní přístup a týmovou spolupráci</li><li data-pasted=\"true\">Přesnost, spolehlivost a samostatnost</li><li>Velkou výhodou, nikoli podmínkou je potom znalost některého z jazyků, kterým se mluví v&nbsp;EU</li></ul><p><strong>Co ti nabízíme?</strong></p><ul><li data-pasted=\"true\">Smlouvu na dobu neurčitou nebo&nbsp;spolupráci na IČO</li><li>Práci na plný&nbsp;úvazek (pracovní dny cca 9-17h)</li><li>25 dní&nbsp;dovolené</li><li>Mimořádné odměny (2x ročně)</li><li>Stabilní pozici v přátelském kolektivu s možností profesního rozvoje</li><li>Příjemné pracoviště v Praze 10 - Hostivaři s dobrou dostupností MHD i bezproblémovým parkingem</li><li>Práci v malé firmě s možností ovlivnit její chod</li></ul><p>Zní to všechno dobře? Pošli nám své CV nebo odkaz na Linkedin, rádi tě uvidíme na pohovoru.</p>",
+  "directApply": true,
+  "jobBenefits": "Dovolená navíc, Finanční bonusy, Kariérní růst, Notebook, Parkoviště, Přátelské prostředí, Stabilní firma, Stravenky, Vzdělávací kurzy",
+  "qualifications": "Customer Service, Sales, Automotive, Customer Experience, Customer Support, Communication, Technical Support, Automobile, Administrativa, CX",
+  "skills": "Customer Service, Sales, Automotive, Customer Experience, Customer Support, Communication, Technical Support, Automobile, Administrativa, CX",
+  "title": "Prodejce autodiagnostiky a zákaznický servis pro diagstore.cz",
+  "url": "https://www.startupjobs.cz/nabidka/108325/prodejce-autodiagnostiky-a-zakaznicky-servis-pro-diagstore-cz",
+  "baseSalary": {
+    "@type": "MonetaryAmount",
+    "currency": "CZK",
+    "value": {
+      "@type": "QuantitativeValue",
+      "minValue": 36000,
+      "maxValue": 64000,
+      "unitText": "MONTH"
+    }
+  },
+  "employmentType": [
+    "FULL_TIME"
+  ],
+  "hiringOrganization": {
+    "@type": "Organization",
+    "name": "diagstore.cz",
+    "logo": "https://assets.startupjobs.cz/LOGO/9872/23f8776e291be3ad6696deed0b80682c.png",
+    "description": "Jsme specializovaný e-shop s autodiagnostikou. Za sebou máme úspěšný rok, kdy se nám podařilo proniknout na zahraniční trhy a před sebou plány na expanzi do dalších zemí i rozšíření stávajících aktivit. Naším cílem je nabídnout řešení pro diagnostiku vozů profesionálům i hobby uživatelům.\n\nJsme malá firma, takže možnosti uplatnění a profilace jsou široké. Nadšení pro věc je polovina úspěchu. Ozvi se nám a domluvíme se co dál.",
+    "url": "https://www.startupjobs.cz/startup/diagstore-cz",
+    "sameAs": "https://www.startupjobs.cz/startup/diagstore-cz"
+  },
+  "identifier": {
+    "@type": "PropertyValue",
+    "name": "diagstore.cz",
+    "value": "108325"
+  },
+  "jobLocation": {
+    "@type": "Place",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Praha",
+      "addressRegion": "Hlavní město Praha",
+      "addressCountry": "Česko"
+    }
+  }
+}

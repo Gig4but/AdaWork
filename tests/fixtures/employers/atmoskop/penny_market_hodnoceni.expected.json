@@ -1,0 +1,193 @@
+{
+ "id": 2790622,
+ "name": "Penny Market s.r.o.",
+ "address": "Radonice, Počernická 257",
+ "field": "Maloobchod s převahou potravin",
+ "employees": 7000,
+ "count_reviews": 861,
+ "count_comments": 604,
+ "employer_pct": 62,
+ "colleagues_pct": 71,
+ "boss_pct": 62,
+ "praised_for": [
+  [
+   "OPTION_RECOMMEND_STABLE",
+   302
+  ],
+  [
+   "OPTION_RECOMMEND_JUNIOR",
+   275
+  ],
+  [
+   "OPTION_RECOMMEND_VARIOUS",
+   236
+  ]
+ ],
+ "reviews_paginator": {
+  "itemsCount": 380,
+  "currentPage": 1,
+  "lastPage": 38
+ },
+ "reviews": [
+  {
+   "id": 338575,
+   "positive": "Člověk se u Penny naučí celý krám znát jako své boty . Tím , že jsme menší a máme méně položek na krámě , dá se to udržet bez výpadků zboží . Člověk se naučí doplňovat , kartonovat , péct na pekárně , prodávat na pekárně , udělat balík s papírem i igelitem , uklízet s jezdícím strojem na mytí podlah ( bábou ) , naučíte se i s elektrickým paletizačním vozíkem , vysokozdvihem . Takoví zaměstnanci jsou potom pro jakoukoli další firmu přínosem a tzv k nezaplacení . Benefity jsou u Penny také pěkné . Stravenky (95,-/ směnu ), benefitní body jak za odpracovaný měsíc (250,-) , tak za nákupy nad 5.000,- / měsíčně (500,-) , za hodnocení produktů ( až 300,-/ měsíčně) , po roce příspěvek na důchodové spoření (800,-/ měsíčně) ,  příspěvek na telefon (O2 , Vodafone asi 150,-/ každý paušál) , jednou za rok v prosinci příspěvek na vánoce ( letos 2.000,-) , multisport karta a další a další bonusy . Za věrnostní body se dá nakupovat třeba knihy v Luxoru , nebo cokoli z Ave lékárny apod . Nemůžu si stěžovat . Za 27 let v Praze jsem pracovala v Tescu , Kauflandu a teď v Penny , ale co se týče bonusů , Penny je na tom nejlépe . ",
+   "negative": "Občas je víc práce , než se dá zvládat , ale když máte dobrý tým , dá se to . Trochu mi vadí , že prostě není čas dát si 30 minut pauzu , kterou vám stejně odečtou , ale  na to se dá zvyknout , když víte , že za to máte každý rok o 1.000,- vyšší výplatu . ",
+   "date": "listopad 2025",
+   "added": "MORE_THAN_HALF_YEAR",
+   "current_employee": true,
+   "tenure": "OPTION_BETWEEN_6_9",
+   "dept": "OPTION_FIELD_SALES",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 10,
+    "negative": 2
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 359064,
+   "positive": "Zajímavé benefity ",
+   "negative": "Poslední dobou to jde od deseti k nule víc práce míň lidí na směně a hlavně kontroly nás jestli vše plníme jak je určeno. Přitom zákazníků je pořád stejně nebo i víc. ",
+   "date": "srpen 2026",
+   "added": "MORE_THAN_MONTH",
+   "current_employee": true,
+   "tenure": "OPTION_BETWEEN_3_5",
+   "dept": "OPTION_FIELD_SALES",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 2,
+    "negative": 0
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 359056,
+   "positive": "pouze s kolegy, poslední důvod proč jsem ještě neodešla",
+   "negative": "hodinový výkon, smýšlení firmy, firma se neubírá rok od roku lepším směrem, je to jen a jen horší, nároky na zaměstnance jsou neúměrné množství požadované práce, tlak je obrovský, ov je neprofesionální...",
+   "date": "srpen 2026",
+   "added": "MORE_THAN_MONTH",
+   "current_employee": true,
+   "tenure": "OPTION_BETWEEN_3_5",
+   "dept": "OPTION_FIELD_SALES",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 2,
+    "negative": 0
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 358770,
+   "positive": "Mam rada svoju pracu super kolektiv sme vždy držime spolu",
+   "negative": null,
+   "date": "srpen 2026",
+   "added": "MORE_THAN_MONTH",
+   "current_employee": true,
+   "tenure": "OPTION_BETWEEN_1_2",
+   "dept": "OPTION_FIELD_SALES",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 2,
+    "negative": 0
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 358612,
+   "positive": "Ráda bych napsala nějaké pozitiva, ale přijde mi, že to není možné.",
+   "negative": "Práce je náročná fyzicky a dost často i psychicky. Finanční ohodnocení je mizerné, směny dost často nevíme ani týden před novým měsícem. Kdybych mohla, už sem znovu nenastoupím. ",
+   "date": "srpen 2026",
+   "added": "MORE_THAN_MONTH",
+   "current_employee": true,
+   "tenure": "OPTION_APROX_HALF",
+   "dept": "OPTION_FIELD_SALES",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 2,
+    "negative": 0
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 355505,
+   "positive": "Stravenky, 5 dnů dovolené navíc- ikdyz zaměstnavatel to používá na to, aby splnil Hodinový výkon ",
+   "negative": "Šetření: hodiny pro prodejnu, hodiny pro ostrahu,   celková částka na ztrátách a odpisech. ",
+   "date": "červenec 2026",
+   "added": "MORE_THAN_MONTH",
+   "current_employee": true,
+   "tenure": "OPTION_BETWEEN_1_2",
+   "dept": "OPTION_FIELD_SALES",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 2,
+    "negative": 0
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 355354,
+   "positive": "Kolektiv na prodejně,benefity,možnost naplánovat si směny,tedy pokud je plný stav zaměstnanců ",
+   "negative": "Zodpovědnost za věci,které nemůžu ovlivnit.\n/Nedodávky zboží, nedodržení závozových plánů,počet zaměstnanců na směně.",
+   "date": "červenec 2026",
+   "added": "MORE_THAN_MONTH",
+   "current_employee": true,
+   "tenure": "OPTION_10_AND_MORE",
+   "dept": "OPTION_FIELD_SALES",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 2,
+    "negative": 0
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 358093,
+   "positive": "Jen s kolegy.  Náplň práce a postavení směn je úplně špatně ",
+   "negative": "Samozřejmě . S tím kolik nás na směně je a že se to nedá zvládnou a rozhodně ne dlouhodobě.  Od nás z prodejny odešli už tři silné holky které to pomáhali táhnout. ",
+   "date": "srpen 2026",
+   "added": "MORE_THAN_MONTH",
+   "current_employee": true,
+   "tenure": "OPTION_BETWEEN_3_5",
+   "dept": "OPTION_FIELD_SALES",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 1,
+    "negative": 0
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 355984,
+   "positive": "Práce rychle utíká, fyzicky náročná a různorodá.",
+   "negative": null,
+   "date": "červenec 2026",
+   "added": "MORE_THAN_MONTH",
+   "current_employee": true,
+   "tenure": "OPTION_10_AND_MORE",
+   "dept": "OPTION_FIELD_BUSINESS",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 1,
+    "negative": 0
+   },
+   "employer_reply": null
+  },
+  {
+   "id": 355486,
+   "positive": "Máme zajímavé benefity.  ",
+   "negative": "Hodinový výkon\nHodně práce , málo lidí na směně \nVysoké nároky při malém počtu lidí\nKontroly sec a podobně ",
+   "date": "červenec 2026",
+   "added": "MORE_THAN_MONTH",
+   "current_employee": true,
+   "tenure": "OPTION_BETWEEN_6_9",
+   "dept": "OPTION_FIELD_SALES",
+   "votes": {
+    "__typename": "NumberOfVotes",
+    "positive": 1,
+    "negative": 0
+   },
+   "employer_reply": null
+  }
+ ]
+}

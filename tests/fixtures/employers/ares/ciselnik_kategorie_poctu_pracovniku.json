@@ -1,0 +1,232 @@
+{
+ "pocetCelkem": 1,
+ "ciselniky": [
+  {
+   "kodCiselniku": "KategoriePoctuPracovniku",
+   "nazevCiselniku": "Kategorie počtu pracovníků",
+   "polozkyCiselniku": [
+    {
+     "kod": "000",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "Neuvedeno"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "110",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "Bez zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "120",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "1 - 5 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "130",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "6 - 9 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "210",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "10 - 19 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "220",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "20 - 24 zaměstnanci"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "230",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "25 - 49 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "240",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "50 - 99 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "310",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "100 - 199 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "320",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "200 - 249 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "330",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "250 - 499 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "340",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "500 - 999 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "410",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "1000 - 1499 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "420",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "1500 - 1999 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "430",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "2000 - 2499 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "440",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "2500 - 2999 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "450",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "3000 - 3999 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "460",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "4000 - 4999 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "470",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "5000 - 9999 zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    },
+    {
+     "kod": "510",
+     "nazev": [
+      {
+       "kodJazyka": "cs",
+       "nazev": "10 000 a více zaměstnanců"
+      }
+     ],
+     "platnostOd": "1973-01-01",
+     "platnostDo": "9999-09-09"
+    }
+   ],
+   "zdrojCiselniku": "res"
+  }
+ ]
+}

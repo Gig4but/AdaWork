@@ -1,0 +1,109 @@
+# Built-in list of public Czech boards/forums with job-offer sections (PLAN.md §4.3 "Forums").
+# Verified on 2026-10-06 by spikes/sources/s09_forums.py: each section_url returned HTTP 200 without
+# login, robots.txt allows it, and no Cloudflare challenge. Fixtures: tests/fixtures/sources/forums/.
+# Fields: id, name, url (site root), section_url (page the generic forum source starts from),
+# kind (classifieds = ad board, discussion = forum threads), notes.
+
+- id: hyperinzerce_prace
+  name: HyperInzerce – Práce, zaměstnání
+  url: https://hyperinzerce.cz/
+  section_url: https://prace.hyperinzerce.cz/
+  kind: classifieds
+  notes: >-
+    Nationwide classifieds, job ads server-rendered (~23 ad links per page,
+    /prace/inzerat/<id>-<slug>). Location is in the slug/title ("nabidka-praha",
+    "cela-cr"). Many MLM/"earn from home" ads -> red_flags check needed.
+
+- id: hyperinzerce_brigady
+  name: HyperInzerce – Brigády, přivýdělky
+  url: https://hyperinzerce.cz/
+  section_url: https://brigady.hyperinzerce.cz/
+  kind: classifieds
+  notes: Same engine as hyperinzerce_prace (/brigady/inzerat/<id>-<slug>).
+
+- id: avizo_volna_mista
+  name: Avízo.cz – Práce / Volná místa
+  url: https://www.avizo.cz/
+  section_url: https://www.avizo.cz/prace/volna-mista/
+  kind: classifieds
+  notes: >-
+    Regional classifieds (strong in Moravia-Silesia). ~40 ads per page,
+    detail URLs /prace/<slug>-<id>.html. Only BreadcrumbList JSON-LD, ads are HTML.
+    Skip the sibling section /prace/praci-hledaji/ (job seekers, not offers).
+
+- id: avizo_brigady
+  name: Avízo.cz – Práce / Brigády
+  url: https://www.avizo.cz/
+  section_url: https://www.avizo.cz/prace/brigady/
+  kind: classifieds
+  notes: Same structure as avizo_volna_mista.
+
+- id: annonce_nabidky
+  name: Annonce.cz – Nabízím práci, dám vydělat
+  url: https://www.annonce.cz/
+  section_url: https://www.annonce.cz/nabizim-praci-dam-vydelat.html
+  kind: classifieds
+  notes: >-
+    Classic national classifieds paper (mojeinzerce.cz redirects here).
+    ~22 ad links per page, HTML only. Sub-filter for Ukrainian refugees exists
+    (nabizim-praci-dam-vydelat-true-f-1225.html).
+
+- id: annonce_brigady
+  name: Annonce.cz – Brigády, práce doma, au-pair
+  url: https://www.annonce.cz/
+  section_url: https://www.annonce.cz/brigady-prace-doma-au-pair.html
+  kind: classifieds
+  notes: Same engine as annonce_nabidky.
+
+- id: bazar_cz
+  name: Bazar.cz – Přivýdělek, brigáda, práce
+  url: https://www.bazar.cz/
+  section_url: https://www.bazar.cz/privydelek-brigada-prace/
+  kind: classifieds
+  notes: >-
+    Small (22 ads on 2026-10-06), server-rendered, ad links end in .aspx.
+    High share of "tipař"/MLM offers.
+
+- id: cbazar_prace
+  name: cBazar.cz – Práce
+  url: https://www.cbazar.cz/
+  section_url: https://prace.cbazar.cz/
+  kind: classifieds
+  notes: Small board, HTML only, detail URLs /<slug>-<id>.html; category sub-pages (e.g. /ekonomika/).
+
+- id: mimibazar_prace
+  name: Mimibazar.cz – Práce, přivýdělek
+  url: https://www.mimibazar.cz/
+  section_url: https://www.mimibazar.cz/inzeraty-nove-prace-privydelek/
+  kind: classifieds
+  notes: >-
+    Parents' marketplace with a jobs category. Page is large (~600 KB) and the
+    fixture is trimmed; ad markup must be confirmed in M6b (ads at /inzerat/<id>/<slug>).
+    Mostly home-based / part-time offers.
+
+- id: emimino_zamestnani
+  name: eMimino.cz – diskuse Zaměstnání
+  url: https://www.emimino.cz/
+  section_url: https://www.emimino.cz/diskuse/zamestnani/
+  kind: discussion
+  notes: >-
+    Parenting community forum; the "Zaměstnání" category mixes questions about work
+    with occasional offers. Thread URLs /diskuse/<slug>-<id>/. Low yield, keep keyword
+    pre-filter strict before AI.
+
+- id: okoun_prace
+  name: Okoun.cz – klub Práce
+  url: https://www.okoun.cz/
+  section_url: https://www.okoun.cz/boards/prace
+  kind: discussion
+  notes: >-
+    Long-running discussion club about work; offers are rare. Posts have stable
+    anchors (?contextId=<id>). Lowest priority; disabled by default is reasonable.
+
+# Checked and NOT included:
+# - sbazar.cz: robots.txt disallows the site for generic crawlers.
+# - modrykonik.cz: no job section (its "Kariéra" link goes to an external site).
+# - zena-in.cz, rodina.cz, abclinuxu.cz, jakpsatweb.cz, agrobazar.cz, inzeruj.cz: no job
+#   section found / 404 / 500 on 2026-10-06.
+# - inzerce.denik.cz: HTTP 403 to plain HTTP.
+# - prace.bazos.cz is a first-class source of its own (not a forum entry).

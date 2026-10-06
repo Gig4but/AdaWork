@@ -1,0 +1,109 @@
+User-Agent: *
+Disallow:
+Sitemap: https://www.dobraprace.cz/sitemap/
+
+User-Agent: Googlebot
+Disallow: /ClickTale/
+Disallow: /autocomplete.php
+Disallow: /countdetail.php
+Disallow: */user/*
+Disallow: /*search=
+Disallow: *akce=*
+Disallow: *odpovedet.php*
+Disallow: /odpoved_redirect.php*
+Disallow: *?step=
+Disallow: *elastic_tab*
+Disallow: *turn_on=*
+Disallow: *turn_off=*
+Disallow: *?category_arr
+
+User-Agent: SeznamBot
+Disallow: /ClickTale/
+Disallow: /autocomplete.php
+Disallow: */countdetail.php
+Disallow: */user/*
+Disallow: *search=*
+Disallow: *akce=*
+Disallow: *odpovedet.php*
+Disallow: /odpoved_redirect.php*
+Disallow: *?step=
+Disallow: *elastic_tab*
+Disallow: *turn_on=*
+Disallow: *turn_off=*
+Disallow: *?category_arr
+
+User-Agent: bingbot
+Disallow: /ClickTale/
+Disallow: /autocomplete.php
+Disallow: */countdetail.php
+Disallow: */user/*
+Disallow: *search=*
+Disallow: *akce=*
+Disallow: *odpovedet.php*
+Disallow: /odpoved_redirect.php*
+Disallow: *?step=
+Disallow: *elastic_tab*
+Disallow: *turn_on=*
+Disallow: *turn_off=*
+Disallow: *?category_arr
+
+User-Agent: MJ12Bot
+crawl-delay: 10
+Disallow: /ClickTale/
+Disallow: /autocomplete.php
+Disallow: */countdetail.php
+Disallow: */user/*
+Disallow: *search=*
+Disallow: *akce=*
+Disallow: *odpovedet.php*
+Disallow: /odpoved_redirect.php*
+Disallow: *?step=
+Disallow: *elastic_tab*
+Disallow: *turn_on=*
+Disallow: *turn_off=*
+Disallow: *?category_arr
+
+User-Agent: AhrefsBot
+crawl-delay: 5
+Disallow: /ClickTale/
+Disallow: /autocomplete.php
+Disallow: */countdetail.php
+Disallow: */user/*
+Disallow: *search=*
+Disallow: *akce=*
+Disallow: *odpovedet.php*
+Disallow: /odpoved_redirect.php*
+Disallow: *?step=
+Disallow: *elastic_tab*
+Disallow: *turn_on=*
+Disallow: *turn_off=*
+Disallow: *?category_arr
+
+User-agent: dotbot
+Crawl-delay: 10
+Disallow: /ClickTale/
+Disallow: /autocomplete.php
+Disallow: */countdetail.php
+Disallow: */user/*
+Disallow: *search=*
+Disallow: *akce=*
+Disallow: *odpovedet.php*
+Disallow: /odpoved_redirect.php*
+Disallow: *?step=
+Disallow: *elastic_tab*
+Disallow: *turn_on=*
+Disallow: *turn_off=*
+Disallow: *?category_arr
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+User-agent: BLEXBot
+Crawl-delay: 10
+
+User-agent: Seekport Crawler
+Crawl-delay: 10
+
+User-agent: Amazonbot
+Disallow: /  # disallow all
+

@@ -1,0 +1,380 @@
+{
+ "Albert": {
+  "pocetCelkem": 529,
+  "top": [
+   {
+    "ico": "01103156",
+    "obchodniJmeno": "Albert Macas",
+    "obec": "Louny",
+    "pravniForma": "101",
+    "datumZaniku": null
+   },
+   {
+    "ico": "01210513",
+    "obchodniJmeno": "Albert Matys",
+    "obec": "Kadaň",
+    "pravniForma": "101",
+    "datumZaniku": null
+   },
+   {
+    "ico": "01213211",
+    "obchodniJmeno": "Albert Radvan",
+    "obec": "Praha",
+    "pravniForma": "101",
+    "datumZaniku": null
+   },
+   {
+    "ico": "01271491",
+    "obchodniJmeno": "Albert Mustafin",
+    "obec": "Pardubice",
+    "pravniForma": "101",
+    "datumZaniku": null
+   },
+   {
+    "ico": "01288130",
+    "obchodniJmeno": "Michael Albert Cwach",
+    "obec": "Hodonice",
+    "pravniForma": "101",
+    "datumZaniku": null
+   },
+   {
+    "ico": "01307789",
+    "obchodniJmeno": "Albert Fučík",
+    "obec": "Praha",
+    "pravniForma": "101",
+    "datumZaniku": null
+   },
+   {
+    "ico": "01322214",
+    "obchodniJmeno": "Albert Zapletal",
+    "obec": "Ostrava",
+    "pravniForma": "101",
+    "datumZaniku": null
+   },
+   {
+    "ico": "01335596",
+    "obchodniJmeno": "Albert Zefaj",
+    "obec": "Hradec Králové",
+    "pravniForma": "101",
+    "datumZaniku": null
+   },
+   {
+    "ico": "01360396",
+    "obchodniJmeno": "Štěpán Albert",
+    "obec": "Praha",
+    "pravniForma": "101",
+    "datumZaniku": null
+   },
+   {
+    "ico": "01365649",
+    "obchodniJmeno": "Ing. Albert Jurkovič",
+    "obec": "Orlová",
+    "pravniForma": "101",
+    "datumZaniku": null
+   }
+  ]
+ },
+ "Albert Česká republika": {
+  "pocetCelkem": 1,
+  "top": [
+   {
+    "ico": "44012373",
+    "obchodniJmeno": "Albert Česká republika, s.r.o.",
+    "obec": "Praha",
+    "pravniForma": "112",
+    "datumZaniku": null
+   }
+  ]
+ },
+ "Lidl ČR": {
+  "pocetCelkem": 0,
+  "top": []
+ },
+ "Kaufland": {
+  "pocetCelkem": 10,
+  "top": [
+   {
+    "ico": "01529153",
+    "obchodniJmeno": "Občanské sdružení - Pro Kaufland Přerov",
+    "obec": "Přerov",
+    "pravniForma": "706",
+    "datumZaniku": null
+   },
+   {
+    "ico": "07699182",
+    "obchodniJmeno": "ZO UZO Kaufland Třeboň",
+    "obec": "Třeboň",
+    "pravniForma": "707",
+    "datumZaniku": null
+   },
+   {
+    "ico": "07757352",
+    "obchodniJmeno": "Kaufland eCommerce Fulfillment CZ s.r.o.",
+    "obec": "Praha",
+    "pravniForma": "112",
+    "datumZaniku": null
+   },
+   {
+    "ico": "22737260",
+    "obchodniJmeno": "Odborová organizace Kaufland Zlín - Vršava",
+    "obec": "Zlín",
+    "pravniForma": "703",
+    "datumZaniku": null
+   },
+   {
+    "ico": "25080181",
+    "obchodniJmeno": "Kaufland Management ČR s.r.o.",
+    "obec": "Praha",
+    "pravniForma": "112",
+    "datumZaniku": null
+   },
+   {
+    "ico": "25110161",
+    "obchodniJmeno": "Kaufland Česká republika v.o.s.",
+    "obec": "Praha",
+    "pravniForma": "111",
+    "datumZaniku": null
+   },
+   {
+    "ico": "70889716",
+    "obchodniJmeno": "Odborová organizace Kaufland ČR",
+    "obec": "Kladno",
+    "pravniForma": "703",
+    "datumZaniku": null
+   },
+   {
+    "ico": "75080613",
+    "obchodniJmeno": "ZO UZO KAUFLAND",
+    "obec": "Litoměřice",
+    "pravniForma": "707",
+    "datumZaniku": null
+   },
+   {
+    "ico": "75100223",
+    "obchodniJmeno": "ZO NOS PPP Kaufland Česká republika v.o.s.",
+    "obec": "Pardubice",
+    "pravniForma": "707",
+    "datumZaniku": null
+   },
+   {
+    "ico": "75129591",
+    "obchodniJmeno": "Základní odborová organizace Odborového svazu pracovníků obchodu, Kaufland ČR, v. o. s.",
+    "obec": null,
+    "pravniForma": "707",
+    "datumZaniku": null
+   }
+  ]
+ },
+ "Hospoda U Lípy": {
+  "pocetCelkem": 0,
+  "top": []
+ },
+ "ŠKODA AUTO": {
+  "pocetCelkem": 12,
+  "top": [
+   {
+    "ico": "00177041",
+    "obchodniJmeno": "Škoda Auto a.s.",
+    "obec": "Mladá Boleslav",
+    "pravniForma": "121",
+    "datumZaniku": null
+   },
+   {
+    "ico": "07700903",
+    "obchodniJmeno": "Nadační fond Škoda Auto",
+    "obec": "Mladá Boleslav",
+    "pravniForma": "118",
+    "datumZaniku": null
+   },
+   {
+    "ico": "14145367",
+    "obchodniJmeno": "Základní organizace Odborové organizace Pro Libertate - ŠKODA AUTO",
+    "obec": "Praha",
+    "pravniForma": "707",
+    "datumZaniku": null
+   },
+   {
+    "ico": "15046745",
+    "obchodniJmeno": "AUTOKLUB ŠKODA v AČR",
+    "obec": "Teplice nad Metují",
+    "pravniForma": "736",
+    "datumZaniku": null
+   },
+   {
+    "ico": "29142890",
+    "obchodniJmeno": "Škoda Auto Vysoká škola z.ú.",
+    "obec": "Mladá Boleslav",
+    "pravniForma": "161",
+    "datumZaniku": null
+   },
+   {
+    "ico": "42715580",
+    "obchodniJmeno": "Spolek rodičů při ŠKODA AUTO a.s., Středním odborném učilišti strojírenském, odštěpný závod, o.s.",
+    "obec": "Mladá Boleslav",
+    "pravniForma": "706",
+    "datumZaniku": null
+   },
+   {
+    "ico": "42716403",
+    "obchodniJmeno": "TJ Auto Škoda Mladá Boleslav, z.s.",
+    "obec": "Mladá Boleslav",
+    "pravniForma": "706",
+    "datumZaniku": null
+   },
+   {
+    "ico": "47536446",
+    "obchodniJmeno": "Dům kultury odborů KOVO ŠKODA  AUTO a.s. Mladá Boleslav s.r.o. v likvidaci",
+    "obec": "Mladá Boleslav",
+    "pravniForma": "112",
+    "datumZaniku": null
+   },
+   {
+    "ico": "48613746",
+    "obchodniJmeno": "Volejbalový klub AUTO ŠKODA Kvasiny, z.s.",
+    "obec": "Kvasiny",
+    "pravniForma": "706",
+    "datumZaniku": null
+   },
+   {
+    "ico": "62451847",
+    "obchodniJmeno": "Podnikový dechový orchestr ŠKODA AUTO Mladá Boleslav, z.s.",
+    "obec": "Mladá Boleslav",
+    "pravniForma": "706",
+    "datumZaniku": null
+   }
+  ]
+ },
+ "Penny": {
+  "pocetCelkem": 16,
+  "top": [
+   {
+    "ico": "01464353",
+    "obchodniJmeno": "ZO Odborového svazu pracovníků obchodu Penny Market, s.r.o.",
+    "obec": "Radonice",
+    "pravniForma": "707",
+    "datumZaniku": null
+   },
+   {
+    "ico": "01671243",
+    "obchodniJmeno": "ZO UZO Penny Market Opava",
+    "obec": "Opava",
+    "pravniForma": "707",
+    "datumZaniku": null
+   },
+   {
+    "ico": "06283659",
+    "obchodniJmeno": "Penny Lane - jazyková škola, s.r.o.",
+    "obec": "Praha",
+    "pravniForma": "112",
+    "datumZaniku": null
+   },
+   {
+    "ico": "08037698",
+    "obchodniJmeno": "Money Penny Agency s.r.o.",
+    "obec": "Praha",
+    "pravniForma": "112",
+    "datumZaniku": null
+   },
+   {
+    "ico": "09639365",
+    "obchodniJmeno": "REALIA Penny s.r.o.",
+    "obec": "Praha",
+    "pravniForma": "112",
+    "datumZaniku": null
+   },
+   {
+    "ico": "14202450",
+    "obchodniJmeno": "Penny Rose Pierce",
+    "obec": "Praha",
+    "pravniForma": "101",
+    "datumZaniku": null
+   },
+   {
+    "ico": "17568561",
+    "obchodniJmeno": "ZO UZO Penny Market Petřvald",
+    "obec": "Petřvald",
+    "pravniForma": "707",
+    "datumZaniku": null
+   },
+   {
+    "ico": "19805098",
+    "obchodniJmeno": "BD ZA PENNY UNIČOV s.r.o.",
+    "obec": "Šternberk",
+    "pravniForma": "112",
+    "datumZaniku": null
+   },
+   {
+    "ico": "19992441",
+    "obchodniJmeno": "PENNY TRUST soukromý svěřenský fond",
+    "obec": null,
+    "pravniForma": null,
+    "datumZaniku": null
+   },
+   {
+    "ico": "22770348",
+    "obchodniJmeno": "Základní odborová organizace Odborového svazu pracovníků obchodu Penny Market s.r.o.",
+    "obec": "České Budějovice",
+    "pravniForma": "707",
+    "datumZaniku": null
+   }
+  ]
+ },
+ "Penny Market": {
+  "pocetCelkem": 7,
+  "top": [
+   {
+    "ico": "01464353",
+    "obchodniJmeno": "ZO Odborového svazu pracovníků obchodu Penny Market, s.r.o.",
+    "obec": "Radonice",
+    "pravniForma": "707",
+    "datumZaniku": null
+   },
+   {
+    "ico": "01671243",
+    "obchodniJmeno": "ZO UZO Penny Market Opava",
+    "obec": "Opava",
+    "pravniForma": "707",
+    "datumZaniku": null
+   },
+   {
+    "ico": "17568561",
+    "obchodniJmeno": "ZO UZO Penny Market Petřvald",
+    "obec": "Petřvald",
+    "pravniForma": "707",
+    "datumZaniku": null
+   },
+   {
+    "ico": "22770348",
+    "obchodniJmeno": "Základní odborová organizace Odborového svazu pracovníků obchodu Penny Market s.r.o.",
+    "obec": "České Budějovice",
+    "pravniForma": "707",
+    "datumZaniku": null
+   },
+   {
+    "ico": "22880062",
+    "obchodniJmeno": "ZO Odborového svazu pracovníků obchodu Penny Market - východ",
+    "obec": "Havlíčkův Brod",
+    "pravniForma": "707",
+    "datumZaniku": null
+   },
+   {
+    "ico": "64945880",
+    "obchodniJmeno": "Penny Market s.r.o.",
+    "obec": "Radonice",
+    "pravniForma": "112",
+    "datumZaniku": null
+   },
+   {
+    "ico": "71188576",
+    "obchodniJmeno": "Základní odborová organizace OSPO, Penny Market s.r.o.",
+    "obec": "Prostějov",
+    "pravniForma": "707",
+    "datumZaniku": null
+   }
+  ]
+ },
+ "Hospoda U Lípy @ Praha": {
+  "pocetCelkem": 0,
+  "top": []
+ }
+}

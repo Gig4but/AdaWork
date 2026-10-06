@@ -1,0 +1,141 @@
+User-agent: Googlebot
+Allow: /
+# multichoice
+Disallow: *|
+Disallow: *%7C
+Disallow: *,
+Disallow: *%2C
+Disallow: /click
+
+
+User-agent: SeznamBot
+Allow: /
+# multichoice
+Disallow: *|
+Disallow: *%7C
+Disallow: *,
+Disallow: *%2C
+Disallow: /click
+
+
+User-agent: Bingbot
+Allow: /
+# multichoice
+Disallow: *|
+Disallow: *%7C
+Disallow: *,
+Disallow: *%2C
+Disallow: /click
+
+
+User-agent: Slurp
+Allow: /
+# multichoice
+Disallow: *|
+Disallow: *%7C
+Disallow: *,
+Disallow: *%2C
+Disallow: /click
+
+
+User-agent: DuckDuckBot
+Allow: /
+# multichoice
+Disallow: *|
+Disallow: *%7C
+Disallow: *,
+Disallow: *%2C
+Disallow: /click
+
+
+User-agent: Baiduspider
+Allow: /
+# multichoice
+Disallow: *|
+Disallow: *%7C
+Disallow: *,
+Disallow: *%2C
+Disallow: /click
+
+
+User-agent: YandexBot
+Allow: /
+# multichoice
+Disallow: *|
+Disallow: *%7C
+Disallow: *,
+Disallow: *%2C
+Disallow: /click
+
+
+User-agent: Applebot
+Allow: /
+# multichoice
+Disallow: *|
+Disallow: *%7C
+Disallow: *,
+Disallow: *%2C
+Disallow: /click
+
+
+User-agent: ia_archiver
+Allow: /
+# multichoice
+Disallow: *|
+Disallow: *%7C
+Disallow: *,
+Disallow: *%2C
+Disallow: /click
+
+
+User-agent: msnbot
+Allow: /
+# multichoice
+Disallow: *|
+Disallow: *%7C
+Disallow: *,
+Disallow: *%2C
+Disallow: /click
+
+
+User-agent: Naverbot
+Allow: /
+# multichoice
+Disallow: *|
+Disallow: *%7C
+Disallow: *,
+Disallow: *%2C
+Disallow: /click
+
+
+# Better safe than sorry
+User-agent: Mediapartners-Google
+Disallow:
+Disallow: /click
+
+User-agent: facebot
+Disallow:
+Disallow: /click
+
+User-agent: facebookexternalhit
+Disallow:
+Disallow: /click
+
+User-agent: Twitterbot
+Disallow:
+Disallow: /click
+
+User-agent: BingPreview
+Disallow:
+Disallow: /click
+
+User-agent: vkShare
+Disallow:
+Disallow: /click
+
+User-agent: Mail.RU_Bot
+Disallow:
+Disallow: /click
+
+User-agent: *
+Disallow: /

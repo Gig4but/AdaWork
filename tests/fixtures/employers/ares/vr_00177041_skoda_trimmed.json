@@ -1,0 +1,861 @@
+{
+ "icoId": "00177041",
+ "zaznamy": [
+  {
+   "primarniZaznam": true,
+   "spisovaZnacka": [
+    {
+     "datumZapisu": "1990-11-20",
+     "soud": "MSPH",
+     "oddil": "B",
+     "vlozka": 332
+    }
+   ],
+   "ico": [
+    {
+     "datumZapisu": "1990-11-20",
+     "hodnota": "00177041"
+    }
+   ],
+   "obchodniJmeno": [
+    {
+     "datumZapisu": "1998-02-06",
+     "datumVymazu": "2023-03-31",
+     "hodnota": "ŠKODA AUTO a.s."
+    },
+    {
+     "datumZapisu": "1991-04-02",
+     "datumVymazu": "1998-02-06",
+     "hodnota": "ŠKODA, automobilová a.s."
+    },
+    {
+     "datumZapisu": "1990-11-20",
+     "datumVymazu": "1991-04-02",
+     "hodnota": "Automobilový koncern ŠKODA a.s."
+    },
+    {
+     "datumZapisu": "2023-03-31",
+     "hodnota": "Škoda Auto a.s."
+    }
+   ],
+   "zakladniKapital": [
+    {
+     "datumZapisu": "1995-11-30",
+     "datumVymazu": "1996-04-23",
+     "typJmeni": "ZAKLADNI_JMENI",
+     "vklad": {
+      "typObnos": "KORUNY",
+      "hodnota": "13129700000;00"
+     }
+    },
+    {
+     "datumZapisu": "1991-08-02",
+     "datumVymazu": "1995-08-24",
+     "typJmeni": "ZAKLADNI_JMENI",
+     "vklad": {
+      "typObnos": "KORUNY",
+      "hodnota": "9642000000;00"
+     }
+    },
+    {
+     "datumZapisu": "1990-11-20",
+     "datumVymazu": "1991-08-02",
+     "typJmeni": "ZAKLADNI_JMENI",
+     "vklad": {
+      "typObnos": "KORUNY",
+      "hodnota": "11000000;00"
+     }
+    },
+    {
+     "datumZapisu": "1996-04-23",
+     "typJmeni": "ZAKLADNI_JMENI",
+     "vklad": {
+      "typObnos": "KORUNY",
+      "hodnota": "16708850000;00"
+     }
+    }
+   ],
+   "pravniForma": [
+    {
+     "datumZapisu": "1990-11-20",
+     "hodnota": "121"
+    }
+   ],
+   "adresy": [
+    {
+     "datumZapisu": "1992-03-24",
+     "datumVymazu": "2001-07-17",
+     "adresa": {
+      "kodStatu": "CZ",
+      "nazevStatu": "Česká republika",
+      "kodKraje": 27,
+      "nazevKraje": "Středočeský kraj",
+      "kodOkresu": 3207,
+      "nazevOkresu": "Mladá Boleslav",
+      "kodObce": 535419,
+      "nazevObce": "Mladá Boleslav",
+      "kodUlice": 292591,
+      "nazevUlice": "tř. Václava Klementa",
+      "cisloDomovni": 869,
+      "kodCastiObce": 402591,
+      "nazevCastiObce": "Mladá Boleslav II",
+      "kodAdresnihoMista": 21249407,
+      "psc": 29301,
+      "textovaAdresa": "tř. Václava Klementa 869, Mladá Boleslav II, 29301 Mladá Boleslav",
+      "standardizaceAdresy": true,
+      "typCisloDomovni": 1
+     },
+     "typAdresy": "SIDLO"
+    },
+    {
+     "datumZapisu": "1990-11-20",
+     "datumVymazu": "1992-03-24",
+     "adresa": {
+      "kodStatu": "CZ",
+      "nazevStatu": "Česká republika",
+      "kodKraje": 27,
+      "kodOkresu": 3207,
+      "kodObce": 535419,
+      "nazevObce": "Mladá Boleslav",
+      "nazevUlice": "tř. Rudé armády",
+      "textovaAdresa": "tř. Rudé armády 869, Mladá Boleslav, Česká republika",
+      "cisloDoAdresy": "869",
+      "standardizaceAdresy": false
+     },
+     "typAdresy": "SIDLO"
+    },
+    {
+     "datumZapisu": "2001-07-17",
+     "datumVymazu": "2015-10-19",
+     "adresa": {
+      "kodStatu": "CZ",
+      "nazevStatu": "Česká republika",
+      "kodKraje": 27,
+      "nazevKraje": "Středočeský kraj",
+      "kodOkresu": 3207,
+      "nazevOkresu": "Mladá Boleslav",
+      "kodObce": 535419,
+      "nazevObce": "Mladá Boleslav",
+      "kodUlice": 292591,
+      "nazevUlice": "tř. Václava Klementa",
+      "cisloDomovni": 869,
+      "kodCastiObce": 402591,
+      "nazevCastiObce": "Mladá Boleslav II",
+      "kodAdresnihoMista": 21249407,
+      "psc": 29301,
+      "textovaAdresa": "tř. Václava Klementa 869, Mladá Boleslav II, 29301 Mladá Boleslav",
+      "standardizaceAdresy": true,
+      "typCisloDomovni": 1
+     },
+     "typAdresy": "SIDLO"
+    },
+    {
+     "datumZapisu": "2015-10-19",
+     "datumVymazu": "2016-05-16",
+     "adresa": {
+      "kodStatu": "CZ",
+      "nazevStatu": "Česká republika",
+      "kodKraje": 27,
+      "nazevKraje": "Středočeský kraj",
+      "kodOkresu": 3207,
+      "nazevOkresu": "Mladá Boleslav",
+      "kodObce": 535419,
+      "nazevObce": "Mladá Boleslav",
+      "kodUlice": 292591,
+      "nazevUlice": "tř. Václava Klementa",
+      "cisloDomovni": 869,
+      "kodCastiObce": 402591,
+      "nazevCastiObce": "Mladá Boleslav II",
+      "kodAdresnihoMista": 21249407,
+      "psc": 29301,
+      "textovaAdresa": "tř. Václava Klementa 869, Mladá Boleslav II, 29301 Mladá Boleslav",
+      "standardizaceAdresy": true,
+      "typCisloDomovni": 1
+     },
+     "typAdresy": "SIDLO"
+    },
+    {
+     "datumZapisu": "2016-05-16",
+     "adresa": {
+      "kodStatu": "CZ",
+      "nazevStatu": "Česká republika",
+      "kodKraje": 27,
+      "nazevKraje": "Středočeský kraj",
+      "kodOkresu": 3207,
+      "nazevOkresu": "Mladá Boleslav",
+      "kodObce": 535419,
+      "nazevObce": "Mladá Boleslav",
+      "kodUlice": 292591,
+      "nazevUlice": "tř. Václava Klementa",
+      "cisloDomovni": 869,
+      "kodCastiObce": 402591,
+      "nazevCastiObce": "Mladá Boleslav II",
+      "kodAdresnihoMista": 21249407,
+      "psc": 29301,
+      "textovaAdresa": "tř. Václava Klementa 869, Mladá Boleslav II, 29301 Mladá Boleslav",
+      "standardizaceAdresy": true,
+      "typCisloDomovni": 1
+     },
+     "typAdresy": "SIDLO"
+    }
+   ],
+   "stavSubjektu": "AKTIVNI",
+   "datumZapisu": "1990-11-20",
+   "cinnosti": {
+    "predmetPodnikani": [
+     {
+      "datumZapisu": "1990-11-20",
+      "datumVymazu": "1991-08-02",
+      "hodnota": "1) Výzkum, vývoj, výroba, prodej, zkoušky, opravy a servis\nosobních a dodávkových automobilů včetně účelových a užitkových\nmodifikací a jejich dílů a příslušenství a doplňkové výbavy\nvčetně souvisejících obchodně technických služeb."
+     },
+     {
+      "datumZapisu": "1990-11-20",
+      "datumVymazu": "1991-08-02",
+      "hodnota": "2) Vývoj, výroba, prodej a opravy:\n- průmyslových robotů a provádění školícího a předváděcího\nstřediska pro průmyslové roboty a automatizaci,\n- obráběcích strojů, strojů na kov a přepravníkových prostředků\npro paletizaci a kontejnerizaci."
+     },
+     {
+      "datumZapisu": "1990-11-20",
+      "datumVymazu": "1991-08-02",
+      "hodnota": "6) Analýza podmínek spojení se zahraničním partnerem o vzniku\npodniku se zahraniční majetkovou účastí, zpracování návrhu\nřešení."
+     },
+     {
+      "datumZapisu": "1990-11-20",
+      "datumVymazu": "1991-08-02",
+      "hodnota": "7) Výroba a prodej tepelné elektrické energie."
+     },
+     {
+      "datumZapisu": "1990-11-20",
+      "datumVymazu": "1991-08-02",
+      "hodnota": "8) Plnění funkce zřizovatele SOU."
+     },
+     {
+      "datumZapisu": "1990-11-20",
+      "datumVymazu": "1991-08-02",
+      "hodnota": "3) Vývoj, výroba a prodej:\n- automobilového kování a zámků,\n- speciálních a jednoúčelových strojů a zařízení, přístrojů,\nnářadí, nástrojů, měřidel a jejich dílů, opravy strojů,\nodlitků z litin a neželezných kovů, výkovků a výlisků, forem\na modelů, šablon a nástrojů pro práškovou metalurgii."
+     },
+     {
+      "datumZapisu": "1990-11-20",
+      "datumVymazu": "1991-08-02",
+      "hodnota": "4) Maloobchodní činnost prodejen osobních automobilů a jejich\ndílů včetně obchodních služeb, oprav a servisu, v souvislosti\ns tím nákup a prodej osobních automobilů v rozsahu uděleného\npovolení."
+     },
+     {
+      "datumZapisu": "1990-11-20",
+      "datumVymazu": "1991-08-02",
+      "hodnota": "5) Provádění ekonomických činností včetně operací s cennými\npapíry."
+     },
+     {
+      "datumZapisu": "1991-08-02",
+      "datumVymazu": "1996-09-26",
+      "hodnota": "výroba a distribuce vozidel a motorů jakéhokoliv druhu\na jejich příslušenství a dále veškerého zařízení, strojů,\nnářadí a dalších technických výrobků,"
+     },
+     {
+      "datumZapisu": "1991-08-02",
+      "datumVymazu": "1997-07-16",
+      "hodnota": "společnost je oprávněna provádět veškeré obchodní transakce\na přijímat veškerá opatření související s jejím předmětem\npodnikání nebo jež mohou takovýto předmět podnikání přímo\nnebo nepřímo podporovat. Společnost může k tomuto účelu\nzřizovat pobočky doma nebo v zahraničí nebo vytvářet nebo\nnabývat jiné společnosti nebo se na nich podílet."
+     },
+     {
+      "datumZapisu": "1996-09-26",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "ubytovací služby  v ubytovacích zařízeních včetně provozování\nhostinských činností v těchto zařízeních"
+     },
+     {
+      "datumZapisu": "1996-09-26",
+      "datumVymazu": "1997-07-16",
+      "hodnota": "mytí automobilů"
+     },
+     {
+      "datumZapisu": "1996-09-26",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "zprostředkování obchodu služeb"
+     },
+     {
+      "datumZapisu": "1996-09-26",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "pronájem movitého, nemovitého majetku"
+     },
+     {
+      "datumZapisu": "1996-09-26",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "pořádání kulturních akcí"
+     },
+     {
+      "datumZapisu": "1996-09-26",
+      "datumVymazu": "1998-05-27",
+      "hodnota": "školství- provozování soukromé školy"
+     },
+     {
+      "datumZapisu": "1996-09-26",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "koupě zboží za účelem jeho dalšího prodeje a prodej\nv rozsahu živnosti volné"
+     },
+     {
+      "datumZapisu": "1996-09-26",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "poradenská a konzultační činnost v oblasti automobilového\nprůmyslu"
+     },
+     {
+      "datumZapisu": "1997-07-16",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "montáž,opravy,revize a zkoušky vyhrazených plynových\nzařízení,plnění tlakových nádob na plyny"
+     },
+     {
+      "datumZapisu": "1997-07-16",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "výroba,instalace a opravy klimatizace"
+     },
+     {
+      "datumZapisu": "1997-07-16",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "výroba,montáž,opravy,rekonstrukce,revize a zkoušky vyhrazených\ntlakových zařízení,kotlů,tlakových nádob,periodické zkoušky\nnádob na plyn"
+     },
+     {
+      "datumZapisu": "1997-07-16",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "kopírování a rozmnožování písemností"
+     },
+     {
+      "datumZapisu": "1998-02-06",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "Poradenství pro oblast - prodej a pronájem nemovitého majetku"
+     },
+     {
+      "datumZapisu": "1996-09-26",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "silniční motorová doprava"
+     },
+     {
+      "datumZapisu": "1996-09-26",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "nákup,prodej a skladování paliv a maziv včetně jejich dovozu s\nvýjimkou výhradního nákupu, prodeje a skladování paliv a maziv\nve spotřebitelském balení do 50 kg na 1 ks balení"
+     },
+     {
+      "datumZapisu": "1997-07-16",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "mytí motorových vozidel"
+     },
+     {
+      "datumZapisu": "1998-02-06",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "Účetnictví"
+     },
+     {
+      "datumZapisu": "1998-02-06",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "Organizační a ekonomické poradenství"
+     },
+     {
+      "datumZapisu": "1998-02-06",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "Poradenství pro oblast marketingu"
+     },
+     {
+      "datumZapisu": "1998-05-27",
+      "datumVymazu": "2000-05-18",
+      "hodnota": "výchova a vzdělávání ve Středním odborném učilišti\nstrojírenském, odborném učilišti,Střední odborné škole\nspecialistů a manažerů a vyšší odborné škole průmyslových\nobchodníků"
+     },
+     {
+      "datumZapisu": "2000-10-27",
+      "datumVymazu": "2002-03-07",
+      "hodnota": "výroba a dovoz chemických látek a chemických přípravků\nklasifikovaných jako výbušné, oxidující, extremně hořlavé, vysoce\nhořlavé, vysoce toxické, toxické, karcinogenní, mutagenní,\ntoxické pro reprodukci, nebezpečné pro životní prostředí\na prodej chemických látek a chemických přípravků klasifikovaných\njako vysoce toxické a toxické"
+     },
+     {
+      "datumZapisu": "1996-09-26",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "výroba silničních vozidel provozovaná průmyslovým způsobem"
+     },
+     {
+      "datumZapisu": "1996-09-26",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "hostinská činnost"
+     },
+     {
+      "datumZapisu": "1996-09-26",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "opravy motorových vozidel"
+     },
+     {
+      "datumZapisu": "1997-07-16",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "výroba,montáž,generální opravy,rekonstrukce,revize a revizní\nzkoušky provozní způsobilosti vyhrazených zdvihacích zařízení"
+     },
+     {
+      "datumZapisu": "1997-07-16",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "montáž,opravy,údržba a revize vyhrazených elektrických zařízení\na výroba rozvaděčů nízkého napětí"
+     },
+     {
+      "datumZapisu": "1997-07-16",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "vodoinstalatérství"
+     },
+     {
+      "datumZapisu": "1997-07-16",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "topenářství"
+     },
+     {
+      "datumZapisu": "1997-07-16",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "výroba,instalace a opravy elektrických strojů a přístrojů"
+     },
+     {
+      "datumZapisu": "1997-07-16",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "zednictví"
+     },
+     {
+      "datumZapisu": "1997-07-16",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "truhlářství"
+     },
+     {
+      "datumZapisu": "1997-07-16",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "tesařství"
+     },
+     {
+      "datumZapisu": "2000-05-18",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "výchova a vzdělávání ve Středním odborném učilišti\nstrojírenském, Odborném učilišti,Střední odborné škole\nspecialistů a manažerů, Vyšší odborné škole průmyslových\nobchodníků a provozování soukromé vysoké školy"
+     },
+     {
+      "datumZapisu": "2008-03-20",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "výzkum a vývoj v oblasti přírodních a technických věd nebo společenských věd"
+     },
+     {
+      "datumZapisu": "1998-05-27",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "provozování nestátního zdravotnického zařízení"
+     },
+     {
+      "datumZapisu": "2000-10-27",
+      "datumVymazu": "2006-09-01",
+      "hodnota": "poskytování telekomunikačních služeb"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "silniční motorová doprava osobní"
+     },
+     {
+      "datumZapisu": "2000-10-27",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "výroba a dovoz chemických látek a chemických přípravků\nklasifikovaných jako hořlavé, zdraví škodlivé, žíravé, dráždivé,\nsenzibilizující"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "silniční motorová doprava nákladní"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "maloobchod motorovými vozidly a jejich příslušenstvím"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "zprostředkování obchodu"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "maloobchod použitým zbožím"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "velkoobchod"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "maloobchod provozovaný mimo řádné provozovny"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "specializovaný maloobchod"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "zprostředkování služeb"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "výroba strojů a zařízení pro určitá hospodářská odvětví"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "poskytování software a poradenství v oblasti hardware a software"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "zpracování dat, služby databank, správa sítí"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "povrchové úpravy a svařování kovů"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "pořádání odborných kurzů, školení a jiných vzdělávacích akcí\nvčetně lektorské činnosti"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "pořádání dětských rekreačních a rekreačně - vzdělávacích akcí"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "činnost podnikatelských, finančních, organizačních a\nekonomických poradců"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "činnost technických poradců v oblasti strojírenství, hutnictví a\nenergetiky"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "činnost technických poradců v oblasti stavebnictví, prodeje a\npronájmu nemovitého majetku"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "údržba motorových vozidel a jejich příslušenství"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "výroba strojů a zařízení pro všeobecné účely"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "pronájem a půjčování věcí movitých"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "realitní činnost"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "ubytovací služby"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "výroba rozvaděčů nízkého napětí"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "pořádání kulturních produkcí, zábav a provozování zařízení\nsloužících zábavě"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "kopírovací práce"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "opravy silničních vozidel"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "opravy ostatních dopravních prostředků"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "činnost účetních poradců, vedení účetnictví"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "opravy karoserií"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "výroba a opravy ostatních motorových dopravních prostředků"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "zámečnictví"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "kovoobráběčství"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "smaltérství"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "nástrojařství"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "galvanizérství"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "slévárenství"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "kovářství"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "výroba, montáž, opravy, rekonstrukce, revize a zkoušky\nvyhrazených tlakových zažízení, kotlů a tlakových nádob,\nperiodické zkoušky nádob na plyny"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "montáž, opravy, revize a zkoušky vyhrazených plynových zařízení,\nplnění tlakových nádob plyny"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "nákup, prodej a skladování paliv a maziv včetně jejich dovozu s\nvýjimkou výhradního nákupu, prodeje a skladování paliv a maziv\nve spotřebitelském balení do 50 kg na jeden kus balení -\nvelkoobchod"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "montáž, opravy, revize a zkoušky vyhrazených elektrických\nzařízení"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "nákup, prodej a skladování paliv a maziv včetně jejich dovozu s\nvýjimkou výhradního nákupu, prodeje a skladování paliv a maziv\nve spotřebitelském balení do 50 kg na jeden kus balení"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "výroba a dovoz chemických látek a chemických přípravků\nklasifikovaných jako výbušné, oxidující, extrémně hořlavé,\nvysoce hořlavé, vysoce toxické, toxické, karcinogenní,\nmutagenní, toxické pro reprodukci, nebezpečné pro životní\nprostředí a prodej chemických látek a chemických přípravků\nklasifikovaných jakovysoce toxické a toxické"
+     },
+     {
+      "datumZapisu": "2002-03-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "provozování čerpacích stanic s palivy a mazivy"
+     },
+     {
+      "datumZapisu": "2002-08-10",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "provozování kulturních a kulturně vzdělávacích zařízení"
+     },
+     {
+      "datumZapisu": "2004-07-15",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "nákup, skladování a prodej zdravotnických prostředků stanovených Ministerstvem zdravotnictví, které mohou být prodávány prodejci stanovených zdravotnických prostředků"
+     },
+     {
+      "datumZapisu": "2004-10-07",
+      "datumVymazu": "2026-05-15",
+      "hodnota": "služby v oblasti administrativní správy a služby organizačně hospodářské povahy"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "obráběčství"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "zámečnictví, nástrojářství"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "slévárenství, modelářství"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "kovářství, podkovářství"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "klempířství a oprava karoserií"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "opravy silničních vozidel"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "montáž, opravy, revize a zkoušky zdvihacích zařízení"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "pokrývačství, tesařství"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "truhlářství, podlahářství"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "výroba, instalace, opravy elektrických strojů a přístrojů, elektronických a telekomunikačních zařízení"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "zednictví"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "montáž, opravy, revize a zkoušky tlakových zařízení a nádob na plyny"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "montáž, opravy, revize a zkoušky elektrických zařízení"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "montáž, opravy, revize a zkoušky plynových zařízení a plnění nádob plyny"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "výroba nebezpečných chemických látek a nebezpečných chemických směsí a prodej chemických látek a chemických směsí klasifikovaných jako vysoce toxické a toxické"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "opravy ostatních dopravních prostředků a pracovních strojů"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "vodoinstalatérství, topenářství"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "činnost účetních poradců, vedení účetnictví, vedení daňové evidence"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "galvanizérství, smaltérství"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "silniční motorová doprava - nákladní provozovaná vozidly nebo jízdními soupravami o největší povolené hmotnosti přesahující 3,5 tuny určenými k přepravě zvířat nebo věcí, - osobní provozovaná vozidly určenými pro přepravu více než 9 osob včetně řidiče, - nákladní mezinárodní provozovaná vozidly nebo jízdními soupravami o největší povolené hmotnosti přesahující 2,5 tuny a nepřesahující 3,5 tuny určenými k přepravě zvířat nebo věcí, - nákladní vnitrostátní provozovaná vozidly nebo jízdními soupravami o největší povolené hmotnosti nepřesahující 3,5 tuny určenými k přepravě zvířat nebo věcí a nákladní mezinárodní provozovaná vozidly nebo jízdními soupravami o největší povolené hmotnosti nepřesahující 2,5 tuny určenými k přepravě zvířat nebo věcí, - osobní provozovaná vozidly určenými pro přepravu nejvýše 9 osob včetně řidiče"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "ostraha majetku a osob"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "provádění staveb, jejich změn a odstraňování"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "vydavatelské činnosti, polygrafická výroba, knihařské a kopírovací práce"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "povrchové úpravy a svařování kovů a dalších materiálů"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "výroba elektronických součástek, elektrických zařízení a výroba a opravy elektrických strojů, přístrojů a elektronických zařízení pracujících na malém napětí"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "výroba strojů a zařízení"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "výroba motorových a přípojných vozidel a karoserií"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "nakládání s odpady (vyjma nebezpečných)"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "zprostředkování obchodu a služeb"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "velkoobchod a maloobchod"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "zastavárenská činnost a maloobchod s použitým zbožím"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "údržba motorových vozidel a jejich příslušenství"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "skladování, balení zboží, manipulace s nákladem a technické činnosti v dopravě"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "ubytovací služby"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "poskytování software, poradenství v oblasti informačních technologií, zpracování dat, hostingové a související činnosti a webové portály"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "nákup, prodej, správa a údržba nemovitostí"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "pronájem a půjčování věcí movitých"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "poradenská a konzultační činnost, zpracování odborných studií a posudků"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "příprava a vypracování technických návrhů, grafické a kresličské práce"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "výzkum a vývoj v oblasti přírodních a technických věd nebo společenských věd"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "testování, měření, analýzy a kontroly"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "služby v oblasti administrativní správy a služby organizačně hospodářské povahy"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "mimoškolní výchova a vzdělávání, pořádání kurzů, školení, včetně lektorské činnosti"
+     },
+     {
+      "datumZapisu": "2026-05-15",
+      "hodnota": "provozování kulturních, kulturně-vzdělávacích a zábavních zařízení, pořádání kulturních produkcí, zábav, výstav, veletrhů, přehlídek, prodejních a obdobných akcí"
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<title>ŘIDIČ MKD - PRAVIDELNÁ LINKA - Praha - východ | Bazoš.cz</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="description" content="Inzerát č. 224381067: ŘIDIČ MKD - PRAVIDELNÁ LINKA, Mzda/plat: Dohodou, Lokalita: Praha - východ. Popis: Přijmeme řidiče sk. C+E na pravidelnou linku."><meta property="og:image" content="https://www.bazos.cz/img/1/067/224381067.jpg?t=1790592352"><meta property="og:title" content="ŘIDIČ MKD - PRAVIDELNÁ LINKA - Praha - východ">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Bazos.cz">
+<meta property="og:description" content="Inzerát č. 224381067: ŘIDIČ MKD - PRAVIDELNÁ LINKA, Mzda/plat: Dohodou, Lokalita: Praha - východ. Popis: Přijmeme řidiče sk. C+E na pravidelnou linku.">
+<link rel="canonical" href="https://prace.bazos.cz/inzerat/224381067/ridic-mkd-pravidelna-linka.php"><meta property="fb:admins" content="1055875657">
+<meta name="ROBOTS" content="max-image-preview:large">
+<link rel="preload" as="image" href="https://www.bazos.cz/img/1/067/224381067.jpg?t=1790592352"><link rel="stylesheet" href="https://www.bazos.cz/bazos67s.css" type="text/css"><link rel="preload" as="image" href="https://www.bazos.cz/obrazky/bazos.svg">
+<link rel="stylesheet" href="https://www.bazos.cz/bazosprint.css" type="text/css" media="print">
+<link rel="icon" href="https://www.bazos.cz/favicon.svg" type="image/svg+xml">
+<link rel="icon" HREF="https://www.bazos.cz/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="https://www.bazos.cz/apple-touch-icon.png">
+<script async="async" src="https://www.google.com/adsense/search/ads.js"></script>
+<script type="text/javascript" charset="utf-8">
+(function(g,o){g[o]=g[o]||function(){(g[o]['q']=g[o]['q']||[]).push(
+  arguments)},g[o]['t']=1*new Date})(window,'_googCsa');
+</script><script>
+var xhr = new XMLHttpRequest();
+var naseptavac_value = '';
+function naseptavac(value) {
+  if (value=='')  {
+  	naseptavac_value = '';
+  	document.getElementById('vysledek').innerHTML='';
+  	}
+else {
+	if (naseptavac_value == value) {
+		return false;
+	}
+	naseptavac_value = value;
+	setTimeout(function () {
+		if (naseptavac_value != value) {
+			return false;
+		}
+		xhr.onreadystatechange = function() {
+ 		 if (this.readyState == 4 && naseptavac_value == value){
+				document.getElementById('vysledek').innerHTML = this.responseText;
+			}
+ 		 };
+		xhr.open("POST", '/suggest.php');
+		xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		xhr.send('rubnas=PR&catnas=279&qnas='+encodeURIComponent(naseptavac_value));
+	}, 250);
+}
+}
+
+var naseptavacpsc_value = '';
+function naseptavacpsc(value) {
+  if (value=='')  {
+  	naseptavacpsc_value = '';
+  	document.getElementById('vysledekpsc').innerHTML='<table cellpadding=\"3\" cellspacing=\"0\" class=\"tablenaspsc\"><tr><td class=\"act\" onclick=\"getLocation();\"><b>Inzeráty v okolí</b></td></tr></table>';
+  	}
+else {
+	if (naseptavacpsc_value == value) {
+		return false;
+	}
+	naseptavacpsc_value = value;
+	setTimeout(function () {
+		if (naseptavacpsc_value != value) {
+			return false;
+		}
+		xhr.onreadystatechange = function() {
+ 		 if (this.readyState == 4 && naseptavacpsc_value == value){
+				document.getElementById('vysledekpsc').innerHTML = this.responseText;
+			}
+ 		 };
+		xhr.open("POST", '/suggestpsc.php');
+		xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		xhr.send('qnaspsc='+encodeURIComponent(naseptavacpsc_value));
+	}, 250);
+}
+}
+
+function getLocation() {
+if (navigator.geolocation) {navigator.geolocation.getCurrentPosition(showPosition);}
+else {document.getElementById('hlokalita').value = '';}
+}
+function showPosition(position) {
+		xhr.onreadystatechange = function() {
+ 		 if (this.readyState == 4){
+				document.getElementById('hlokalita').value = this.responseText;
+				document.forms['formt'].submit();
+			}
+ 		 };
+		xhr.open("POST", '/zip.php');
+		xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		xhr.send('latitude='+encodeURIComponent(position.coords.latitude)+'&longitude='+encodeURIComponent(position.coords.longitude));
+}
+
+function favouriteadd(value,params,obradresa) {
+xhr.onreadystatechange = function() {
+  if (this.readyState == 4 && this.status == 200){
+				document.getElementById('favour').innerHTML = this.responseText;
+				document.getElementById('obrfavour').src = obradresa;
+			}
+  };
+xhr.open("POST", value);
+xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+xhr.send(params);
+}
+
+function odeslatrequest(value,params,overvalue) {
+xhr.onreadystatechange = function() {
+  if (this.readyState == 4){
+				document.getElementById(overvalue).innerHTML = this.responseText;
+			}
+  };
+xhr.open("POST", value);
+xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+xhr.send(params);
+}
+function odeslatakci(postaction,value1,value2,value3) {
+document.getElementById('postaction').value = postaction;
+document.getElementById("postv1").value = value1;
+document.getElementById("postv2").value = value2;
+document.getElementById("postv3").value = value3;
+document.formaction.submit();
+}
+</script>
+<script src="https://www.bazos.cz/flickity2.js"></script></head>
+
+<body>
+
+
+<div class="sirka">
+<div class="listalogor">
+<div class="listalogol"><a href="https://www.bazos.cz/" title="Bazos.cz - Inzerce, bazar"><img src="https://www.bazos.cz/obrazky/bazos.svg" width="199" height="34" alt="Bazos.cz - Inzerce, inzeráty"></a></div>
+<div class="listalogom"><b>... inzerce pro každého</b></div>
+<div class="listalogop"><a href="https://www.bazos.cz/oblibene.php"><b>Oblíbené inzeráty</b></a> <a href="https://www.bazos.cz/moje-inzeraty.php"><b>Moje inzeráty</b></a> <a href="/pridat-inzerat.php"><b><span class=pridati>Přidat inzerát</span></b></a></div>
+</div>
+<form name="formt" id="formt" method=get action=/>
+<div class="listah">
+<div class="rubriky">
+<b>
+Co: <span class=vysokoli><span id="vysledek"></span><input type="search" onkeyup="naseptavac(this.value);" id=hledat name=hledat size="17" maxlength="256" value="" autocomplete="off" title="Co? Vyhledávaný výraz"></span>
+
+<select name="rubriky" onchange='this.form.submit();' title="Vyber rubriku">
+<option value="www">Všechny rubriky</option>
+<option value="auto">Auto</option><option value="deti">Děti</option><option value="dum">Dům a zahrada</option><option value="elektro">Elektro</option><option value="foto">Foto</option><option value="hudba">Hudba</option><option value="knihy">Knihy</option><option value="mobil">Mobily</option><option value="motorky">Motorky</option><option value="nabytek">Nábytek</option><option value="obleceni">Oblečení</option><option value="pc">PC</option><option value="prace" selected>Práce</option><option value="reality">Reality</option><option value="sluzby">Služby</option><option value="sport">Sport</option><option value="stroje">Stroje</option><option value="vstupenky">Vstupenky</option><option value="zvirata">Zvířata</option><option value="ostatni">Ostatní</option></select>
+
+Lokalita: <span class=vysokolipsc><span id="vysledekpsc"></span><input type="search" name="hlokalita" id="hlokalita" onkeyup="naseptavacpsc(this.value);" onclick="naseptavacpsc(this.value);" value="" size="4" maxlength="25" autocomplete="off" title="Kde? PSČ (místo)" style="-webkit-appearance: none;"></span>
+Okolí: <input name="humkreis" title="Okolí v km" value="25" size="3" style="width: 25px;"> km
+Cena od: <input name=cenaod title="Cena od Kč" maxlength="12" size="5" value=""> - do: <input name=cenado title="Cena do Kč" maxlength="12" size="5" value=""> Kč <input type="submit" name="Submit" value="Hledat">
+<input type="hidden" name="order" id="order"><input type="hidden" name="crp" id="crp"><input type="hidden" id="kitx" name="kitx" value="ano"></b>
+</div>
+</div>
+</form>
+<div class="drobky"><a href="https://www.bazos.cz/" title="Inzerce Bazoš">Hlavní stránka</a>  > <a href="https://prace.bazos.cz/">Práce</a> > <a href="https://prace.bazos.cz/logistika/">Doprava a logistika</a> > <b>Inzerát č. 224381067</b></div>
+<br>
+
+
+<div class="flexmain"><div class="menuleft"><div class="nadpismenu">Kategorie</div>
+<div class="barvalmenu">
+<div class="barvaleva">
+<a href="/administrativa/" >Administrativa</a>
+<a href="/potravinarstvi/" >Chemie a potravinářství</a>
+<a href="/logistika/"  id=zvyraznenikat>Doprava a logistika</a>
+<a href="/finance/" >Finance a ekonomika</a>
+<a href="/it/" >IT a telekomunikace</a>
+<a href="/marketing/" >Marketing a reklama</a>
+<a href="/management/" >Management</a>
+<a href="/obchod/" >Obchod a prodej</a>
+<a href="/bezpecnost/" >Obrana a bezpečnost</a>
+<a href="/ubytovani/" >Pohostinství a ubytování</a>
+<a href="/domacnost/" >Práce v domácnosti</a>
+<a href="/pravo/" >Právo, legislativa</a>
+<a href="/prumysl/" >Průmysl a výroba</a>
+<a href="/remeslo/" >Řemeslné práce</a>
+<a href="/sluzby/" >Servis a služby</a>
+<a href="/stavebnictvi/" >Stavebnictví</a>
+<a href="/technika/" >Technika a energetika</a>
+<a href="/tisk/" >Tisk a polygrafie</a>
+<a href="/vyzkum/" >Výzkum a vývoj</a>
+<a href="/personalistika/" >Vzdělávání a personalistika</a>
+<a href="/zdravotnictvi/" >Zdravotnictví</a>
+<a href="/zemedelstvi/" >Zemědělství</a>
+<br>
+<a href="/brigada/" >Brigády</a>
+<a href="/ostatni/" >Ostatní</a>
+</div></div>
+
+
+
+</div><div class="maincontent">
+
+
+<div class="listainzerat inzeratyflex">
+<div class="inzeratydetnadpis"><H1 class=nadpisdetail>ŘIDIČ MKD - PRAVIDELNÁ LINKA</H1><span class=velikost10> - <span title="TOP 7x Platí do 26.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span></div>
+<div class="inzeratydetdel"><span onclick="odeslatakci('edit','224381067');return false;" class="paction">Smazat/ Upravit/ Topovat</span></div>
+</div><br><div class="fliobal"><div class="carousel"><div class="carousel-cell"><img class="carousel-cell-image" data-flickity-lazyload="https://www.bazos.cz/img/1/067/224381067.jpg?t=1790592352" src="https://www.bazos.cz/img/1/067/224381067.jpg?t=1790592352" width="800" height="600" alt="ŘIDIČ MKD - PRAVIDELNÁ LINKA"></div><div class="carousel-cell"><img class="carousel-cell-image" data-flickity-lazyload="https://www.bazos.cz/img/2/067/224381067.jpg?t=1790592352" alt="ŘIDIČ MKD - PRAVIDELNÁ LINKA - 2"></div></div><div class="flinavigace" id="nahledy1"><img onmouseover="flkty.select(0, false, true );" src="https://www.bazos.cz/img/1t/067/224381067.jpg?t=1790592352" alt="ŘIDIČ MKD - PRAVIDELNÁ LINKA - 1" class="obrazekflithumb"><br><img onmouseover="flkty.select(1, false, true );" src="https://www.bazos.cz/img/2t/067/224381067.jpg?t=1790592352" alt="ŘIDIČ MKD - PRAVIDELNÁ LINKA - 2" class="obrazekflithumb"><br></div></div><script>var flkty = new Flickity( '.carousel', {fullscreen: true,lazyLoad: 1,wrapAround: true,adaptiveHeight: true});</script>
+<div class=popisdetail>Přijmeme řidiče sk. C+E na pravidelnou linku Říčany - Brusel - Říčany. <br>
+Stálá a pravidelná práce, jízda ve dvojce. Jde o expresní přepravu,  takže nikde žádné zbytečné zdržování, jen naložit-složit. Vše rampa-rampa, řidiči nic nenakládají. <br>
+Hledáme řidiče pohodáře, který chce jezdit ven, ale být také v týdnu doma. Druhý kolega je parťák, co se vším poradí a případně i zaučí, ale tahle práce fakt není složitá. <br>
+Požadujeme řp sk. C+E s platným profesákem. A nějaká zkušenost s kamionem se také hodí, ale není úplně podmínkou. <br>
+Nástup a platové podmínky dohodneme určitě osobně.  <br>
+A něco o nás… Jsme menší rodinná firma, jsme tu už dost dlouho, takže víme co děláme. Řidiči se nám tu moc nestřídají a hlavně spolu spolupracují a pomáhají si. Od vedení podpora 24/7 je samozřejmost a možnost mluvit kdykoliv se šéfem také 😉. Jsme kolegové, ne vedení a řidiči.</div><br>
+<table width="100%" cellpadding="5" cellspacing="0">
+<tr><td width="35%" valign=top class=listadvlevo>
+<table width="*" cellpadding="0" cellspacing="1">
+<tr><td height="22px" width="25%">Jméno:<br><br></td><td colspan=2><b><span onclick="odeslatakci('rating','7114130','7634179','Martin');return false;" class="paction">Martin</span></b><br><br></td></tr>
+<tr id="overlaytel"><td height="22px" width="25%">Telefon:<br><br></td><td colspan=2><span class=teldetail onclick="odeslatrequest('/ad-phone.php','idi=224381067&idphone=7634179','overlaytel');"><span style="white-space: nowrap;">602... zobraz číslo</span></span><br><br></td></tr>
+<tr><td height="22px" width="25%">Lokalita:</td><td width="9%"><img src="https://www.bazos.cz/obrazky/map.svg" alt="Mapa" height="17"></td><td><a href="https://www.google.com/maps/place/49.986773,14.656448/@49.986773,14.656448,12z/data=!4m2!3m1!1s0x0:0x0" title="Přibližná lokalita" rel="nofollow">251 01</a> <a href="https://prace.bazos.cz/inzeraty/%C5%99%C3%AD%C4%8Dany-u-prahy/25101/">Praha - východ</a></td></tr>
+<tr><td height="22px" width="25%"><br>Vidělo:</td><td colspan=2><br>924 lidí</td></tr>
+<tr><td height="22px" width="25%"><br>Mzda/plat:</td><td colspan=2><br><b><span translate="no">Dohodou</span></b></td></tr>
+</table>
+</td>
+
+<td width="*" valign=top class=listadvpravo>
+
+<table cellpadding="0" cellspacing="1">
+<tr><td height="22px"><img src="https://www.bazos.cz/obrazky/user.svg" alt="Uživatel" height="17"></td><td><form name="formaction" method="post" style="display: inline;"><input type="hidden" id="postaction" name="postaction" value=""><input type="hidden" id="postv1" name="postv1" value=""><input type="hidden" id="postv2" name="postv2" value=""><input type="hidden" id="postv3" name="postv3" value=""></form>
+<span onclick="odeslatakci('rating','7114130','7634179','Martin');return false;" class="paction">Všechny inzeráty a hodnocení uživatele</span></td></tr>
+<tr><td height="22px"><img id="obrfavour" src="https://www.bazos.cz/obrazky/favourite.svg" alt="Oblíbené" height="18"></td><td><span id="favour"><a href="https://www.bazos.cz/oblibene.php" rel="nofollow">Přidat do oblíbených</a></span></td></tr>
+<tr><td height="22px"><img src="https://www.bazos.cz/obrazky/spam.svg" alt="Spam" height="17"></td><td><span onclick="odeslatakci('spam','224381067');return false;" class="paction">Označit špatný inzerát</span></td></tr>
+<tr><td height="22px"><img src="https://www.bazos.cz/obrazky/miscat.svg" alt="Chybná kategorie" height="17"></td><td><span onclick="odeslatakci('category','224381067');return false;" class="paction">Označit chybnou kategorii inzerátu</span></td></tr>
+<tr><td height="22px"><img src="https://www.bazos.cz/obrazky/print.svg" alt="Tisk" height="17"></td><td><a href="#" onclick="window.print()">Vytisknout inzerát</a></td></tr>
+<tr><td height="22px"><a href="https://www.facebook.com/sharer/sharer.php?u=https://prace.bazos.cz/inzerat/224381067/ridic-mkd-pravidelna-linka.php" target="_blank" rel="nofollow"><img src="https://www.bazos.cz/obrazky/facebook.svg" alt="Facebook" height="22"></a></td><td><a href="https://www.facebook.com/sharer/sharer.php?u=https://prace.bazos.cz/inzerat/224381067/ridic-mkd-pravidelna-linka.php" target="_blank" rel="nofollow">Sdílejte na Facebooku</a></td></tr>
+<tr><td height="22px"><img src="https://www.bazos.cz/obrazky/mail.svg" alt="Mail" height="17"></td><td><span onclick="odeslatakci('recommend','224381067');return false;" class="paction">Doporučit kamarádovi</span></td></tr>
+<tr><td height="22px"><img src="https://www.bazos.cz/obrazky/similar.svg" alt="Podobné" height="17"></td><td><a href="https://prace.bazos.cz/inzeraty/%C5%99idi%C4%8D-mkd/">Vyhledat podobné inzeráty</a></td></tr>
+</table>
+
+</td></tr>
+</table>
+<br>
+
+<script>
+function nahledy() {
+  var na1 = document.getElementById("nahledy1");
+  var na2 = document.getElementById("nahledy2");
+  var na3 = document.getElementById("nahledy3");
+  var na4 = document.getElementById("nahledy4");
+  if (na1.style.display === "none") {
+    na1.style.display = "block";
+    na2.style.display = "block";
+    na3.style.display = "none";
+    na4.style.display = "none";
+  } else {
+    na1.style.display = "none";
+    na2.style.display = "none";
+    na3.style.display = "block";
+    na4.style.display = "block";
+  }
+}
+</script>
+
+
+<div class="kontaktniformular"><div class="oranzovy" id="overlaymail"><b>Kontaktovat inzerenta emailem</b><br><br>
+Kontaktovat emailem může pouze ověřený uživatel.<br>
+<br>
+Vaše telefonní číslo <span class="ztop">*</span><br>
+<input type="text" name="teloverit2" id="teloverit2" maxlength="30" autocomplete="off" onkeydown="if (event.keyCode == 13) odeslatrequest('/ad-mail.php','idi=224381067&teloverit='+encodeURIComponent(document.getElementById('teloverit2').value),'overlaymail');">
+<br><br>
+<button type="button" id="mailbutton" onclick="odeslatrequest('/ad-mail.php','idi=224381067&teloverit='+encodeURIComponent(document.getElementById('teloverit2').value),'overlaymail');">Odeslat</button>
+</div></div>
+
+
+<br>
+
+<div class="podobne">
+<br><br>
+<div class="listainzerat">Podobné inzeráty</div><div id="container_one"></div>
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224733725/ridic-mkd-sklapeci-naves.php"><img src="https://www.bazos.cz/img/1t/725/224733725.jpg" class="obrazek" alt="ŘIDIČ MKD - SKLÁPĚCÍ NÁVĚS" width="170" height="128"></a>
+<span class=nadpis><a href="/inzerat/224733725/ridic-mkd-sklapeci-naves.php">ŘIDIČ MKD - SKLÁPĚCÍ NÁVĚS</a></span><span class=velikost10> - [6.10. 2026]</span><br>
+<div class=popis>Řidič kamionu na MKD – sklápěcí návěs!
+
+Do našeho týmu hledáme spolehlivého řidiče kamionu pro mezinárodní kamionovou dopravu (MKD) se sklápěcím návěsem.
+Jsme stabilní česká výrobní a obchodní společnost. Naše doprava slouží primárně k potřebám na ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">Dohodou</span></b></div>
+<div class="inzeratylok">Zlín<br>766 01</div>
+<div class="inzeratyview">24 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224733725');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224733725');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','8051436','5470586','Martin');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224733725');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224730908/primeme-ridice-ce-2-500kcden.php"><img src="https://www.bazos.cz/img/1t/908/224730908.jpg" class="obrazek" alt="Přimeme řidiče C+E  2 500kč/den" width="170" height="128"></a>
+<span class=nadpis><a href="/inzerat/224730908/primeme-ridice-ce-2-500kcden.php">Přimeme řidiče C+E  2 500kč/den</a></span><span class=velikost10> - [6.10. 2026]</span><br>
+<div class=popis>Přijmeme řidiče C+E
+Staňte se řidičem/ řidičkou v malé rodinné firmě-Saba Trans s.r.o
+
+
+Nabízíme
+Práce na hlavní pracovní poměr.
+Nástup možný ihned dle domluvy z důvodu rozšíření vozového parku.
+Jedná se o pravidelné přepravy Cz,Sk,Hu,Pl,A
+
+ ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  60 000 Kč</span></b></div>
+<div class="inzeratylok">Bruntál<br>792 01</div>
+<div class="inzeratyview">31 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224730908');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224730908');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','1133155','6885621','L%C3%A1%C4%8Fa');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224730908');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224730677/prijmeme-ridice-mkd.php"><img src="https://www.bazos.cz/obrazky/empty.gif" class="obrazek" alt="Přijmeme řidiče MKD" width="170" height="128"></a>
+<span class=nadpis><a href="/inzerat/224730677/prijmeme-ridice-mkd.php">Přijmeme řidiče MKD</a></span><span class=velikost10> - [6.10. 2026]</span><br>
+<div class=popis>přijmeme řidiče C+E na MKD pro stálé trasy do Itálie na walkingfloor,auta stáří do 3let,víkendy volné,náborový příspěvěk 20 tisíc po 3měsících,parkování na firmě v ČB nebo doma,možnost tankování a oprav,plat 55.000-60.000kč.Tel:+420 602 793 603</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  60 000 Kč</span></b></div>
+<div class="inzeratylok">České Budějovice<br>370 10</div>
+<div class="inzeratyview">15 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224730677');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224730677');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','9771594','7958909','Martin+Tesar%C4%8D%C3%ADk');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224730677');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224726433/MKD-nastup-min-40000-50000-Kc.php"><img src="https://www.bazos.cz/img/1t/433/224726433.jpg?t=1791274047" class="obrazek" alt="PŘIJMEME ŘIDIČE SK. C + E, MKD." width="170" height="128"></a>
+<span class=nadpis><a href="/inzerat/224726433/MKD-nastup-min-40000-50000-Kc.php">PŘIJMEME ŘIDIČE SK. C + E, MKD.</a></span><span class=velikost10> - <span title="TOP 1x Platí do 13.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Dopravní společnost s 25 vozidly, vlastním servisním a administrativním zázemím přijme spolehlivé řidiče sk. C+E na MEZINÁRODNÍ kamionovou dopravu na nové vozy DAF, Mercedes. Ubytování po dohodě zajišteno..
+Destinace Německo, Holandsko, Belgie. Nást ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  55 000 Kč</span></b></div>
+<div class="inzeratylok">Pelhřimov<br>395 01</div>
+<div class="inzeratyview">22 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224726433');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224726433');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','3053735','96412','Zden%C4%9Bk+Bezemek');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224726433');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224725684/ridic-ce-mkd-chces-slusne-penize-a-byt-doma.php"><img src="https://www.bazos.cz/img/1t/684/224725684.jpg?t=1791273361" class="obrazek" alt="🚛 ŘIDIČ C+E – MKD | CHCEŠ SLUŠNÉ PENÍZE A BÝT DOMA?" width="170" height="128"></a>
+<span class=nadpis><a href="/inzerat/224725684/ridic-ce-mkd-chces-slusne-penize-a-byt-doma.php">🚛 ŘIDIČ C+E – MKD | CHCEŠ SLUŠNÉ PENÍZE A BÝT DOMA?</a></span><span class=velikost10> - <span title="TOP 21x Platí do 17.11. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Hledáme zkušeného řidiče C+E na mezinárodní kamionovou dopravu.
+
+Nejsme firma, kde jsi jen číslo v systému. Chceme, aby řidič věděl, na čem je, s jakým autem jezdí a kdy bude doma.
+
+💰 PRŮMĚRNĚ SI VYDĚLÁŠ:
+13/13 - 49.000Kč čistého
+22/5 - 68.000K ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">V textu</span></b></div>
+<div class="inzeratylok">Kladno<br>273 51</div>
+<div class="inzeratyview">78 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224725684');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224725684');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','0','6919550','Petr+La%C5%A1ek');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224725684');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224725113/brigada-ridicridicka-mkd.php"><img src="https://www.bazos.cz/img/1t/113/224725113.jpg" class="obrazek" alt="Brigáda - řidič/řidička MKD" width="170" height="128"></a>
+<span class=nadpis><a href="/inzerat/224725113/brigada-ridicridicka-mkd.php">Brigáda - řidič/řidička MKD</a></span><span class=velikost10> - [6.10. 2026]</span><br>
+<div class=popis>Hledáme nového kolegu - brigádníka (zástup za dovolené, nemoci), na pozici řidiče/řidičky MKD. Vhodné i pro důchodce, na práci se domluvíme podle Vašich možností a představ.
+
+Nabízíme:
+- minimální sazbu 2.800 Kč čistého/den
+- zázemí stabilní spol ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">V textu</span></b></div>
+<div class="inzeratylok">Jičín<br>508 01</div>
+<div class="inzeratyview">28 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224725113');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224725113');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','9774884','7058152','Marek+Drahon%C3%ADnsk%C3%BD');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224725113');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224725108/ridicridicka-mkd.php"><img src="https://www.bazos.cz/img/1t/108/224725108.jpg" class="obrazek" alt="Řidič/řidička MKD" width="170" height="128"></a>
+<span class=nadpis><a href="/inzerat/224725108/ridicridicka-mkd.php">Řidič/řidička MKD</a></span><span class=velikost10> - [6.10. 2026]</span><br>
+<div class=popis>🚛 ŘIDIČ MKD – až 70 000 Kč čistého! 💰
+Chceš jezdit po Evropě a mít jistotu pořádného výdělku?
+U nás si přijdeš až na 70 000 Kč čistého – podle toho, co a jak chceš jezdit!
+👉 Nové vozy (max. 3 roky) – Renault T nebo MAN TGX
+👉 Vlastní auto, žádné s ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  70 000 Kč</span></b></div>
+<div class="inzeratylok">Jičín<br>508 01</div>
+<div class="inzeratyview">26 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224725108');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224725108');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','9774884','7058152','Marek+Drahon%C3%ADnsk%C3%BD');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224725108');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224725051/ridicridicka-ce-na-mkd-olomouc.php"><img src="https://www.bazos.cz/img/1t/051/224725051.jpg" class="obrazek" alt="Řidič/řidička C+E na MKD - Olomouc" width="170" height="128"></a>
+<span class=nadpis><a href="/inzerat/224725051/ridicridicka-ce-na-mkd-olomouc.php">Řidič/řidička C+E na MKD - Olomouc</a></span><span class=velikost10> - [6.10. 2026]</span><br>
+<div class=popis>Hledáme nové zaměstnance do týmu na pozici řidiče C+E na MKD. 
+Nabízíme práci jen od pondělí do pátku s víkendy doma nebo 1 víkend doma a 1 v zahraničí.
+Po dohodě je možno parkovat v místě bydliště!
+
+Jedná se o přepravy do Španělska, Itálie, Fran ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  60 000 Kč</span></b></div>
+<div class="inzeratylok">Olomouc<br>779 00</div>
+<div class="inzeratyview">36 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224725051');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224725051');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','9471282','7626646','Mojm%C3%ADr+%C5%BDal%C3%A1k');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224725051');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224724216/ridic-mkd-ce.php"><img src="https://www.bazos.cz/img/1t/216/224724216.jpg?t=1791274259" class="obrazek" alt="ŘIDIČ MKD - C+E" width="170" height="128"></a>
+<span class=nadpis><a href="/inzerat/224724216/ridic-mkd-ce.php">ŘIDIČ MKD - C+E</a></span><span class=velikost10> - [6.10. 2026]</span><br>
+<div class=popis>Přijmeme řidiče kamionu MKD – C+E
+
+Do naší firmy v Zábřehu na Moravě hledáme řidiče na mezinárodní kamionovou dopravu.
+
+jezdíme nejvíce: CZ,DE,NL,BE,FR,ES,PT,AT,IT,PL,SK,HU.
+
+turnusy dle dohody
+
+nástup možný dle dohody
+
+mzda 55 000–78 000 K ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">V textu</span></b></div>
+<div class="inzeratylok">Šumperk<br>789 01</div>
+<div class="inzeratyview">34 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224724216');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224724216');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','7089861','3131993','Detranstransport');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224724216');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224720525/ridic-mkd-gira-fruit-sro-svata-katerina.php"><img src="https://www.bazos.cz/img/1t/525/224720525.jpg?t=1791268602" class="obrazek" alt="ŘIDIČ MKD - GIRA fruit, s.r.o. - Svatá Kateřina" width="170" height="128"></a>
+<span class=nadpis><a href="/inzerat/224720525/ridic-mkd-gira-fruit-sro-svata-katerina.php">ŘIDIČ MKD - GIRA fruit, s.r.o. - Svatá Kateřina</a></span><span class=velikost10> - [6.10. 2026]</span><br>
+<div class=popis>Do našeho týmu hledáme spolehlivého a zodpovědného kolegu na pozici řidiče mezinárodní kamionové dopravy. Jezdíme především do zemí západní Evropy.
+
+Požadujeme:
+• řidičský průkaz skupiny C+E
+• profesní průkaz a kartu řidiče
+• spolehlivost, samos ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  85 000 Kč</span></b></div>
+<div class="inzeratylok">Kutná Hora<br>284 01</div>
+<div class="inzeratyview">62 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224720525');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224720525');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','15704437','14420043','Petra+T%C4%9B%C5%A1itelov%C3%A1');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224720525');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div id="container_two"></div>
+<script type="text/javascript" charset="utf-8">
+var pageOptions = {
+  'pubId': 'pub-3645948300403337',
+  'query' : "řidič mkd - pravidelná linka",
+  'channel': '4133833399',
+  'linkTarget' : '_blank',
+  'personalizedAds' : 'false',
+  'ivt': false,
+'styleId' : '6171314811',  'hl': 'cs'
+};
+
+var adblock1 = {
+  'container': 'container_one',
+  'width': 'auto',
+  'number' : 1
+};
+
+var adblock2 = {
+  'container': 'container_two',
+  'width': 'auto',
+  'number' : 2
+};
+
+_googCsa('ads', pageOptions, adblock1, adblock2);
+
+</script>
+<br>
+
+</div>
+
+
+</div></div><br>
+
+&copy;2026 Bazoš -  <b>Inzerce, Bazar Doprava a logistika</b><br>
+<a href="https://www.bazos.cz/napoveda.php">Nápověda</a>, <a href="https://www.bazos.cz/dotazy.php">Dotazy</a>, <a href="https://www.bazos.cz/hodnoceni.php">Hodnocení</a>, <a href="https://www.bazos.cz/kontakt.php">Kontakt</a>, <a href="https://www.bazos.cz/reklama.php">Reklama</a>, <a href="https://www.bazos.cz/podminky.php">Podmínky</a>, <a href="https://www.bazos.cz/ochrana-udaju.php">Ochrana údajů</a>, <a href="https://www.bazos.cz/rss.php?rub=pr&cat=279">RSS</a>, <form name="formvkm" id="formvkm" method="post" style="display: inline;"><input type="hidden" name="vkm" value="m"><input type="submit" class="vkm" value="Mobilní verze"></form><br>
+
+Inzeráty Práce celkem: <b>5952</b>, za 24 hodin: <b>801</b><br><br>
+<a href="https://www.bazos.cz/mapa-kategorie.php">Mapa kategorií</a>, <a href="https://prace.bazos.cz/mapa-search.php">Nejvyhledávanější výrazy</a>
+<br>
+Země: <a href="https://prace.bazos.cz">Česká republika</a>, <a href="https://praca.bazos.sk">Slovensko</a>, <a href="https://praca.bazos.pl">Polsko</a>, <a href="https://jobs.bazos.at">Rakousko</a>
+<br>
+<br>
+</div>
+
+<script src="https://www.bazos.cz/cookie-consent.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({"notice_banner_type":"simple","consent_type":"express","palette":"light","language":"cs","page_load_consent_levels":["strictly-necessary"],"notice_banner_reject_button_hide":false,"preferences_center_close_button_hide":false,"page_refresh_confirmation_buttons":false,"cookie_domain": "bazos.cz"});
+});
+</script>
+<a href="#" id="open_preferences_center"> </a>
+
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-NZW1QTHKBB"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-NZW1QTHKBB');
+</script>
+
+</body>
+</html>

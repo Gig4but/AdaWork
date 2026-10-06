@@ -1,0 +1,138 @@
+[
+  {
+    "type": "PLACE",
+    "category": "parking_tickets_14",
+    "tokens": [
+      [
+        0.0,
+        4.0
+      ],
+      [
+        5.0,
+        9.0
+      ]
+    ],
+    "name": "1-13-20 Kounicova ul.",
+    "id": "node/[4223460625]",
+    "lat": 49.200318,
+    "lon": 16.6035811,
+    "country": "CZ",
+    "tz": "Europe/Prague",
+    "areas": [
+      {
+        "name": "Česko",
+        "adminLevel": 2.0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Jihomoravský kraj",
+        "adminLevel": 4.0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "okres Brno-město",
+        "adminLevel": 5.0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      "... 4 more"
+    ],
+    "score": -18.326000213623047
+  },
+  {
+    "type": "PLACE",
+    "category": "parking_tickets_14",
+    "tokens": [
+      [
+        0.0,
+        4.0
+      ],
+      [
+        5.0,
+        9.0
+      ]
+    ],
+    "name": "1-13-04 Kounicova ul.",
+    "id": "node/[6148463310]",
+    "lat": 49.2027371,
+    "lon": 16.6000885,
+    "country": "CZ",
+    "tz": "Europe/Prague",
+    "areas": [
+      {
+        "name": "Česko",
+        "adminLevel": 2.0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Jihomoravský kraj",
+        "adminLevel": 4.0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "okres Brno-město",
+        "adminLevel": 5.0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      "... 4 more"
+    ],
+    "score": -18.326000213623047
+  },
+  {
+    "type": "PLACE",
+    "category": "parking_tickets_14",
+    "tokens": [
+      [
+        0.0,
+        4.0
+      ],
+      [
+        5.0,
+        9.0
+      ]
+    ],
+    "name": "1-14-13 Kounicova ul.",
+    "id": "node/[6152585297]",
+    "lat": 49.2001234,
+    "lon": 16.6047202,
+    "country": "CZ",
+    "tz": "Europe/Prague",
+    "areas": [
+      {
+        "name": "Česko",
+        "adminLevel": 2.0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Jihomoravský kraj",
+        "adminLevel": 4.0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "okres Brno-město",
+        "adminLevel": 5.0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      "... 4 more"
+    ],
+    "score": -18.326000213623047
+  },
+  "... 7 more"
+]

@@ -1,0 +1,404 @@
+{
+  "polozky": [
+    {
+      "id": "CastObce/19",
+      "kod": "19",
+      "nazev": {
+        "cs": "Abertamy"
+      },
+      "obec": "Obec/554979"
+    },
+    {
+      "id": "CastObce/27",
+      "kod": "27",
+      "nazev": {
+        "cs": "Hřebečná"
+      },
+      "obec": "Obec/554979"
+    },
+    {
+      "id": "CastObce/35",
+      "kod": "35",
+      "nazev": {
+        "cs": "Adamov"
+      },
+      "obec": "Obec/535826"
+    },
+    {
+      "id": "CastObce/51",
+      "kod": "51",
+      "nazev": {
+        "cs": "Dolní Adršpach"
+      },
+      "obec": "Obec/547786"
+    },
+    {
+      "id": "CastObce/60",
+      "kod": "60",
+      "nazev": {
+        "cs": "Horní Adršpach"
+      },
+      "obec": "Obec/547786"
+    },
+    {
+      "id": "CastObce/78",
+      "kod": "78",
+      "nazev": {
+        "cs": "Albeř"
+      },
+      "obec": "Obec/546798"
+    },
+    {
+      "id": "CastObce/86",
+      "kod": "86",
+      "nazev": {
+        "cs": "Albrechtice"
+      },
+      "obec": "Obec/551015"
+    },
+    {
+      "id": "CastObce/108",
+      "kod": "108",
+      "nazev": {
+        "cs": "Jezeří"
+      },
+      "obec": "Obec/567175"
+    },
+    {
+      "id": "CastObce/116",
+      "kod": "116",
+      "nazev": {
+        "cs": "Albrechtice"
+      },
+      "obec": "Obec/547981"
+    },
+    {
+      "id": "CastObce/124",
+      "kod": "124",
+      "nazev": {
+        "cs": "Albrechtice"
+      },
+      "obec": "Obec/598925"
+    },
+    {
+      "id": "CastObce/175",
+      "kod": "175",
+      "nazev": {
+        "cs": "Albrechtice nad Orlicí"
+      },
+      "obec": "Obec/576077"
+    },
+    {
+      "id": "CastObce/191",
+      "kod": "191",
+      "nazev": {
+        "cs": "Nová Ves"
+      },
+      "obec": "Obec/576549"
+    },
+    {
+      "id": "CastObce/205",
+      "kod": "205",
+      "nazev": {
+        "cs": "Štěpánovsko"
+      },
+      "obec": "Obec/576859"
+    },
+    {
+      "id": "CastObce/221",
+      "kod": "221",
+      "nazev": {
+        "cs": "Albrechtice nad Vltavou"
+      },
+      "obec": "Obec/549258"
+    },
+    {
+      "id": "CastObce/230",
+      "kod": "230",
+      "nazev": {
+        "cs": "Hladná"
+      },
+      "obec": "Obec/549258"
+    },
+    {
+      "id": "CastObce/264",
+      "kod": "264",
+      "nazev": {
+        "cs": "Údraž"
+      },
+      "obec": "Obec/549258"
+    },
+    {
+      "id": "CastObce/272",
+      "kod": "272",
+      "nazev": {
+        "cs": "Újezd"
+      },
+      "obec": "Obec/549258"
+    },
+    {
+      "id": "CastObce/281",
+      "kod": "281",
+      "nazev": {
+        "cs": "Albrechtice v Jizerských horách"
+      },
+      "obec": "Obec/563528"
+    },
+    {
+      "id": "CastObce/299",
+      "kod": "299",
+      "nazev": {
+        "cs": "Mariánská Hora"
+      },
+      "obec": "Obec/563528"
+    },
+    {
+      "id": "CastObce/302",
+      "kod": "302",
+      "nazev": {
+        "cs": "Albrechtičky"
+      },
+      "obec": "Obec/568741"
+    },
+    {
+      "id": "CastObce/311",
+      "kod": "311",
+      "nazev": {
+        "cs": "Nová Horka"
+      },
+      "obec": "Obec/599921"
+    },
+    {
+      "id": "CastObce/329",
+      "kod": "329",
+      "nazev": {
+        "cs": "Andělka"
+      },
+      "obec": "Obec/564494"
+    },
+    {
+      "id": "CastObce/337",
+      "kod": "337",
+      "nazev": {
+        "cs": "Filipovka"
+      },
+      "obec": "Obec/564494"
+    },
+    {
+      "id": "CastObce/345",
+      "kod": "345",
+      "nazev": {
+        "cs": "Loučná"
+      },
+      "obec": "Obec/564494"
+    },
+    {
+      "id": "CastObce/353",
+      "kod": "353",
+      "nazev": {
+        "cs": "Saň"
+      },
+      "obec": "Obec/564494"
+    },
+    {
+      "id": "CastObce/361",
+      "kod": "361",
+      "nazev": {
+        "cs": "Andělská Hora"
+      },
+      "obec": "Obec/538001"
+    },
+    {
+      "id": "CastObce/370",
+      "kod": "370",
+      "nazev": {
+        "cs": "Anenská Studánka"
+      },
+      "obec": "Obec/573426"
+    },
+    {
+      "id": "CastObce/388",
+      "kod": "388",
+      "nazev": {
+        "cs": "Helvíkov"
+      },
+      "obec": "Obec/573426"
+    },
+    {
+      "id": "CastObce/396",
+      "kod": "396",
+      "nazev": {
+        "cs": "Antošovice"
+      },
+      "obec": "Obec/554821"
+    },
+    {
+      "id": "CastObce/400",
+      "kod": "400",
+      "nazev": {
+        "cs": "Archlebov"
+      },
+      "obec": "Obec/586030"
+    },
+    {
+      "id": "CastObce/418",
+      "kod": "418",
+      "nazev": {
+        "cs": "Arneštovice"
+      },
+      "obec": "Obec/509388"
+    },
+    {
+      "id": "CastObce/426",
+      "kod": "426",
+      "nazev": {
+        "cs": "Arnolec"
+      },
+      "obec": "Obec/586854"
+    },
+    {
+      "id": "CastObce/434",
+      "kod": "434",
+      "nazev": {
+        "cs": "Arnoltice"
+      },
+      "obec": "Obec/562343"
+    },
+    {
+      "id": "CastObce/442",
+      "kod": "442",
+      "nazev": {
+        "cs": "Bynovec"
+      },
+      "obec": "Obec/544647"
+    },
+    {
+      "id": "CastObce/451",
+      "kod": "451",
+      "nazev": {
+        "cs": "Labská Stráň"
+      },
+      "obec": "Obec/544701"
+    },
+    {
+      "id": "CastObce/469",
+      "kod": "469",
+      "nazev": {
+        "cs": "Arnoštovice"
+      },
+      "obec": "Obec/529702"
+    },
+    {
+      "id": "CastObce/477",
+      "kod": "477",
+      "nazev": {
+        "cs": "Durdice"
+      },
+      "obec": "Obec/529702"
+    },
+    {
+      "id": "CastObce/591",
+      "kod": "591",
+      "nazev": {
+        "cs": "Babí"
+      },
+      "obec": "Obec/579025"
+    },
+    {
+      "id": "CastObce/604",
+      "kod": "604",
+      "nazev": {
+        "cs": "Babice"
+      },
+      "obec": "Obec/538043"
+    },
+    {
+      "id": "CastObce/612",
+      "kod": "612",
+      "nazev": {
+        "cs": "Babice"
+      },
+      "obec": "Obec/569828"
+    },
+    {
+      "id": "CastObce/639",
+      "kod": "639",
+      "nazev": {
+        "cs": "Babice"
+      },
+      "obec": "Obec/590274"
+    },
+    {
+      "id": "CastObce/647",
+      "kod": "647",
+      "nazev": {
+        "cs": "Bolíkovice"
+      },
+      "obec": "Obec/590274"
+    },
+    {
+      "id": "CastObce/655",
+      "kod": "655",
+      "nazev": {
+        "cs": "Babice"
+      },
+      "obec": "Obec/592013"
+    },
+    {
+      "id": "CastObce/663",
+      "kod": "663",
+      "nazev": {
+        "cs": "Babice"
+      },
+      "obec": "Obec/552356"
+    },
+    {
+      "id": "CastObce/671",
+      "kod": "671",
+      "nazev": {
+        "cs": "Krakořice"
+      },
+      "obec": "Obec/505188"
+    },
+    {
+      "id": "CastObce/680",
+      "kod": "680",
+      "nazev": {
+        "cs": "Babice"
+      },
+      "obec": "Obec/542989"
+    },
+    {
+      "id": "CastObce/698",
+      "kod": "698",
+      "nazev": {
+        "cs": "Babice nad Svitavou"
+      },
+      "obec": "Obec/582794"
+    },
+    {
+      "id": "CastObce/701",
+      "kod": "701",
+      "nazev": {
+        "cs": "Babice u Rosic"
+      },
+      "obec": "Obec/582808"
+    },
+    {
+      "id": "CastObce/710",
+      "kod": "710",
+      "nazev": {
+        "cs": "Babylon"
+      },
+      "obec": "Obec/553433"
+    },
+    {
+      "id": "CastObce/728",
+      "kod": "728",
+      "nazev": {
+        "cs": "Bácovice"
+      },
+      "obec": "Obec/561118"
+    }
+  ]
+}

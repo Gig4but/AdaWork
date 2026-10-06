@@ -1,0 +1,26 @@
+{
+ "id": 2790622,
+ "name": "Penny Market s.r.o.",
+ "address": "Radonice, Počernická 257",
+ "field": "Maloobchod s převahou potravin",
+ "employees": 7000,
+ "count_reviews": 861,
+ "count_comments": 604,
+ "employer_pct": 62,
+ "colleagues_pct": 71,
+ "boss_pct": 62,
+ "praised_for": [
+  [
+   "OPTION_RECOMMEND_STABLE",
+   302
+  ],
+  [
+   "OPTION_RECOMMEND_JUNIOR",
+   275
+  ],
+  [
+   "OPTION_RECOMMEND_VARIOUS",
+   236
+  ]
+ ]
+}

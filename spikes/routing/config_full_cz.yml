@@ -1,0 +1,26 @@
+# MOTIS v2.11.3 spike config: whole Czech Republic, all features on.
+# Paths are relative to the working directory spikes/routing/data/full
+server:
+  port: 8080
+  web_folder: ../motis/ui
+osm: ../dl/czech-republic-latest.osm.pbf
+tiles:
+  profile: ../motis/tiles-profiles/full.lua
+  db_size: 274877906944
+  flush_threshold: 100000
+timetable:
+  first_day: 2026-10-06
+  num_days: 30
+  railviz: true
+  with_shapes: true
+  datasets:
+    rail:
+      path: ../dl/NeTEx_GVD2026.zip
+    pid:
+      path: ../dl/PID_GTFS.zip
+    jmk:
+      path: ../dl/JMK_GTFS.zip
+street_routing: true
+osr_footpath: true
+geocoding: true
+reverse_geocoding: true

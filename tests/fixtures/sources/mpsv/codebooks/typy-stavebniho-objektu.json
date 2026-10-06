@@ -1,0 +1,32 @@
+{
+  "polozky": [
+    {
+      "id": "TypStavebnihoObjektu/1",
+      "kod": "1",
+      "nazev": {
+        "cs": "Budova s číslem popisným"
+      }
+    },
+    {
+      "id": "TypStavebnihoObjektu/2",
+      "kod": "2",
+      "nazev": {
+        "cs": "Budova s číslem evidenčním"
+      }
+    },
+    {
+      "id": "TypStavebnihoObjektu/3",
+      "kod": "3",
+      "nazev": {
+        "cs": "Budova bez čísla popisného či evidenčního"
+      }
+    },
+    {
+      "id": "TypStavebnihoObjektu/4",
+      "kod": "4",
+      "nazev": {
+        "cs": "Bez rozlišení"
+      }
+    }
+  ]
+}

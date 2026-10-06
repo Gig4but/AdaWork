@@ -1,0 +1,35 @@
+{
+  "@context": "https://schema.org/",
+  "@type": "JobPosting",
+  "title": "Obchodní zástupci pro agrohnojiva a komodity",
+  "description": "<h2>O nás</h2><div><p>Jsme <strong>ACHP Slavkov, a. s.</strong> – dlouholetý a spolehlivý partner českých zemědělců se zaměřením na prodej zemědělských minerálních hnojiv, listových hnojiv a výkup komodit.</p><p>Pracujeme jako menší, přátelský tým, který drží při sobě – a právě teď se rozrůstáme!<br><br><strong>Hledáme obchodníky / obchodnice, kteří / které rozumí zemědělství a chtějí mít vlastní region, vlastní zákazníky a výsledky, které jsou vidět.</strong><br><br><strong>Nové kolegy / kolegyně hledáme pro tyto oblasti obchodování:</strong></p><ul>\t<li><strong>Středočeský kraj</strong></li>\t<li><strong>kraj Vysočina</strong></li>\t<li><strong>Moravskoslezský kraj</strong></li></ul></div><h2>Co u nás budete dělat?</h2><div><ul>\t<li>Aktivně obchodovat minerální hnojiva (granulovaná i kapalná), listovou výživu a komodity u koncových zákazníků – zemědělců.</li>\t<li>Starat se o naše zákazníky a aktivně vyhledávat nové obchodní příležitosti ve svěřeném&nbsp;regionu.</li>\t<li>Poskytovat poradenství v oblasti minerálních hnojiv, listové výživy rostlin a komodit.</li>\t<li>Připravovat obchodní nabídky, sledovat vývoj trhu, trendy a novinky v zemědělství.</li>\t<li>Úzce spolupracovat s kolegy v obchodním týmu, backoffice i s vedením společnosti.</li>\t<li>Kombinovat práci v terénu s administrativou doma a / nebo v kanceláři.</li></ul></div><h2>Jak si vás představujeme?</h2><div><ul>\t<li>Máte praxi v obchodě se zemědělskými vstupy (hnojiva, přípravky, komodity), nebo jste agronom s&nbsp;obchodními zkušenostmi.</li>\t<li>Podmínkou je dokončené vzdělání zemědělského směru (SŠ/VŠ).</li>\t<li>Máte vynikající komunikační dovednosti - umíte jednat s&nbsp;malým farmářem i předsedou velkého podniku.</li>\t<li>Jste samostatný/á, zodpovědný/á – umíte si sám/a zorganizovat čas mezi obchodem a administrativou.</li>\t<li>Jste aktivní řidič sk. B.</li></ul></div><h2>Co vám nabídneme?</h2><div><ul>\t<li>Férové a motivující finanční ohodnocení včetně bonusů za vaše obchodní výsledky.</li>\t<li>Služební vůz, notebook a mobilní telefon – i k soukromým účelům.</li>\t<li>25 dní dovolené pro zasloužený odpočinek.</li>\t<li>Firemní rekreační zařízení k využití pro vás i rodinu.</li>\t<li>Příspěvek na penzijní spoření nebo dlouhodobý investiční produkt.</li>\t<li>Dotované stravování a občerstvení na pracovišti.</li>\t<li>Odborné zaškolení, vstřícné kolegy a práci, která má smysl.</li>\t<li>... a&nbsp;spoustu dalších výhod, které vám rádi představíme osobně při kávě.</li></ul></div>",
+  "datePosted": "2026-10-06",
+  "validThrough": "2026-10-29T13:11:37",
+  "url": "https://www.jenprace.cz/nabidka/h4z3x8/obchodni-zastupci-pro-agrohnojiva-a-komodity",
+  "employmentType": [
+    "FULL_TIME"
+  ],
+  "hiringOrganization": {
+    "@type": "Organization",
+    "name": "ACHP Slavkov, a.s."
+  },
+  "baseSalary": {
+    "@type": "MonetaryAmount",
+    "currency": "CZK",
+    "value": {
+      "@type": "QuantitativeValue",
+      "minValue": 40000,
+      "maxValue": 80000,
+      "unitText": "MONTH"
+    }
+  },
+  "jobLocation": {
+    "@type": "Place",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Celá ČR",
+      "addressCountry": "CZ"
+    }
+  },
+  "jobBenefits": "dovolená navíc, finanční bonusy a prémie, 13., případně 14. plat, firemní akce, pracovní zařízení (mobil, pc, notebook...), služební auto, vzdělávací kurzy, příspěvek na volný čas, přátelské prostředí, závodní stravování, občerstvení na pracovišti"
+}

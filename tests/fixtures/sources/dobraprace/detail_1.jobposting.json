@@ -1,0 +1,27 @@
+{
+  "title": "Obsluha výrobní linky až 40 000 Kč, nástupní bonus 15 000 Kč",
+  "description": "Hledáme šikovného muže pro obsluhu strojů ve výrobě.",
+  "datePosted": "2023-08-30 16:17:31",
+  "validThrough": "9999-12-31",
+  "applicantLocationRequirements": {
+    "@type": "Country",
+    "name": "CS"
+  },
+  "employmentType": "FULL_TIME",
+  "hiringOrganization": {
+    "@type": "Organization",
+    "name": "DFI EUROPE s.r.o."
+  },
+  "jobLocation": {
+    "@type": "Place",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "CS",
+      "addressLocality": "Hostivice okres Praha-západ",
+      "addressRegion": "Středočeský kraj"
+    }
+  },
+  "industry": "Manuální a dělnické profese",
+  "@context": "https://schema.org",
+  "@type": "JobPosting"
+}

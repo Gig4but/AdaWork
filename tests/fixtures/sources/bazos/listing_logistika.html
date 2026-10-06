@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<title>Doprava a logistika inzerce - Práce - Nabídka | Bazoš.cz</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="description" content="Kategorie Doprava a logistika inzerce. Vybírejte z 1 798 inzerátů. Prodej snadno a rychle na Bazoši. Přes půl milionů uživatelů za den."><meta property="og:title" content="Doprava a logistika inzerce - Práce - Nabídka">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Bazos.cz">
+<meta property="og:description" content="Kategorie Doprava a logistika inzerce. Vybírejte z 1 798 inzerátů. Prodej snadno a rychle na Bazoši. Přes půl milionů uživatelů za den.">
+<link rel="canonical" href="https://prace.bazos.cz/logistika/20/"><meta property="fb:admins" content="1055875657">
+<link rel="stylesheet" href="https://www.bazos.cz/bazos67s.css" type="text/css"><link rel="preload" as="image" href="https://www.bazos.cz/obrazky/bazos.svg">
+<link rel="stylesheet" href="https://www.bazos.cz/bazosprint.css" type="text/css" media="print">
+<link rel="icon" href="https://www.bazos.cz/favicon.svg" type="image/svg+xml">
+<link rel="icon" HREF="https://www.bazos.cz/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="https://www.bazos.cz/apple-touch-icon.png">
+<script async="async" src="https://www.google.com/adsense/search/ads.js"></script>
+<script type="text/javascript" charset="utf-8">
+(function(g,o){g[o]=g[o]||function(){(g[o]['q']=g[o]['q']||[]).push(
+  arguments)},g[o]['t']=1*new Date})(window,'_googCsa');
+</script><script>
+var xhr = new XMLHttpRequest();
+var naseptavac_value = '';
+function naseptavac(value) {
+  if (value=='')  {
+  	naseptavac_value = '';
+  	document.getElementById('vysledek').innerHTML='';
+  	}
+else {
+	if (naseptavac_value == value) {
+		return false;
+	}
+	naseptavac_value = value;
+	setTimeout(function () {
+		if (naseptavac_value != value) {
+			return false;
+		}
+		xhr.onreadystatechange = function() {
+ 		 if (this.readyState == 4 && naseptavac_value == value){
+				document.getElementById('vysledek').innerHTML = this.responseText;
+			}
+ 		 };
+		xhr.open("POST", '/suggest.php');
+		xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		xhr.send('rubnas=PR&catnas=279&qnas='+encodeURIComponent(naseptavac_value));
+	}, 250);
+}
+}
+
+var naseptavacpsc_value = '';
+function naseptavacpsc(value) {
+  if (value=='')  {
+  	naseptavacpsc_value = '';
+  	document.getElementById('vysledekpsc').innerHTML='<table cellpadding=\"3\" cellspacing=\"0\" class=\"tablenaspsc\"><tr><td class=\"act\" onclick=\"getLocation();\"><b>Inzeráty v okolí</b></td></tr></table>';
+  	}
+else {
+	if (naseptavacpsc_value == value) {
+		return false;
+	}
+	naseptavacpsc_value = value;
+	setTimeout(function () {
+		if (naseptavacpsc_value != value) {
+			return false;
+		}
+		xhr.onreadystatechange = function() {
+ 		 if (this.readyState == 4 && naseptavacpsc_value == value){
+				document.getElementById('vysledekpsc').innerHTML = this.responseText;
+			}
+ 		 };
+		xhr.open("POST", '/suggestpsc.php');
+		xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		xhr.send('qnaspsc='+encodeURIComponent(naseptavacpsc_value));
+	}, 250);
+}
+}
+
+function getLocation() {
+if (navigator.geolocation) {navigator.geolocation.getCurrentPosition(showPosition);}
+else {document.getElementById('hlokalita').value = '';}
+}
+function showPosition(position) {
+		xhr.onreadystatechange = function() {
+ 		 if (this.readyState == 4){
+				document.getElementById('hlokalita').value = this.responseText;
+				document.forms['formt'].submit();
+			}
+ 		 };
+		xhr.open("POST", '/zip.php');
+		xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		xhr.send('latitude='+encodeURIComponent(position.coords.latitude)+'&longitude='+encodeURIComponent(position.coords.longitude));
+}
+
+var agent_value = '';
+function agentclick() {
+  if (document.getElementById('agentmail').value=='')  {
+  	document.getElementById("agentmail").focus();
+    return false;
+  	}
+else {
+agent_value = document.getElementById('agentmail').value;
+xhr.onreadystatechange = function() {
+  if (this.readyState == 4){
+				document.getElementById('overlay').innerHTML = this.responseText;
+			}
+  };
+xhr.open("POST", '/agent.php');
+xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+xhr.send('hledat=&rubrikav=PR&hlokalita=&humkreis=&cenaod=&cenado=&cat=279&typ=&agentmail='+encodeURIComponent(agent_value));
+}
+}
+
+function odeslatrequest(value,params) {
+xhr.onreadystatechange = function() {
+  if (this.readyState == 4){
+				document.getElementById('overlay').innerHTML = this.responseText;
+			}
+  };
+xhr.open("POST", value);
+xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+xhr.send(params);
+}
+function overlay() {
+	el = document.getElementById("overlay");
+	el.style.display = (el.style.display == "inline") ? "none" : "inline";
+}
+function odeslatakci(postaction,value1,value2,value3) {
+document.getElementById('postaction').value = postaction;
+document.getElementById("postv1").value = value1;
+document.getElementById("postv2").value = value2;
+document.getElementById("postv3").value = value3;
+document.formaction.submit();
+}
+</script>
+</head>
+
+<body>
+
+
+<div class="sirka">
+<div class="listalogor">
+<div class="listalogol"><a href="https://www.bazos.cz/" title="Bazos.cz - Inzerce, bazar"><img src="https://www.bazos.cz/obrazky/bazos.svg" width="199" height="34" alt="Bazos.cz - Inzerce, inzeráty"></a></div>
+<div class="listalogom"><b>... inzerce pro každého</b></div>
+<div class="listalogop"><a href="https://www.bazos.cz/oblibene.php"><b>Oblíbené inzeráty</b></a> <a href="https://www.bazos.cz/moje-inzeraty.php"><b>Moje inzeráty</b></a> <a href="/pridat-inzerat.php"><b><span class=pridati>Přidat inzerát</span></b></a></div>
+</div>
+<form name="formt" id="formt" method=get >
+<div class="listah">
+<div class="rubriky">
+<b>
+Co: <span class=vysokoli><span id="vysledek"></span><input type="search" onkeyup="naseptavac(this.value);" id=hledat name=hledat size="17" maxlength="256" value="" autocomplete="off" title="Co? Vyhledávaný výraz"></span>
+
+<select name="rubriky" onchange='this.form.submit();' title="Vyber rubriku">
+<option value="www">Všechny rubriky</option>
+<option value="auto">Auto</option><option value="deti">Děti</option><option value="dum">Dům a zahrada</option><option value="elektro">Elektro</option><option value="foto">Foto</option><option value="hudba">Hudba</option><option value="knihy">Knihy</option><option value="mobil">Mobily</option><option value="motorky">Motorky</option><option value="nabytek">Nábytek</option><option value="obleceni">Oblečení</option><option value="pc">PC</option><option value="prace" selected>Práce</option><option value="reality">Reality</option><option value="sluzby">Služby</option><option value="sport">Sport</option><option value="stroje">Stroje</option><option value="vstupenky">Vstupenky</option><option value="zvirata">Zvířata</option><option value="ostatni">Ostatní</option></select>
+
+Lokalita: <span class=vysokolipsc><span id="vysledekpsc"></span><input type="search" name="hlokalita" id="hlokalita" onkeyup="naseptavacpsc(this.value);" onclick="naseptavacpsc(this.value);" value="" size="4" maxlength="25" autocomplete="off" title="Kde? PSČ (místo)" style="-webkit-appearance: none;"></span>
+Okolí: <input name="humkreis" title="Okolí v km" value="25" size="3" style="width: 25px;"> km
+Cena od: <input name=cenaod title="Cena od Kč" maxlength="12" size="5" value=""> - do: <input name=cenado title="Cena do Kč" maxlength="12" size="5" value=""> Kč <input type="submit" name="Submit" value="Hledat">
+<input type="hidden" name="order" id="order"><input type="hidden" name="crp" id="crp"><input type="hidden" id="kitx" name="kitx" value="ano"></b>
+</div>
+</div>
+</form>
+<div class="drobky"><a href="https://www.bazos.cz/" title="Inzerce Bazoš">Hlavní stránka</a>  > <a href="https://prace.bazos.cz">Práce</a> > <h1 class="nadpiskategorie">Doprava a logistika</h1></div>
+<br>
+
+
+<div class="flexmain"><div class="menuleft"><div class="nadpismenu">Kategorie</div>
+<div class="barvalmenu">
+<div class="barvaleva">
+<a href="/administrativa/" >Administrativa</a>
+<a href="/potravinarstvi/" >Chemie a potravinářství</a>
+<a href="/logistika/"  id=zvyraznenikat>Doprava a logistika</a>
+<a href="/finance/" >Finance a ekonomika</a>
+<a href="/it/" >IT a telekomunikace</a>
+<a href="/marketing/" >Marketing a reklama</a>
+<a href="/management/" >Management</a>
+<a href="/obchod/" >Obchod a prodej</a>
+<a href="/bezpecnost/" >Obrana a bezpečnost</a>
+<a href="/ubytovani/" >Pohostinství a ubytování</a>
+<a href="/domacnost/" >Práce v domácnosti</a>
+<a href="/pravo/" >Právo, legislativa</a>
+<a href="/prumysl/" >Průmysl a výroba</a>
+<a href="/remeslo/" >Řemeslné práce</a>
+<a href="/sluzby/" >Servis a služby</a>
+<a href="/stavebnictvi/" >Stavebnictví</a>
+<a href="/technika/" >Technika a energetika</a>
+<a href="/tisk/" >Tisk a polygrafie</a>
+<a href="/vyzkum/" >Výzkum a vývoj</a>
+<a href="/personalistika/" >Vzdělávání a personalistika</a>
+<a href="/zdravotnictvi/" >Zdravotnictví</a>
+<a href="/zemedelstvi/" >Zemědělství</a>
+<br>
+<a href="/brigada/" >Brigády</a>
+<a href="/ostatni/" >Ostatní</a>
+</div></div>
+
+
+
+</div><div class="maincontent">
+
+
+<div class="listainzerat inzeratyflex">
+<div class="inzeratynadpis"><img src="https://www.bazos.cz/obrazky/list.gif" width="18" height="16" alt="List inzerátů" class=gallerylista> <form name="formgal" id="formgal" method="post" style="display: inline;"><input type="hidden" name="gal" value="g"><input type="image" alt="Submit" src="https://www.bazos.cz/obrazky/gallery.gif" width="18" height="16" class="gallerylist inputgal"></form> Zobrazeno 21-40 inzerátů z 1 798</div>
+<div class="inzeratycena"><b><span onclick="document.getElementById('order').value=1;document.forms['formt'].submit();" class="paction">Mzda/plat</span></b></div>
+<div class="inzeratylok">Lokalita</div>
+<div class="inzeratyview"><span onclick="document.getElementById('order').value=3;document.forms['formt'].submit();" class="paction">Zobrazeno</span></div>
+</div><form name="formaction" method="post" style="display: inline;"><input type="hidden" id="postaction" name="postaction" value=""><input type="hidden" id="postv1" name="postv1" value=""><input type="hidden" id="postv2" name="postv2" value=""><input type="hidden" id="postv3" name="postv3" value=""></form><button type="button" onclick="odeslatrequest('/agent.php','teloverit=');overlay();">Nové inzeráty e-mailem</button>
+	<div id="overlay">
+     <div></div>
+</div>
+
+<div id="container_one"></div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/223687422/stala-prace-rakovnik-naves.php"><img src="https://www.bazos.cz/img/1t/422/223687422.jpg?t=1790583062" class="obrazek" alt="Stálá práce RAKOVNÍK KOLEČKA - návěs" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/223687422/stala-prace-rakovnik-naves.php">Stálá práce RAKOVNÍK KOLEČKA - návěs</a></h2><span class=velikost10> - <span title="TOP 10x Platí do 29.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Hledáme řidiče kamionu C+E na KOLEČKA  Rakovník - Lipsko/Regesburg.
+Práce denní - noční (kolečko cca 10h dle provozu).
+Plat 2500 Kč čistého den.
+Nakládka z boku bez kurtů. Obaly zpět na tom samém místě vykládky.
+Požadujeme - spolehlivost, praxe m ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  2 500 Kč</span></b></div>
+<div class="inzeratylok">Rakovník<br>270 65</div>
+<div class="inzeratyview">1600 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','223687422');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','223687422');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','3071481','2766080','David+Svoboda');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','223687422');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/223939147/kuryr-allegro.php"><img src="https://www.bazos.cz/img/1t/147/223939147.jpg?t=1790837048" class="obrazek" alt="KURÝR ALLEGRO" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/223939147/kuryr-allegro.php">KURÝR ALLEGRO</a></h2><span class=velikost10> - <span title="TOP 7x Platí do 29.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Přijmeme řidiče pro rozvoz balíků.
+
+Rozvážíme do boxů, výdejních míst a zákazníkům
+
+Začátek směny v 6:00
+
+Konec směny 14:00-16:00 dle zkušeností řidiče
+
+Depo Zdiby
+
+Směny pondělí až pátek
+
+
+
+Požadujeme
+Řidičský průkaz skupiny B
+
+
+
+Nabízíme
+Nový vozov ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  42 000 Kč</span></b></div>
+<div class="inzeratylok">Praha 8<br>180 00</div>
+<div class="inzeratyview">591 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','223939147');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','223939147');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','4939510','8423691','MSC+group+s.r.o.');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','223939147');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224343656/foodora-rozvoz-jidla-ve-slanem.php"><img src="https://www.bazos.cz/img/1t/656/224343656.jpg?t=1790499463" class="obrazek" alt="FOODORA – Rozvoz jídla ve SLANÉM" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/224343656/foodora-rozvoz-jidla-ve-slanem.php">FOODORA – Rozvoz jídla ve SLANÉM</a></h2><span class=velikost10> - <span title="TOP 10x Platí do 28.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>🚗 Hledáme nové zaměstnance a brigádníky pro rozvoz jídla ve Slaném! 🍔📦
+📝 Náplň práce:
+• 🍽️ Vyzvedávání jídel v restauracích.
+• 🚗 Doručování jídel zákazníkům.
+🎁 Nabízíme:
+• ✅ Jednoduchou práci (1–2 objednávky za hodinu).
+• 💰 Výdělek 130–140 Kč/h ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">V textu</span></b></div>
+<div class="inzeratylok">Kladno<br>274 01</div>
+<div class="inzeratyview">245 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224343656');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224343656');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','4939510','5599157','Artem');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224343656');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224519167/ridic-ce.php"><img src="https://www.bazos.cz/img/1t/167/224519167.jpg?t=1790843674" class="obrazek" alt="Řidič  C+E" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/224519167/ridic-ce.php">Řidič  C+E</a></h2><span class=velikost10> - <span title="TOP 6x Platí do 28.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Do menšího kolektivu přijmeme řidiče C+E
+Vozidlo Scania + plachtový
+Dá se jezdit vnitro s návratem v týdnu dom a nebo MKD po-pá
+jezdíme CZ+SK+D+A+I
+Možnost i na sklopný návěs - agrokomodity
+Školení , průserpojistka ,phm , mobil , oblečení.....  ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  55 000 Kč</span></b></div>
+<div class="inzeratylok">Hodonín<br>696 81</div>
+<div class="inzeratyview">896 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224519167');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224519167');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','16144480','14899251','P%C5%99emysl');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224519167');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224576380/ridic-sk-ce-vkd-hradec-kralove-denni-navraty.php"><img src="https://www.bazos.cz/img/1t/380/224576380.jpg?t=1790963835" class="obrazek" alt="Řidič sk. C+E, VKD (Hradec Králové)- DENNÍ NÁVRATY" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/224576380/ridic-sk-ce-vkd-hradec-kralove-denni-navraty.php">Řidič sk. C+E, VKD (Hradec Králové)- DENNÍ NÁVRATY</a></h2><span class=velikost10> - <span title="TOP 5x Platí do 27.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Dopravní firma působící na dopravním trhu 30 let s vlastním zázemím a 65-ti nákladními vozidly přijme zaměstnance na nová vozidla MAN, Mercedes, návěsy 100cbm, soupravy 120cbm. Jezdíme přímo pro výrobní závody v ČR. Parkování - Hradec Králové. Víkend ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  47 000 Kč</span></b></div>
+<div class="inzeratylok">Hradec Králové<br>503 01</div>
+<div class="inzeratyview">238 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224576380');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224576380');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','141314','159922','Stanislav+Siegl');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224576380');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224576261/ridic-sk-ce-vkd-mohelnice-spani-v-aute-max-1x-v-tydnu.php"><img src="https://www.bazos.cz/img/1t/261/224576261.jpg?t=1790963534" class="obrazek" alt="Řidič sk. C+E, VKD (Mohelnice)-spaní v autě max 1x v týdnu" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/224576261/ridic-sk-ce-vkd-mohelnice-spani-v-aute-max-1x-v-tydnu.php">Řidič sk. C+E, VKD (Mohelnice)-spaní v autě max 1x v týdnu</a></h2><span class=velikost10> - <span title="TOP 5x Platí do 27.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Dopravní firma působící na dopravním trhu 30 let s vlastním zázemím a 70-ti nákladními vozidly přijme zaměstnance na nová vozidla MAN, Mercedes, návěsy 100cbm, soupravy 120 CBM. Jezdíme pro výrobní závody v ČR. Parkování - Loštice u Mohelnice, Prostě ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  47 000 Kč</span></b></div>
+<div class="inzeratylok">Šumperk<br>789 83</div>
+<div class="inzeratyview">141 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224576261');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224576261');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','141314','159922','Stanislav+Siegl');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224576261');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224576160/ridic-sk-ce-vkd-cesky-brod-uzice.php"><img src="https://www.bazos.cz/img/1t/160/224576160.jpg?t=1790963289" class="obrazek" alt="Řidič sk. C+E, VKD (Český Brod, Úžice)" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/224576160/ridic-sk-ce-vkd-cesky-brod-uzice.php">Řidič sk. C+E, VKD (Český Brod, Úžice)</a></h2><span class=velikost10> - <span title="TOP 5x Platí do 27.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Dopravní firma působící na dopravním trhu 30 let s vlastním zázemím a 70-ti nákladními vozidly přijme zaměstnance na nová vozidla MAN, Mercedes, návěsy 100cbm, soupravy 120cbm. Jezdíme přímo pro výrobní závody v ČR. Parkování - Český Brod, Úžice u Kr ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  48 000 Kč</span></b></div>
+<div class="inzeratylok">Kolín<br>282 01</div>
+<div class="inzeratyview">93 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224576160');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224576160');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','141314','159922','Stanislav+Siegl');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224576160');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224381067/ridic-mkd-pravidelna-linka.php"><img src="https://www.bazos.cz/img/1t/067/224381067.jpg?t=1790592352" class="obrazek" alt="ŘIDIČ MKD - PRAVIDELNÁ LINKA" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/224381067/ridic-mkd-pravidelna-linka.php">ŘIDIČ MKD - PRAVIDELNÁ LINKA</a></h2><span class=velikost10> - <span title="TOP 7x Platí do 26.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Přijmeme řidiče sk. C+E na pravidelnou linku Říčany - Brusel - Říčany. 
+Stálá a pravidelná práce, jízda ve dvojce. Jde o expresní přepravu,  takže nikde žádné zbytečné zdržování, jen naložit-složit. Vše rampa-rampa, řidiči nic nenakládají. 
+Hledáme ř ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">Dohodou</span></b></div>
+<div class="inzeratylok">Praha - východ<br>251 01</div>
+<div class="inzeratyview">924 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224381067');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224381067');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','7114130','7634179','Martin');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224381067');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224554019/ridic-ce-vnitro.php"><img src="https://www.bazos.cz/img/1t/019/224554019.jpg?t=1790924202" class="obrazek" alt="Řidič C+E vnitro" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/224554019/ridic-ce-vnitro.php">Řidič C+E vnitro</a></h2><span class=velikost10> - <span title="TOP 4x Platí do 24.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Přijmeme řidiče na rozvoz stavebních materiálů po cz.
+Plato nebo plachta (výběr je na řídiči)
+Parkujem v Dolních Beřkovicích u Mělníka ale dá se domluvit i na parkování doma.
+Vlastní servisními zázemí 
+Plat 60-65tis čistého.</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  65 000 Kč</span></b></div>
+<div class="inzeratylok">Mělník<br>277 13</div>
+<div class="inzeratyview">557 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224554019');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224554019');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','0','692477','Petr+Kol%C3%A1%C5%99+Transporte+s.r.o.');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224554019');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224384572/ridic-ce.php"><img src="https://www.bazos.cz/img/1t/572/224384572.jpg?t=1791269812" class="obrazek" alt="Řidič C+E ,C,T" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/224384572/ridic-ce.php">Řidič C+E ,C,T</a></h2><span class=velikost10> - <span title="TOP 5x Platí do 23.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Hledáme řidiče na Volvo- návěs sklopka. Auto přestavěno na traktor lze řídit i se skupinou C a T. Profesní průkaz. Mzda 220Kč čistého. 
+Příspěvek na dojíždění. Parkování 5km od Litomyšle.  
+Nástup ihned - doježdění této sezóny.
+Možnost pokračování ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">V textu</span></b></div>
+<div class="inzeratylok">Svitavy<br>570 01</div>
+<div class="inzeratyview">905 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224384572');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224384572');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','17842585','9352761','Ta%C5%A1ner');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224384572');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224520833/kuryr-allegro-autodoprava-safarik-nastup-mozny-ihned.php"><img src="https://www.bazos.cz/obrazky/empty.gif" class="obrazek" alt="Kurýr Allegro (autodoprava Šafařík) - nástup možný ihned" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/224520833/kuryr-allegro-autodoprava-safarik-nastup-mozny-ihned.php">Kurýr Allegro (autodoprava Šafařík) - nástup možný ihned</a></h2><span class=velikost10> - <span title="TOP 4x Platí do 23.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Do zavedené dopravní firmy Autodoprava Šafařík hledáme spolehlivého a šikovného řidiče / kurýra pro pravidelný rozvoz zásilek pro síť One by Allegro.
+Máte volné ruce a chcete začít vydělávat co nejdříve? U nás je nástup možný ihned!
+Místo výkonu pr ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">V textu</span></b></div>
+<div class="inzeratylok">Rokycany<br>337 01</div>
+<div class="inzeratyview">392 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224520833');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224520833');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','18050577','16973712','Martin');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224520833');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224657956/kuryr-pizzerie.php"><img src="https://www.bazos.cz/img/1t/956/224657956.jpg?t=1791137852" class="obrazek" alt="Kuryr pizzerie" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/224657956/kuryr-pizzerie.php">Kuryr pizzerie</a></h2><span class=velikost10> - <span title="TOP 3x Platí do 22.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>🚗 COME ON PIZZA ŘÍČANY HLEDÁ KURÝRA! 🍕
+
+Hledáme spolehlivého kurýra/kurýrku na rozvoz jídla v Říčanech a okolí.
+
+💰 1 700 Kč / směna + dýška
+🚗 Rozvoz vlastním autem
+⛽ PHM proplácíme
+🕙 Směny 10:00–23:00
+📅 Směny dle domluvy
+
+👉 Možnost pravidelných směn  ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  1 700 Kč</span></b></div>
+<div class="inzeratylok">Praha - východ<br>251 01</div>
+<div class="inzeratyview">76 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224657956');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224657956');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','217191','81678','Michal');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224657956');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/223472885/ridic-kuryr.php"><img src="https://www.bazos.cz/obrazky/empty.gif" class="obrazek" alt="Řidič / kurýr" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/223472885/ridic-kuryr.php">Řidič / kurýr</a></h2><span class=velikost10> - <span title="TOP 3x Platí do 22.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Jsme mladý kolektiv a hledáme mezi sebe řidiče/ kurýra na rozvoz zásilek v PPL Depo Řeporyje. Požadujeme spolehlivost, flexibilitu, fyzickou zdatnost, čistý trestní rejstřík.
+pracovní doba pondělí až pátek 5:00 až 13:30. Oblečení, zaškolení, a vše p ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  45 000 Kč</span></b></div>
+<div class="inzeratylok">Praha - východ<br>250 01</div>
+<div class="inzeratyview">339 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','223472885');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','223472885');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','14725213','13356779','Marie');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','223472885');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224268799/prijmeme-ridice-skupiny-ce.php"><img src="https://www.bazos.cz/img/1t/799/224268799.jpg?t=1790323774" class="obrazek" alt="Přijmeme řidiče skupiny C+E" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/224268799/prijmeme-ridice-skupiny-ce.php">Přijmeme řidiče skupiny C+E</a></h2><span class=velikost10> - <span title="TOP 6x Platí do 22.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Do naší firmy přijmeme zaměstnance na pozici řidiče nákladního automobilu s klanicovým návěsem.
+Jezdíme převážně: tuzemsko, Slovensko, Rakousko.
+Pracovní doba: pondělí – pátek, víkendy volné, může se stát, že bude nutné přespat v autě, někdy i 2x - ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">Dohodou</span></b></div>
+<div class="inzeratylok">Brno<br>602 00</div>
+<div class="inzeratyview">706 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224268799');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224268799');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','8893604','6920846','Jitka+%C5%A0krancov%C3%A1');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224268799');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224463504/ridic-sk-ce-rakovnikprestice.php"><img src="https://www.bazos.cz/img/1t/504/224463504.jpg?t=1790743935" class="obrazek" alt="Řidič Sk. C+E Rakovník/Přeštice" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/224463504/ridic-sk-ce-rakovnikprestice.php">Řidič Sk. C+E Rakovník/Přeštice</a></h2><span class=velikost10> - <span title="TOP 4x Platí do 22.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>STS Přeštice, a.s. Hledá řidiče na pobočku Rakovník. 
+
+Inzeráty napsané pomocí AI má dnes snad každá autodoprava. Všude moderní vozový park, skvělý kolektiv, nadstandardní peníze a práce snů.
+
+Tak jsme si řekli, že napíšeme něco normálního.
+
+Js ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">Zdarma</span></b></div>
+<div class="inzeratylok">Rakovník<br>270 36</div>
+<div class="inzeratyview">502 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224463504');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224463504');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','4289142','1055932','Marko');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224463504');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/223604763/ridic-ce-75-000-kc-cisteho-nemecko-plzensko.php"><img src="https://www.bazos.cz/img/1t/763/223604763.jpg?t=1790782796" class="obrazek" alt="ŘIDIČ C+E – 75 000 Kč ČISTÉHO – NĚMECKO – PLZEŇSKO" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/223604763/ridic-ce-75-000-kc-cisteho-nemecko-plzensko.php">ŘIDIČ C+E – 75 000 Kč ČISTÉHO – NĚMECKO – PLZEŇSKO</a></h2><span class=velikost10> - <span title="TOP 21x Platí do 21.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>HLEDÁME ŘIDIČE C+E – AŽ 75 000 Kč ČISTÉHO MĚSÍČNĚ
+
+Jezdíme pouze Německo. Nástup a parkování Nýřany u Plzně.
+
+💰 VÝDĚLEK AŽ 75 000 Kč ČISTÉHO
+
+Výši výdělku si ovlivníte zvoleným režimem:
+
+🔹 75 000 Kč čistého – 2 víkendy v měsíci venku
+🔹 70 00 ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  75 000 Kč</span></b></div>
+<div class="inzeratylok">Plzeň-sever<br>330 23</div>
+<div class="inzeratyview">2798 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','223604763');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','223604763');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','16639465','6033598','Renata+%C5%A0%C3%ADchov%C3%A1');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','223604763');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/223849035/hledame-ridice-ce.php"><img src="https://www.bazos.cz/img/1t/035/223849035.jpg?t=1790359213" class="obrazek" alt="ŘIDIČ C+E" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/223849035/hledame-ridice-ce.php">ŘIDIČ C+E</a></h2><span class=velikost10> - <span title="TOP 5x Platí do 20.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Přeprava lesní štěpky, nejčastěji v okruhu cca 100 km od Lanškrouna, dle zakázek i po celé ČR.
+• posuvná podlaha / kontejnerová souprava
+• výhodou práce s nakladačem
+• nadstandardní finanční ohodnocení
+• požadujeme samostatnost a spolehlivost</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">Dohodou</span></b></div>
+<div class="inzeratylok">Ústí nad Orlicí<br>563 01</div>
+<div class="inzeratyview">1410 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','223849035');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','223849035');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','17013646','15845206','Robin');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','223849035');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/224248460/prijmeme-ridice-sk-c-osmikola-sklapec-8x4-praha.php"><img src="https://www.bazos.cz/img/1t/460/224248460.jpg?t=1790268181" class="obrazek" alt="🚛 Přijmeme řidiče sk. C –sklápěč 8x4/ kontejnerovka PRAHA" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/224248460/prijmeme-ridice-sk-c-osmikola-sklapec-8x4-praha.php">🚛 Přijmeme řidiče sk. C –sklápěč 8x4/ kontejnerovka PRAHA</a></h2><span class=velikost10> - <span title="TOP 5x Platí do 19.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Jsme stabilní rodinná stavební firma s vlastním zázemím a mechanizací. Pracujeme převážně na státních zakázkách, díky čemuž máme dlouhodobě zajištěný objem práce po celý rok.
+
+Do týmu aktuálně hledáme spolehlivého řidiče sk. C, který chce stabilní  ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">  50 000 Kč</span></b></div>
+<div class="inzeratylok">Praha 6<br>160 00</div>
+<div class="inzeratyview">1092 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','224248460');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','224248460');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','16653703','6851961','BS+ROCHL');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','224248460');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+
+<div class="inzeraty inzeratyflex">
+<div class="inzeratynadpis"><a href="/inzerat/223517116/ridic-nakladniho-automobilu-na-hpp.php"><img src="https://www.bazos.cz/img/1t/116/223517116.jpg?t=1788784273" class="obrazek" alt="Řidič nákladního automobilu na HPP" width="170" height="128"></a>
+<h2 class=nadpis><a href="/inzerat/223517116/ridic-nakladniho-automobilu-na-hpp.php">Řidič nákladního automobilu na HPP</a></h2><span class=velikost10> - <span title="TOP 21x Platí do 19.10. 2026" class="ztop">TOP</span> - [6.10. 2026]</span><br>
+<div class=popis>Společnosti PALEKO CZ, s.r.o. hledá nového kolegu na pozici řidič/ka nákladního automobilu (Scania, DAF) na HPP převážně pro vnitrostátní přepravu. Přepravujeme převážně vlastní zboží, ale poskytujeme i externí přepravu. Provozovna se nachází v okres ...</div><br><br>
+</div>
+<div class="inzeratycena"><b><span translate="no">Dohodou</span></b></div>
+<div class="inzeratylok">Praha - východ<br>250 63</div>
+<div class="inzeratyview">3191 x</div>
+<div class="inzeratyakce">
+<span onclick="odeslatakci('spam','223517116');return false;" class="akce paction">Označit špatný inzerát</span> <span onclick="odeslatakci('category','223517116');return false;" class="akce paction">Chybnou kategorii</span> <span onclick="odeslatakci('rating','8572475','6552707','Svatopluk+Koc%C5%AFrek');return false;" class="akce paction">Ohodnotit uživatele</span> <span onclick="odeslatakci('edit','223517116');return false;" class="akce paction">Smazat/Upravit/Topovat</span>
+</div>
+</div>
+<div id="container_two"></div><script type="text/javascript" charset="utf-8">
+var pageOptions = {
+  'pubId': 'pub-3645948300403337',
+  'query' : "Doprava a logistika",
+  "channel": "4719857758",  'linkTarget' : '_blank',
+  'personalizedAds' : 'false',
+  'ivt': false,
+'styleId' : '6171314811',  'adPage': 2,
+  'hl': 'cs'
+};
+
+var adblock1 = {
+  'container': 'container_one',
+  'width': 'auto',
+  'maxTop' : 2
+};
+
+var adblock2 = {
+  'container': 'container_two',
+  'width': 'auto',
+  'number' : 2
+};
+
+_googCsa('ads', pageOptions, adblock2);</script>
+
+<br><div class="strankovani">Stránka: <a href="/logistika/"><b>Předchozí</b></a> <a href="/logistika/">1</a> <a href="/logistika/20/">2</a> <a href="/logistika/40/">3</a> <a href="/logistika/60/">4</a> <a href="/logistika/80/">5</a> <a href="/logistika/100/">6</a> <a href="/logistika/120/">7</a> <a href="/logistika/140/">8</a> <a href="/logistika/40/"><b>Další</b></a></div><br><br><br>
+
+
+</div></div><br>
+
+&copy;2026 Bazoš -  <b>Inzerce, Bazar Doprava a logistika</b><br>
+<a href="https://www.bazos.cz/napoveda.php">Nápověda</a>, <a href="https://www.bazos.cz/dotazy.php">Dotazy</a>, <a href="https://www.bazos.cz/hodnoceni.php">Hodnocení</a>, <a href="https://www.bazos.cz/kontakt.php">Kontakt</a>, <a href="https://www.bazos.cz/reklama.php">Reklama</a>, <a href="https://www.bazos.cz/podminky.php">Podmínky</a>, <a href="https://www.bazos.cz/ochrana-udaju.php">Ochrana údajů</a>, <a href="https://www.bazos.cz/rss.php?rub=pr&cat=279">RSS</a>, <form name="formvkm" id="formvkm" method="post" style="display: inline;"><input type="hidden" name="vkm" value="m"><input type="submit" class="vkm" value="Mobilní verze"></form><br>
+
+Inzeráty Práce celkem: <b>5952</b>, za 24 hodin: <b>801</b><br><br>
+<a href="https://www.bazos.cz/mapa-kategorie.php">Mapa kategorií</a>, <a href="https://prace.bazos.cz/mapa-search.php">Nejvyhledávanější výrazy</a>
+<br>
+Země: <a href="https://prace.bazos.cz">Česká republika</a>, <a href="https://praca.bazos.sk">Slovensko</a>, <a href="https://praca.bazos.pl">Polsko</a>, <a href="https://jobs.bazos.at">Rakousko</a>
+<br>
+<br>
+</div>
+
+<script src="https://www.bazos.cz/cookie-consent.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({"notice_banner_type":"simple","consent_type":"express","palette":"light","language":"cs","page_load_consent_levels":["strictly-necessary"],"notice_banner_reject_button_hide":false,"preferences_center_close_button_hide":false,"page_refresh_confirmation_buttons":false,"cookie_domain": "bazos.cz"});
+});
+</script>
+<a href="#" id="open_preferences_center"> </a>
+
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-NZW1QTHKBB"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-NZW1QTHKBB');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,522 @@
+{
+ "pocetCelkem": 7,
+ "ekonomickeSubjekty": [
+  {
+   "ico": "01464353",
+   "obchodniJmeno": "ZO Odborového svazu pracovníků obchodu Penny Market, s.r.o.",
+   "sidlo": {
+    "kodStatu": "CZ",
+    "nazevStatu": "Česká republika",
+    "kodKraje": 27,
+    "nazevKraje": "Středočeský kraj",
+    "kodOkresu": 3209,
+    "nazevOkresu": "Praha-východ",
+    "kodObce": 538701,
+    "nazevObce": "Radonice",
+    "kodUlice": 419109,
+    "nazevUlice": "Počernická",
+    "cisloDomovni": 257,
+    "kodCastiObce": 138240,
+    "nazevCastiObce": "Radonice",
+    "kodAdresnihoMista": 26013894,
+    "psc": 25073,
+    "textovaAdresa": "Počernická 257, 25073 Radonice",
+    "standardizaceAdresy": true,
+    "typCisloDomovni": 1
+   },
+   "pravniForma": "707",
+   "pravniFormaRos": "707",
+   "financniUrad": "057",
+   "datumVzniku": "2013-02-05",
+   "datumAktualizace": "2023-08-10",
+   "icoId": "01464353",
+   "adresaDorucovaci": {
+    "radekAdresy1": "Počernická 257",
+    "radekAdresy2": "25073 Radonice"
+   },
+   "czNace2008": [
+    "94200"
+   ],
+   "seznamRegistraci": {
+    "stavZdrojeRos": "AKTIVNI",
+    "stavZdrojeVr": "AKTIVNI",
+    "stavZdrojeRes": "AKTIVNI",
+    "stavZdrojeRzp": "NEEXISTUJICI",
+    "stavZdrojeNrpzs": "NEEXISTUJICI",
+    "stavZdrojeRpsh": "NEEXISTUJICI",
+    "stavZdrojeRcns": "NEEXISTUJICI",
+    "stavZdrojeSzr": "NEEXISTUJICI",
+    "stavZdrojeDph": "NEEXISTUJICI",
+    "stavZdrojeSkDph": "NEEXISTUJICI",
+    "stavZdrojeSd": "NEEXISTUJICI",
+    "stavZdrojeIr": "NEEXISTUJICI",
+    "stavZdrojeCeu": "NEEXISTUJICI",
+    "stavZdrojeRs": "NEEXISTUJICI",
+    "stavZdrojeRed": "NEEXISTUJICI",
+    "stavZdrojeMonitor": "NEEXISTUJICI"
+   },
+   "primarniZdroj": "ros",
+   "dalsiUdaje": [
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "ZO Odborového svazu pracovníků obchodu Penny Market, s.r.o.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 27,
+        "nazevKraje": "Středočeský kraj",
+        "kodOkresu": 3209,
+        "nazevOkresu": "Praha-východ",
+        "kodObce": 538701,
+        "nazevObce": "Radonice",
+        "kodUlice": 419109,
+        "nazevUlice": "Počernická",
+        "cisloDomovni": 257,
+        "kodCastiObce": 138240,
+        "nazevCastiObce": "Radonice",
+        "kodAdresnihoMista": 26013894,
+        "psc": 25073,
+        "textovaAdresa": "Počernická 257, 25073 Radonice",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "707",
+     "pravniFormaRos": "707",
+     "datovyZdroj": "res"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "ZO Odborového svazu pracovníků obchodu Penny Market, s.r.o.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 27,
+        "nazevKraje": "Středočeský kraj",
+        "kodOkresu": 3209,
+        "nazevOkresu": "Praha-východ",
+        "kodObce": 538701,
+        "nazevObce": "Radonice",
+        "kodUlice": 419109,
+        "nazevUlice": "Počernická",
+        "cisloDomovni": 257,
+        "kodCastiObce": 138240,
+        "nazevCastiObce": "Radonice",
+        "kodAdresnihoMista": 26013894,
+        "psc": 25073,
+        "textovaAdresa": "Počernická 257, 25073 Radonice",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniFormaRos": "707",
+     "datovyZdroj": "ros"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "ZO Odborového svazu pracovníků obchodu Penny Market, s.r.o.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 27,
+        "nazevKraje": "Středočeský kraj",
+        "kodOkresu": 3209,
+        "nazevOkresu": "Praha-východ",
+        "kodObce": 538701,
+        "nazevObce": "Radonice",
+        "kodUlice": 419109,
+        "nazevUlice": "Počernická",
+        "cisloDomovni": 257,
+        "kodCastiObce": 138240,
+        "nazevCastiObce": "Radonice",
+        "kodAdresnihoMista": 26013894,
+        "psc": 25073,
+        "textovaAdresa": "Počernická 257, 25073 Radonice",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "707",
+     "spisovaZnacka": "L 57411/MSPH",
+     "datovyZdroj": "vr"
+    }
+   ],
+   "czNace": [
+    "94200"
+   ]
+  },
+  {
+   "ico": "01671243",
+   "obchodniJmeno": "ZO UZO Penny Market Opava",
+   "sidlo": {
+    "kodStatu": "CZ",
+    "nazevStatu": "Česká republika",
+    "kodKraje": 132,
+    "nazevKraje": "Moravskoslezský kraj",
+    "kodOkresu": 3806,
+    "nazevOkresu": "Opava",
+    "kodObce": 505927,
+    "nazevObce": "Opava",
+    "kodMestskeCastiObvodu": 555321,
+    "kodUlice": 346560,
+    "nazevMestskeCastiObvodu": "Opava (nečleněná část města)",
+    "nazevUlice": "Rybářská",
+    "cisloDomovni": 2903,
+    "kodCastiObce": 490016,
+    "cisloOrientacni": 7,
+    "nazevCastiObce": "Předměstí",
+    "kodAdresnihoMista": 27807720,
+    "psc": 74601,
+    "textovaAdresa": "Rybářská 2903/7, Předměstí, 74601 Opava",
+    "standardizaceAdresy": true,
+    "typCisloDomovni": 1
+   },
+   "pravniForma": "707",
+   "pravniFormaRos": "707",
+   "financniUrad": "384",
+   "datumVzniku": "2013-05-03",
+   "datumAktualizace": "2026-04-06",
+   "icoId": "01671243",
+   "adresaDorucovaci": {
+    "radekAdresy1": "Rybářská 2903/7",
+    "radekAdresy2": "Předměstí",
+    "radekAdresy3": "74601 Opava"
+   },
+   "czNace2008": [
+    "94200"
+   ],
+   "seznamRegistraci": {
+    "stavZdrojeRos": "AKTIVNI",
+    "stavZdrojeVr": "AKTIVNI",
+    "stavZdrojeRes": "AKTIVNI",
+    "stavZdrojeRzp": "NEEXISTUJICI",
+    "stavZdrojeNrpzs": "NEEXISTUJICI",
+    "stavZdrojeRpsh": "NEEXISTUJICI",
+    "stavZdrojeRcns": "NEEXISTUJICI",
+    "stavZdrojeSzr": "NEEXISTUJICI",
+    "stavZdrojeDph": "NEEXISTUJICI",
+    "stavZdrojeSkDph": "NEEXISTUJICI",
+    "stavZdrojeSd": "NEEXISTUJICI",
+    "stavZdrojeIr": "NEEXISTUJICI",
+    "stavZdrojeCeu": "NEEXISTUJICI",
+    "stavZdrojeRs": "NEEXISTUJICI",
+    "stavZdrojeRed": "NEEXISTUJICI",
+    "stavZdrojeMonitor": "NEEXISTUJICI"
+   },
+   "primarniZdroj": "ros",
+   "dalsiUdaje": [
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "ZO UZO Penny Market Opava",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 132,
+        "nazevKraje": "Moravskoslezský kraj",
+        "kodOkresu": 3806,
+        "nazevOkresu": "Opava",
+        "kodObce": 505927,
+        "nazevObce": "Opava",
+        "kodMestskeCastiObvodu": 555321,
+        "kodUlice": 346560,
+        "nazevMestskeCastiObvodu": "Opava (nečleněná část města)",
+        "nazevUlice": "Rybářská",
+        "cisloDomovni": 2903,
+        "kodCastiObce": 490016,
+        "cisloOrientacni": 7,
+        "nazevCastiObce": "Předměstí",
+        "kodAdresnihoMista": 27807720,
+        "psc": 74601,
+        "textovaAdresa": "Rybářská 2903/7, Předměstí, 74601 Opava",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "707",
+     "pravniFormaRos": "707",
+     "datovyZdroj": "res"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "ZO UZO Penny Market Opava",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 132,
+        "nazevKraje": "Moravskoslezský kraj",
+        "kodOkresu": 3806,
+        "nazevOkresu": "Opava",
+        "kodObce": 505927,
+        "nazevObce": "Opava",
+        "kodMestskeCastiObvodu": 555321,
+        "kodUlice": 346560,
+        "nazevMestskeCastiObvodu": "Opava (nečleněná část města)",
+        "nazevUlice": "Rybářská",
+        "cisloDomovni": 2903,
+        "kodCastiObce": 490016,
+        "cisloOrientacni": 7,
+        "nazevCastiObce": "Předměstí",
+        "kodAdresnihoMista": 27807720,
+        "psc": 74601,
+        "textovaAdresa": "Rybářská 2903/7, Předměstí, 74601 Opava",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniFormaRos": "707",
+     "datovyZdroj": "ros"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "ZO UZO Penny Market Opava",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 132,
+        "nazevKraje": "Moravskoslezský kraj",
+        "kodOkresu": 3806,
+        "nazevOkresu": "Opava",
+        "kodObce": 505927,
+        "nazevObce": "Opava",
+        "kodMestskeCastiObvodu": 555321,
+        "kodUlice": 346560,
+        "nazevMestskeCastiObvodu": "Opava (nečleněná část města)",
+        "nazevUlice": "Rybářská",
+        "cisloDomovni": 2903,
+        "kodCastiObce": 490016,
+        "cisloOrientacni": 7,
+        "nazevCastiObce": "Předměstí",
+        "kodAdresnihoMista": 27807720,
+        "psc": 74601,
+        "textovaAdresa": "Rybářská 2903/7, Předměstí, 74601 Opava",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "707",
+     "spisovaZnacka": "L 17564/KSOS",
+     "datovyZdroj": "vr"
+    }
+   ],
+   "czNace": [
+    "94200"
+   ]
+  },
+  {
+   "ico": "17568561",
+   "obchodniJmeno": "ZO UZO Penny Market Petřvald",
+   "sidlo": {
+    "kodStatu": "CZ",
+    "nazevStatu": "Česká republika",
+    "kodKraje": 132,
+    "nazevKraje": "Moravskoslezský kraj",
+    "kodOkresu": 3803,
+    "nazevOkresu": "Karviná",
+    "kodObce": 599085,
+    "nazevObce": "Petřvald",
+    "kodUlice": 202606,
+    "nazevUlice": "Závodní",
+    "cisloDomovni": 1843,
+    "kodCastiObce": 120481,
+    "nazevCastiObce": "Petřvald",
+    "kodAdresnihoMista": 27009840,
+    "psc": 73541,
+    "textovaAdresa": "Závodní 1843, 73541 Petřvald",
+    "standardizaceAdresy": true,
+    "typCisloDomovni": 1
+   },
+   "pravniForma": "707",
+   "pravniFormaRos": "707",
+   "financniUrad": "367",
+   "datumVzniku": "2022-09-23",
+   "datumAktualizace": "2026-05-03",
+   "icoId": "17568561",
+   "adresaDorucovaci": {
+    "radekAdresy1": "Závodní 1843",
+    "radekAdresy2": "73541 Petřvald"
+   },
+   "czNace2008": [
+    "94200"
+   ],
+   "seznamRegistraci": {
+    "stavZdrojeRos": "AKTIVNI",
+    "stavZdrojeVr": "AKTIVNI",
+    "stavZdrojeRes": "AKTIVNI",
+    "stavZdrojeRzp": "NEEXISTUJICI",
+    "stavZdrojeNrpzs": "NEEXISTUJICI",
+    "stavZdrojeRpsh": "NEEXISTUJICI",
+    "stavZdrojeRcns": "NEEXISTUJICI",
+    "stavZdrojeSzr": "NEEXISTUJICI",
+    "stavZdrojeDph": "NEEXISTUJICI",
+    "stavZdrojeSkDph": "NEEXISTUJICI",
+    "stavZdrojeSd": "NEEXISTUJICI",
+    "stavZdrojeIr": "NEEXISTUJICI",
+    "stavZdrojeCeu": "NEEXISTUJICI",
+    "stavZdrojeRs": "NEEXISTUJICI",
+    "stavZdrojeRed": "NEEXISTUJICI",
+    "stavZdrojeMonitor": "NEEXISTUJICI"
+   },
+   "primarniZdroj": "ros",
+   "dalsiUdaje": [
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "ZO UZO Penny Market Petřvald",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 132,
+        "nazevKraje": "Moravskoslezský kraj",
+        "kodOkresu": 3803,
+        "nazevOkresu": "Karviná",
+        "kodObce": 599085,
+        "nazevObce": "Petřvald",
+        "kodUlice": 202606,
+        "nazevUlice": "Závodní",
+        "cisloDomovni": 1843,
+        "kodCastiObce": 120481,
+        "nazevCastiObce": "Petřvald",
+        "kodAdresnihoMista": 27009840,
+        "psc": 73541,
+        "textovaAdresa": "Závodní 1843, 73541 Petřvald",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "707",
+     "pravniFormaRos": "707",
+     "datovyZdroj": "res"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "ZO UZO Penny Market Petřvald",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 132,
+        "nazevKraje": "Moravskoslezský kraj",
+        "kodOkresu": 3803,
+        "nazevOkresu": "Karviná",
+        "kodObce": 599085,
+        "nazevObce": "Petřvald",
+        "kodUlice": 202606,
+        "nazevUlice": "Závodní",
+        "cisloDomovni": 1843,
+        "kodCastiObce": 120481,
+        "nazevCastiObce": "Petřvald",
+        "kodAdresnihoMista": 27009840,
+        "psc": 73541,
+        "textovaAdresa": "Závodní 1843, 73541 Petřvald",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniFormaRos": "707",
+     "datovyZdroj": "ros"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "ZO UZO Penny Market Petřvald",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 132,
+        "nazevKraje": "Moravskoslezský kraj",
+        "kodOkresu": 3803,
+        "nazevOkresu": "Karviná",
+        "kodObce": 599085,
+        "nazevObce": "Petřvald",
+        "kodUlice": 202606,
+        "nazevUlice": "Závodní",
+        "cisloDomovni": 1843,
+        "kodCastiObce": 120481,
+        "nazevCastiObce": "Petřvald",
+        "kodAdresnihoMista": 27009840,
+        "psc": 73541,
+        "textovaAdresa": "Závodní 1843, 73541 Petřvald",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "707",
+     "spisovaZnacka": "L 20409/KSOS",
+     "datovyZdroj": "vr"
+    }
+   ],
+   "czNace": [
+    "94200"
+   ]
+  }
+ ]
+}

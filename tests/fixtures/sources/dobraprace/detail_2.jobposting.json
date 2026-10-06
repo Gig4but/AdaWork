@@ -1,0 +1,26 @@
+{
+  "title": "Оператор на виробництві",
+  "description": "Очікується:\n<ul><li>Спритність рук. </li><li>Практика на виробництві є перевагою.</li><li>Бажання працювати на три зміни.</li></ul>",
+  "datePosted": "2023-12-14 09:10:04",
+  "validThrough": "9999-12-31",
+  "applicantLocationRequirements": {
+    "@type": "Country",
+    "name": "CS"
+  },
+  "hiringOrganization": {
+    "@type": "Organization",
+    "name": "DISPONERO s.r.o. (Liberec)"
+  },
+  "jobLocation": {
+    "@type": "Place",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "CS",
+      "addressLocality": " okres Liberec",
+      "addressRegion": "Liberecký kraj"
+    }
+  },
+  "industry": "Manuální a dělnické profese;Ostatní;Výroba, průmysl a energetika",
+  "@context": "https://schema.org",
+  "@type": "JobPosting"
+}

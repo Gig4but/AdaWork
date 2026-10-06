@@ -1,0 +1,38 @@
+{
+  "@context": "https://schema.org/",
+  "@type": "JobPosting",
+  "title": "Operátor v cívkárně/měďárně",
+  "description": "<h2>O nás</h2><div><p><strong>Alfa Job Plus –&nbsp;spolehlivý partner při výběru zaměstnání v Plzni a okolí</strong></p></div><h2>Náplň práce:</h2><div><ul>\t<li>Montáž komponentů a celků do zařízení pro výrobu elektrické energie</li>\t<li>Navíjení cívek statorů a rotorů do generátorů</li></ul></div><h2>Co od Vás očekáváme:</h2><div><ul>\t<li>Vzdělání v technickém oboru</li>\t<li>Částečná orientace v&nbsp;technických výkresech - výhodou</li>\t<li>Zručnost, pečlivost, spolehlivost, svědomitost</li></ul></div><h2>Co Vám můžeme nabídnout:</h2><div><ul>\t<li>Zajímavé pracovní uplatnění ve stabilní a perspektivní české společnosti v Plzni</li>\t<li>Práce v příjemném kolektivu</li>\t<li>Směnný provoz</li>\t<li>Možnost přesčasů</li>\t<li>5 týdnů dovolené</li>\t<li>Zálohy po odpracování prvního týdne</li>\t<li>Možnost ubytování</li>\t<li>Čtvrtletní prémie</li>\t<li>Penzijní připojištění 15 600 Kč/rok</li>\t<li>Možnost přestupu do kmenového stavu společnosti</li></ul><p><strong>Mzda:</strong></p><ul>\t<li>Čtvrtletní prémie</li>\t<li>Penzijní připojištění 15 600 Kč/rok</li></ul><p><strong>Místo výkonu práce:&nbsp;</strong></p><ul>\t<li>Plzeň</li></ul></div>",
+  "datePosted": "2026-10-05",
+  "validThrough": "2026-10-21T09:30:56",
+  "url": "https://www.jenprace.cz/nabidka/2tcexh/operator-v-civkarne-medarne-od-200-kc-hod-cisteho",
+  "employmentType": [
+    "FULL_TIME"
+  ],
+  "hiringOrganization": {
+    "@type": "Organization",
+    "name": "Alfa Job Plus s.r.o."
+  },
+  "baseSalary": {
+    "@type": "MonetaryAmount",
+    "currency": "CZK",
+    "value": {
+      "@type": "QuantitativeValue",
+      "minValue": 35000,
+      "maxValue": 35000,
+      "unitText": "MONTH"
+    }
+  },
+  "jobLocation": {
+    "@type": "Place",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Sedláčkova 245/24",
+      "addressLocality": "Plzeň",
+      "postalCode": "30100",
+      "addressRegion": "Plzeňský kraj",
+      "addressCountry": "CZ"
+    }
+  },
+  "jobBenefits": "finanční bonusy a prémie, zálohy ze mzdy, příspěvek na spoření a pojištění"
+}

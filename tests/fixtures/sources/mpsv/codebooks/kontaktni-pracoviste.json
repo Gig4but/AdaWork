@@ -1,0 +1,1887 @@
+{
+  "polozky": [
+    {
+      "id": "KontaktniPracoviste/GRUPCR",
+      "kod": "GRUPCR",
+      "nazev": {
+        "cs": "Generální ředitelství Úřadu práce ČR"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_2",
+      "kod": "krp_2",
+      "nazev": {
+        "cs": "Krajská pobočka pro hlavní město Prahu"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_3",
+      "kod": "krp_3",
+      "nazev": {
+        "cs": "Krajská pobočka v Příbrami"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_4",
+      "kod": "krp_4",
+      "nazev": {
+        "cs": "Krajská pobočka v Českých Budějovicích"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_5",
+      "kod": "krp_5",
+      "nazev": {
+        "cs": "Krajská pobočka v Plzni"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_6",
+      "kod": "krp_6",
+      "nazev": {
+        "cs": "Krajská pobočka v Karlových Varech"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_7",
+      "kod": "krp_7",
+      "nazev": {
+        "cs": "Krajská pobočka v Ústí nad Labem"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_8",
+      "kod": "krp_8",
+      "nazev": {
+        "cs": "Krajská pobočka v Liberci"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_9",
+      "kod": "krp_9",
+      "nazev": {
+        "cs": "Krajská pobočka v Hradci Králové"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_10",
+      "kod": "krp_10",
+      "nazev": {
+        "cs": "Krajská pobočka v Pardubicích"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_11",
+      "kod": "krp_11",
+      "nazev": {
+        "cs": "Krajská pobočka v Jihlavě"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_12",
+      "kod": "krp_12",
+      "nazev": {
+        "cs": "Krajská pobočka v Brně"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_13",
+      "kod": "krp_13",
+      "nazev": {
+        "cs": "Krajská pobočka v Olomouci"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_14",
+      "kod": "krp_14",
+      "nazev": {
+        "cs": "Krajská pobočka v Ostravě"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/krp_15",
+      "kod": "krp_15",
+      "nazev": {
+        "cs": "Krajská pobočka ve Zlíně"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BNA",
+      "kod": "BNA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Benešov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BNB",
+      "kod": "BNB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Benešov (Vlašim)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BNC",
+      "kod": "BNC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Benešov (Votice)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BEA",
+      "kod": "BEA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Beroun"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BEB",
+      "kod": "BEB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Hořovice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BKA",
+      "kod": "BKA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Blansko"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BKB",
+      "kod": "BKB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Boskovice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BKC",
+      "kod": "BKC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Boskovice (Letovice)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BMA",
+      "kod": "BMA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Brno-město"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BOA",
+      "kod": "BOA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Brno-venkov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BOB",
+      "kod": "BOB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Ivančice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BOD",
+      "kod": "BOD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Rosice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BOE",
+      "kod": "BOE",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Tišnov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BOF",
+      "kod": "BOF",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Židlochovice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BOG",
+      "kod": "BOG",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Pohořelice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BRA",
+      "kod": "BRA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Bruntál"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BRB",
+      "kod": "BRB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Krnov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BRC",
+      "kod": "BRC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Krnov (Osoblaha)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BRD",
+      "kod": "BRD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Rýmařov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BRF",
+      "kod": "BRF",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Krnov (Město Albrechtice)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BRH",
+      "kod": "BRH",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Bruntál (Vrbno pod Pradědem)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BVA",
+      "kod": "BVA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Břeclav"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BVB",
+      "kod": "BVB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Hustopeče"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/BVC",
+      "kod": "BVC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Mikulov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CLA",
+      "kod": "CLA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Česká Lípa"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CLB",
+      "kod": "CLB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Nový Bor"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CLC",
+      "kod": "CLC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Česká Lípa (Doksy)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CLD",
+      "kod": "CLD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Mimoň"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CBA",
+      "kod": "CBA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště České Budějovice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CBB",
+      "kod": "CBB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště České Budějovice (Nové Hrady)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CBC",
+      "kod": "CBC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště České Budějovice (Trhové Sviny)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CBD",
+      "kod": "CBD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště České Budějovice (Týn nad Vltavou)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CKA",
+      "kod": "CKA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Český Krumlov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CKB",
+      "kod": "CKB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kaplice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/DCA",
+      "kod": "DCA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Děčín"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/DCB",
+      "kod": "DCB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Rumburk"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/DCC",
+      "kod": "DCC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Varnsdorf"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/DOA",
+      "kod": "DOA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Domažlice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/FMA",
+      "kod": "FMA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Frýdek-Místek"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/FMB",
+      "kod": "FMB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Třinec"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/FMC",
+      "kod": "FMC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Frýdlant nad Ostravicí"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/FMD",
+      "kod": "FMD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jablunkov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/HBA",
+      "kod": "HBA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Havlíčkův Brod"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/HBB",
+      "kod": "HBB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Chotěboř"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/HBC",
+      "kod": "HBC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Světlá nad Sázavou (Ledeč nad Sázavou)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/HBF",
+      "kod": "HBF",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Světlá nad Sázavou"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/HOA",
+      "kod": "HOA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Hodonín"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/HOB",
+      "kod": "HOB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kyjov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/HOC",
+      "kod": "HOC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Veselí nad Moravou"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/HKA",
+      "kod": "HKA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Hradec Králové"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/HKB",
+      "kod": "HKB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Nový Bydžov (Chlumec nad Cidlinou)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/HKC",
+      "kod": "HKC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Nový Bydžov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CHA",
+      "kod": "CHA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Cheb"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CHB",
+      "kod": "CHB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Aš"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CHC",
+      "kod": "CHC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Mariánské Lázně"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CVA",
+      "kod": "CVA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Chomutov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CVC",
+      "kod": "CVC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kadaň"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CVD",
+      "kod": "CVD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Klášterec nad Ohří"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CVE",
+      "kod": "CVE",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kadaň (Vejprty)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CVB",
+      "kod": "CVB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jirkov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CRA",
+      "kod": "CRA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Chrudim"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CRB",
+      "kod": "CRB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Hlinsko"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CRC",
+      "kod": "CRC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Třemošnice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/CRD",
+      "kod": "CRD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Skuteč"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JNA",
+      "kod": "JNA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jablonec nad Nisou"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JNB",
+      "kod": "JNB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Tanvald"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JNC",
+      "kod": "JNC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jablonec nad Nisou (Železný Brod)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JCA",
+      "kod": "JCA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jičín"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JCB",
+      "kod": "JCB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jičín (Hořice)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JCC",
+      "kod": "JCC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jičín (Nová Paka)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JIA",
+      "kod": "JIA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jihlava"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JIB",
+      "kod": "JIB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jihlava (Polná)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JIC",
+      "kod": "JIC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Telč"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JID",
+      "kod": "JID",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Telč (Třešť)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JHA",
+      "kod": "JHA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jindřichův Hradec"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JHB",
+      "kod": "JHB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Dačice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JHC",
+      "kod": "JHC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Třeboň"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KVA",
+      "kod": "KVA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Karlovy Vary"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KVB",
+      "kod": "KVB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Karlovy Vary (Toužim)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KVE",
+      "kod": "KVE",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Ostrov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KVF",
+      "kod": "KVF",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Karlovy Vary (Nejdek)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KAA",
+      "kod": "KAA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Karviná"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KAB",
+      "kod": "KAB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Bohumín"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KAC",
+      "kod": "KAC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Havířov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KAD",
+      "kod": "KAD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Orlová"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KAE",
+      "kod": "KAE",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Český Těšín"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KLA",
+      "kod": "KLA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kladno"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KLB",
+      "kod": "KLB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Slaný"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KTA",
+      "kod": "KTA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Klatovy"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KTB",
+      "kod": "KTB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Sušice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KTC",
+      "kod": "KTC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Klatovy (Horažďovice)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KOA",
+      "kod": "KOA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kolín"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KOB",
+      "kod": "KOB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kolín (Český Brod)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KMA",
+      "kod": "KMA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kroměříž"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KMB",
+      "kod": "KMB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Bystřice pod Hostýnem"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KMC",
+      "kod": "KMC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Holešov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KHA",
+      "kod": "KHA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kutná Hora"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KHB",
+      "kod": "KHB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kutná Hora (Uhlířské Janovice)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KHC",
+      "kod": "KHC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kutná Hora (Zruč nad Sázavou)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/KHD",
+      "kod": "KHD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Čáslav"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LBA",
+      "kod": "LBA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Liberec"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LBB",
+      "kod": "LBB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Frýdlant"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LBC",
+      "kod": "LBC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Liberec (Hrádek nad Nisou)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LBD",
+      "kod": "LBD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Frýdlant (Nové Město pod Smrkem)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LBF",
+      "kod": "LBF",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Liberec (Český Dub)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LTA",
+      "kod": "LTA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Litoměřice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LTE",
+      "kod": "LTE",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Lovosice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LTB",
+      "kod": "LTB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Roudnice nad Labem"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LTD",
+      "kod": "LTD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Litoměřice (Libochovice)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LTC",
+      "kod": "LTC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Štětí (Úštěk)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LTF",
+      "kod": "LTF",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Štětí"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LNA",
+      "kod": "LNA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Louny"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LNB",
+      "kod": "LNB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Podbořany"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/LNC",
+      "kod": "LNC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Žatec"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/MEA",
+      "kod": "MEA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Mělník"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/MEB",
+      "kod": "MEB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kralupy nad Vltavou"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/MEC",
+      "kod": "MEC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Neratovice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/MBA",
+      "kod": "MBA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Mladá Boleslav"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/MBB",
+      "kod": "MBB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Mladá Boleslav (Mnichovo Hradiště)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/MOA",
+      "kod": "MOA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Most"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/MOB",
+      "kod": "MOB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Litvínov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/NAA",
+      "kod": "NAA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Náchod"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/NAB",
+      "kod": "NAB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Broumov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/NAC",
+      "kod": "NAC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jaroměř"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/NAD",
+      "kod": "NAD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Náchod (Nové Město nad Metují)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/NJA",
+      "kod": "NJA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Nový Jičín"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/NJB",
+      "kod": "NJB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kopřivnice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/NJC",
+      "kod": "NJC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Odry"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/NJD",
+      "kod": "NJD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Bílovec"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/NJE",
+      "kod": "NJE",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Frenštát pod Radhoštěm"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/NBA",
+      "kod": "NBA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Nymburk"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/NBB",
+      "kod": "NBB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Nymburk (Milovice)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/NBC",
+      "kod": "NBC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Nymburk (Městec Králové)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/OLA",
+      "kod": "OLA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Olomouc"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/OLB",
+      "kod": "OLB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Litovel"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/OLC",
+      "kod": "OLC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Šternberk"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/OLD",
+      "kod": "OLD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Uničov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/OPA",
+      "kod": "OPA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Opava"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/OPB",
+      "kod": "OPB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Hlučín"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/OPC",
+      "kod": "OPC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Vítkov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/OPD",
+      "kod": "OPD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kravaře"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/OTA",
+      "kod": "OTA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Ostrava"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/OTB",
+      "kod": "OTB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Ostrava (Poruba)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/OTC",
+      "kod": "OTC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Ostrava (Jih)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/OTE",
+      "kod": "OTE",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Ostrava (Vítkovice)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PAA",
+      "kod": "PAA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Pardubice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PAB",
+      "kod": "PAB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Holice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PAC",
+      "kod": "PAC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Přelouč"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PEA",
+      "kod": "PEA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Pelhřimov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PEB",
+      "kod": "PEB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Humpolec"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PIA",
+      "kod": "PIA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Písek"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PIB",
+      "kod": "PIB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Mirovice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PIC",
+      "kod": "PIC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Milevsko"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PMA",
+      "kod": "PMA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Plzeň"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PJA",
+      "kod": "PJA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Plzeň sever a jih"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PJB",
+      "kod": "PJB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště pro Plzeň-jih (Nepomuk)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PJC",
+      "kod": "PJC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště pro Plzeň-jih (Přeštice)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PSA",
+      "kod": "PSA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Plzeň sever a jih"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PSB",
+      "kod": "PSB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště pro Plzeň-sever (Nýřany)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PSC",
+      "kod": "PSC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště pro Plzeň-sever (Kralovice)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PSE",
+      "kod": "PSE",
+      "nazev": {
+        "cs": "Kontaktní pracoviště pro Plzeň-sever (Manětín)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ABA",
+      "kod": "ABA",
+      "nazev": {
+        "cs": "Krajská pobočka pro hlavní město Prahu"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ABC",
+      "kod": "ABC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Praha 2"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ABD",
+      "kod": "ABD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Praha 3"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ABE",
+      "kod": "ABE",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Praha 4"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ABF",
+      "kod": "ABF",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Praha 5"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ABG",
+      "kod": "ABG",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Praha 6"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ABI",
+      "kod": "ABI",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Praha 8"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ABJ",
+      "kod": "ABJ",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Praha 9"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ABK",
+      "kod": "ABK",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Praha 10"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PYA",
+      "kod": "PYA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Praha východ a Praha západ"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PZA",
+      "kod": "PZA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Praha východ a Praha západ"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PTA",
+      "kod": "PTA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Prachatice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PTB",
+      "kod": "PTB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Vimperk"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PTC",
+      "kod": "PTC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Volary"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PVA",
+      "kod": "PVA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Prostějov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PVB",
+      "kod": "PVB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Konice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PRA",
+      "kod": "PRA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Přerov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PRB",
+      "kod": "PRB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Hranice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PRC",
+      "kod": "PRC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Lipník nad Bečvou"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PRD",
+      "kod": "PRD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kojetín"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PBA",
+      "kod": "PBA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Příbram"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PBB",
+      "kod": "PBB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Sedlčany"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PBC",
+      "kod": "PBC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Dobříš"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PBD",
+      "kod": "PBD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Příbram (Březnice)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/PBE",
+      "kod": "PBE",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Příbram (Rožmitál pod Třemšínem)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/RAA",
+      "kod": "RAA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Rakovník"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ROA",
+      "kod": "ROA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Rokycany"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/RKA",
+      "kod": "RKA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Rychnov nad Kněžnou"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/RKB",
+      "kod": "RKB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Dobruška"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/RKC",
+      "kod": "RKC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kostelec nad Orlicí"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SMA",
+      "kod": "SMA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Semily"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SMB",
+      "kod": "SMB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jilemnice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SMC",
+      "kod": "SMC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Turnov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SOA",
+      "kod": "SOA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Sokolov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SOB",
+      "kod": "SOB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Sokolov (Horní Slavkov)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SOC",
+      "kod": "SOC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Kraslice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SOD",
+      "kod": "SOD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Sokolov (Chodov)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/STA",
+      "kod": "STA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Strakonice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/STB",
+      "kod": "STB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Blatná"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/STC",
+      "kod": "STC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Vodňany"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SYA",
+      "kod": "SYA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Svitavy"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SYB",
+      "kod": "SYB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Litomyšl"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SYC",
+      "kod": "SYC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Moravská Třebová"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SYD",
+      "kod": "SYD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Polička"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SUA",
+      "kod": "SUA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Šumperk"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SUB",
+      "kod": "SUB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Zábřeh"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SUC",
+      "kod": "SUC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Mohelnice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/SUD",
+      "kod": "SUD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Hanušovice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/TAA",
+      "kod": "TAA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Tábor"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/TAB",
+      "kod": "TAB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Soběslav"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/TCA",
+      "kod": "TCA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Tachov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/TCB",
+      "kod": "TCB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Stříbro"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/TPA",
+      "kod": "TPA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Teplice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/TUA",
+      "kod": "TUA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Trutnov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/TUB",
+      "kod": "TUB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Vrchlabí"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/TUC",
+      "kod": "TUC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Dvůr Králové nad Labem"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/TRA",
+      "kod": "TRA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Třebíč"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/TRB",
+      "kod": "TRB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Moravské Budějovice (Jemnice)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/TRC",
+      "kod": "TRC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Moravské Budějovice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/TRD",
+      "kod": "TRD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Třebíč (Náměšť nad Oslavou)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/UHA",
+      "kod": "UHA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Uherské Hradiště"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/UHB",
+      "kod": "UHB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Uherský Brod"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ULA",
+      "kod": "ULA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Ústí nad Labem"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/UOA",
+      "kod": "UOA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Ústí nad Orlicí"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/UOB",
+      "kod": "UOB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Lanškroun"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/UOC",
+      "kod": "UOC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Králíky"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/UOD",
+      "kod": "UOD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Vysoké Mýto"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/UOE",
+      "kod": "UOE",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Česká Třebová"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/UOF",
+      "kod": "UOF",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Žamberk"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/VSA",
+      "kod": "VSA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Vsetín"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/VSB",
+      "kod": "VSB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Rožnov pod Radhoštěm"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/VSC",
+      "kod": "VSC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Valašské Meziříčí"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/VSD",
+      "kod": "VSD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Karolinka"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/VYA",
+      "kod": "VYA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Vyškov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/VYB",
+      "kod": "VYB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Bučovice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/VYC",
+      "kod": "VYC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Slavkov u Brna"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ZLA",
+      "kod": "ZLA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Zlín"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ZLD",
+      "kod": "ZLD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Otrokovice"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ZLB",
+      "kod": "ZLB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Slavičín"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ZLC",
+      "kod": "ZLC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Valašské Klobouky"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ZNA",
+      "kod": "ZNA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Znojmo"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ZNB",
+      "kod": "ZNB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Moravský Krumlov"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ZNC",
+      "kod": "ZNC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Znojmo (Hrušovany nad Jevišovkou)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ZND",
+      "kod": "ZND",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Znojmo (Vranov nad Dyjí)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ZRA",
+      "kod": "ZRA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Žďár nad Sázavou"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ZRB",
+      "kod": "ZRB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Bystřice nad Pernštejnem"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ZRC",
+      "kod": "ZRC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Nové Město na Moravě"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ZRD",
+      "kod": "ZRD",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Velké Meziříčí"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/ZRE",
+      "kod": "ZRE",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Velké Meziříčí (Velká Bíteš)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JEA",
+      "kod": "JEA",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jeseník"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JED",
+      "kod": "JED",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jeseník (Zlaté Hory)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JEC",
+      "kod": "JEC",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Jeseník (Vidnava)"
+      }
+    },
+    {
+      "id": "KontaktniPracoviste/JEB",
+      "kod": "JEB",
+      "nazev": {
+        "cs": "Kontaktní pracoviště Javorník"
+      }
+    }
+  ]
+}

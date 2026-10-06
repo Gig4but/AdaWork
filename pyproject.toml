@@ -1,0 +1,73 @@
+[project]
+name = "adawork"
+dynamic = ["version"]
+description = "Hledání volných pracovních míst v Česku ze všech zdrojů na jednom místě."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "jinja2>=3.1",
+    "pydantic>=2.8",
+    "platformdirs>=4.2",
+    "pywebview>=5.2",
+    "pystray>=0.19",
+    "pillow>=10.4",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+adawork = "adawork.cli:main"
+
+[project.gui-scripts]
+adaworkw = "adawork.cli:main"  # the window app without a console window
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.13.1",
+    "import-linter>=2.15",
+    "pyright>=1.1.414",
+    "pytest>=8.3",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "adawork/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["adawork"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["*.md", "spikes"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.pyright]
+include = ["adawork"]
+pythonVersion = "3.12"
+
+# A package imports only from the layers below it. `uv run lint-imports`
+[tool.importlinter]
+root_package = "adawork"
+
+[[tool.importlinter.contracts]]
+name = "Layers"
+type = "layers"
+containers = ["adawork"]
+layers = [
+    "cli",
+    "web",
+    "desktop",
+    "config | logs | system",
+    "paths",
+]

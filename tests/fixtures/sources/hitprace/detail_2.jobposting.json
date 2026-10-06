@@ -1,0 +1,39 @@
+{
+  "@context": "https://schema.org",
+  "@type": "JobPosting",
+  "title": "Servisní technik kogeneračních jednotek",
+  "description": "<p>Našim klientem je stabilní společnost zabývající se výstavbou bioplynových stanic</p>Servisní technik kogeneračních jednotek<h2>Náplň práce</h2><ul><li>zajištění servisu kogeneračních jednotek u smluvních partnerů v České republice a na Slovensku</li><li>diagnostika motorů, řídicích systémů a elektrických zařízení</li></ul><h2>Požadujeme</h2><ul><li>manuální zručnost </li><li>předchozí zkušenost jako automechanik nebo autotronik podmínkou</li><li>zkušenost jako aktivní řidič</li><li>samostatnost, časová flexibilita a chuť učit se novým věcem</li><li>ochota cestovat po ČR a SK</li></ul><h2>Co nabízíme</h2><ul><li>náborový příspěvek ve výši 50 000 Kč po odpracování 1 roku</li><li>maximální podpora při zaškolení na práci v oboru elektro, plyn, mechanika</li><li>za dobře vykonanou práci měsíční a roční odměny nad rámec</li><li>výhodný mobilní tarif i pro rodinné příslušníky</li><li>výhodné nákupy u dodavatelských firem</li><li>příspěvek na stravné, po roce práce 5 týdnů dovolené, možnost využít sick days</li><li>firemní akce (snídaně, večírek)</li><li>příspěvek na jazykové vzdělávání</li><li>značkové pracovní oblečení </li><li>benefitní karta Edenred</li></ul>",
+  "datePosted": "2026-08-30",
+  "validThrough": "2026-10-08T02:25:35+00:00",
+  "jobLocation": {
+    "@type": "Place",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Jihomoravský kraj, Brno",
+      "addressCountry": "CZ",
+      "postalCode": "60200",
+      "addressRegion": "Jihomoravský kraj"
+    }
+  },
+  "url": "https://www.hitprace.cz/prace-detail/servisni-technik-kogeneracnich-jednotek-brno-8cd6a99d/",
+  "baseSalary": {
+    "@type": "MonetaryAmount",
+    "currency": "CZK",
+    "value": {
+      "@type": "QuantitativeValue",
+      "unitText": "MONTH",
+      "minValue": 45000,
+      "maxValue": 52000
+    }
+  },
+  "identifier": {
+    "@type": "PropertyValue",
+    "name": "HitPrace.cz",
+    "value": "8cd6a99d"
+  },
+  "hiringOrganization": {
+    "@type": "Organization",
+    "name": "Trenkwalder Česká Republika"
+  },
+  "employmentType": "FULL_TIME"
+}

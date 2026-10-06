@@ -1,0 +1,10 @@
+User-Agent: *
+Disallow: /auth/
+Disallow: /search/
+Disallow: /hledat/
+Disallow: /muj/
+Disallow: /asmt/
+Disallow: /odpovedni-formular/
+Disallow: /presmerovani-na-formular/
+
+Sitemap: https://d2260mt3awrr7p.cloudfront.net/prace.cz/sitemap-index.xml

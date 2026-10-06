@@ -1,0 +1,237 @@
+# robots.txt for JenPráce.cz
+# https://www.jenprace.cz/robots.txt
+# Last updated: 2026-08-13
+# See also: /llms.txt and /ai.txt for AI-specific guidance
+
+# ============================================================
+# Default rules - all crawlers (search engines, etc.)
+# ============================================================
+User-agent: *
+Disallow: /ucet/prihlaseni/*
+Disallow: /cdn-cgi/
+Disallow: /meta.json
+Disallow: /uzitecne-informace/vypocet-nemocenske?*brutto=*
+Disallow: /nabidky*page_dbox*
+Disallow: /nabidky*do=infinityNextPage*
+Disallow: /*?do=candidatePopUp-*
+Disallow: /data/*
+Disallow: /mosaic/*
+
+Sitemap: https://www.jenprace.cz/sitemap.xml
+
+# ============================================================
+# Blocked scrapers - dataset harvesters, aggressive crawlers
+# ============================================================
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: Omgili
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+# ============================================================
+# AI training & search crawlers - allowed on public content
+# ============================================================
+
+# OpenAI - GPT, ChatGPT
+User-agent: GPTBot
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# OpenAI - ChatGPT user-initiated browsing
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# OpenAI - Search bot
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# Anthropic - Claude (training crawler)
+User-agent: ClaudeBot
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# Anthropic - Claude user-initiated browsing
+User-agent: Claude-User
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# Anthropic - Search bot
+User-agent: Claude-SearchBot
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# Google - Bard / Gemini training data
+User-agent: Google-Extended
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# Perplexity user-initiated
+User-agent: Perplexity-User
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# Common Crawl - používá ho mnoho AI projektů
+User-agent: CCBot
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# Apple - Apple Intelligence
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# Meta - Llama training
+User-agent: Meta-ExternalAgent
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# Meta - FacebookBot
+User-agent: FacebookBot
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# Mistral AI
+User-agent: MistralAI-User
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# DuckDuckGo AI
+User-agent: DuckAssistBot
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/
+
+# You.com
+User-agent: YouBot
+Allow: /
+Disallow: /ucet/
+Disallow: /inzerenti/dashboard/
+Disallow: /zivotopis/edit/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cdn-cgi/
+Disallow: /data/
+Disallow: /mosaic/

@@ -1,0 +1,18 @@
+{
+  "polozky": [
+    {
+      "id": "TypMzdy/hod",
+      "kod": "hod",
+      "nazev": {
+        "cs": "Kč/hod."
+      }
+    },
+    {
+      "id": "TypMzdy/mesic",
+      "kod": "mesic",
+      "nazev": {
+        "cs": "Kč/měsíc"
+      }
+    }
+  ]
+}

@@ -1,0 +1,218 @@
+{
+ "polozky": [
+  {
+   "portalId": 4152,
+   "id": "AgenturaPrace/4152",
+   "nazev": "AG MIRASTAFF s.r.o.",
+   "ico": "29813158",
+   "odpovednyZastupce": "Mgr. Ema Hejlová",
+   "urlAdresa": null,
+   "adresaSidla": {
+    "cisloDomovni": 1,
+    "cisloOrientacni": null,
+    "dodatekAdresy": null,
+    "kodAdresnihoMista": 17389852,
+    "psc": "39111",
+    "typCislaDomovniho": {
+     "id": "TypStavebnihoObjektu/1"
+    },
+    "kraj": {
+     "id": "Kraj/35"
+    },
+    "okres": {
+     "id": "Okres/3308"
+    },
+    "obec": {
+     "id": "Obec/552828"
+    },
+    "mestskyObvodMestskaCast": null,
+    "mestskyObvodVPraze": null,
+    "castObce": {
+     "id": "CastObce/405159"
+    },
+    "ulice": {
+     "nazev": "Strkovská"
+    }
+   },
+   "adresaText": null,
+   "pracoviste": null,
+   "kontaktniOsoby": [
+    {
+     "jmeno": "Ema",
+     "prijmeni": "Hejlová",
+     "titulPred": "Mgr.",
+     "titulZa": null
+    }
+   ],
+   "povoleni": [
+    {
+     "druhyPraci": {
+      "cs": "Bez omezení"
+     },
+     "platnostOd": "2026-10-02",
+     "platnostDo": "2029-10-02",
+     "poradenskaCinnost": false,
+     "predmetProCizinceMimoEu": false,
+     "predmetProObcanyCr": false,
+     "predmetProObcanyEu": false,
+     "vyhledavaniZamestnani": false,
+     "zamestnavaniOsob": true,
+     "uzemniPlatnost": {
+      "id": "UzemniPlatnostAgentury/neomez"
+     }
+    },
+    {
+     "druhyPraci": {
+      "cs": "Bez omezení"
+     },
+     "platnostOd": "2026-10-02",
+     "platnostDo": null,
+     "poradenskaCinnost": true,
+     "predmetProCizinceMimoEu": false,
+     "predmetProObcanyCr": false,
+     "predmetProObcanyEu": false,
+     "vyhledavaniZamestnani": true,
+     "zamestnavaniOsob": false,
+     "uzemniPlatnost": {
+      "id": "UzemniPlatnostAgentury/neomez"
+     }
+    }
+   ]
+  },
+  {
+   "portalId": 4151,
+   "id": "AgenturaPrace/4151",
+   "nazev": "A-WebSys, spol. s r.o.",
+   "ico": "26910560",
+   "odpovednyZastupce": "Ing. David Pres",
+   "urlAdresa": null,
+   "adresaSidla": null,
+   "adresaText": null,
+   "pracoviste": [
+    {
+     "adresaPracoviste": {
+      "cisloDomovni": 53,
+      "cisloOrientacni": "24",
+      "dodatekAdresy": null,
+      "kodAdresnihoMista": 19093861,
+      "psc": "60200",
+      "typCislaDomovniho": {
+       "id": "TypStavebnihoObjektu/1"
+      },
+      "kraj": {
+       "id": "Kraj/116"
+      },
+      "okres": {
+       "id": "Okres/3702"
+      },
+      "obec": {
+       "id": "Obec/582786"
+      },
+      "mestskyObvodMestskaCast": {
+       "id": "MestskyObvodMestskaCast/550973"
+      },
+      "mestskyObvodVPraze": null,
+      "castObce": {
+       "id": "CastObce/411582"
+      },
+      "ulice": {
+       "nazev": "Kobližná"
+      }
+     },
+     "adresaText": null
+    }
+   ],
+   "kontaktniOsoby": [
+    {
+     "jmeno": "David",
+     "prijmeni": "Pres",
+     "titulPred": "Ing.",
+     "titulZa": null
+    }
+   ],
+   "povoleni": [
+    {
+     "druhyPraci": {
+      "cs": "Bez omezení"
+     },
+     "platnostOd": "2026-10-01",
+     "platnostDo": null,
+     "poradenskaCinnost": true,
+     "predmetProCizinceMimoEu": false,
+     "predmetProObcanyCr": false,
+     "predmetProObcanyEu": false,
+     "vyhledavaniZamestnani": true,
+     "zamestnavaniOsob": false,
+     "uzemniPlatnost": {
+      "id": "UzemniPlatnostAgentury/neomez"
+     }
+    }
+   ]
+  },
+  {
+   "portalId": 4150,
+   "id": "AgenturaPrace/4150",
+   "nazev": "Centrum pro integraci cizinců o.p.s.",
+   "ico": "26631997",
+   "odpovednyZastupce": "Mgr. Lucie Ditrychová",
+   "urlAdresa": null,
+   "adresaSidla": {
+    "cisloDomovni": 10,
+    "cisloOrientacni": "32",
+    "dodatekAdresy": null,
+    "kodAdresnihoMista": 22348603,
+    "psc": "18600",
+    "typCislaDomovniho": {
+     "id": "TypStavebnihoObjektu/1"
+    },
+    "kraj": {
+     "id": "Kraj/19"
+    },
+    "okres": null,
+    "obec": {
+     "id": "Obec/554782"
+    },
+    "mestskyObvodMestskaCast": {
+     "id": "MestskyObvodMestskaCast/500208"
+    },
+    "mestskyObvodVPraze": {
+     "id": "MestskyObvodVPraze/86"
+    },
+    "castObce": {
+     "id": "CastObce/400637"
+    },
+    "ulice": {
+     "nazev": "Pernerova"
+    }
+   },
+   "adresaText": null,
+   "pracoviste": null,
+   "kontaktniOsoby": [
+    {
+     "jmeno": "Lucie",
+     "prijmeni": "Ditrychová",
+     "titulPred": "Mgr.",
+     "titulZa": null
+    }
+   ],
+   "povoleni": [
+    {
+     "druhyPraci": {
+      "cs": "Bez omezení"
+     },
+     "platnostOd": "2026-09-26",
+     "platnostDo": null,
+     "poradenskaCinnost": true,
+     "predmetProCizinceMimoEu": false,
+     "predmetProObcanyCr": false,
+     "predmetProObcanyEu": false,
+     "vyhledavaniZamestnani": true,
+     "zamestnavaniOsob": false,
+     "uzemniPlatnost": {
+      "id": "UzemniPlatnostAgentury/neomez"
+     }
+    }
+   ]
+  }
+ ]
+}

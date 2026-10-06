@@ -1,0 +1,32 @@
+{
+  "polozky": [
+    {
+      "id": "ZverejnovatVpm/ano",
+      "kod": "ano",
+      "nazev": {
+        "cs": "Zveřejňovat"
+      }
+    },
+    {
+      "id": "ZverejnovatVpm/anoeu",
+      "kod": "anoeu",
+      "nazev": {
+        "cs": "Zveřejňovat - zájem o pracovníky z EU"
+      }
+    },
+    {
+      "id": "ZverejnovatVpm/anosp",
+      "kod": "anosp",
+      "nazev": {
+        "cs": "Zveřejňovat - bez údajů o zaměstnavateli"
+      }
+    },
+    {
+      "id": "ZverejnovatVpm/ne",
+      "kod": "ne",
+      "nazev": {
+        "cs": "Nezveřejňovat"
+      }
+    }
+  ]
+}

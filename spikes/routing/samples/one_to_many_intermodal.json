@@ -1,0 +1,24 @@
+{
+  "street_durations": [
+    {},
+    {},
+    {},
+    "... 47 more"
+  ],
+  "transit_durations": [
+    [
+      {
+        "duration": 4440.0,
+        "transfers": 1
+      }
+    ],
+    [
+      {
+        "duration": 2340.0,
+        "transfers": 1
+      }
+    ],
+    [],
+    "... 47 more"
+  ]
+}

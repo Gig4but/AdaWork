@@ -1,0 +1,46 @@
+{
+  "polozky": [
+    {
+      "id": "TypMistaVykonuPrace/adrprov",
+      "kod": "adrprov",
+      "nazev": {
+        "cs": "Adresa provozovny"
+      }
+    },
+    {
+      "id": "TypMistaVykonuPrace/obec",
+      "kod": "obec",
+      "nazev": {
+        "cs": "Obec"
+      }
+    },
+    {
+      "id": "TypMistaVykonuPrace/okres",
+      "kod": "okres",
+      "nazev": {
+        "cs": "Seznam okresů"
+      }
+    },
+    {
+      "id": "TypMistaVykonuPrace/adrvolna",
+      "kod": "adrvolna",
+      "nazev": {
+        "cs": "Adresa volná"
+      }
+    },
+    {
+      "id": "TypMistaVykonuPrace/celaCR",
+      "kod": "celaCR",
+      "nazev": {
+        "cs": "Celá ČR"
+      }
+    },
+    {
+      "id": "TypMistaVykonuPrace/neurceno",
+      "kod": "neurceno",
+      "nazev": {
+        "cs": "Celá ČR"
+      }
+    }
+  ]
+}
