@@ -45,6 +45,8 @@ class Settings(BaseModel):
     wizard_completed: bool = False
     profile: Profile = Field(default_factory=Profile)
     automation: AutomationSettings = Field(default_factory=AutomationSettings)
+    # Source id -> on/off as the user chose; sources not listed use their default.
+    sources: dict[str, bool] = Field(default_factory=dict)
 
     _path: Path | None = PrivateAttr(default=None)
 

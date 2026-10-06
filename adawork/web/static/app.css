@@ -107,6 +107,11 @@ body[data-view="map"] #results { display: none; }
 .popup ul { margin: 0; padding-left: 1rem; max-height: 260px; overflow-y: auto; }
 .popup li { margin-bottom: .35rem; }
 
+.risk { border: 2px solid var(--pico-del-color); padding: 1rem; }
+.risk p { margin-block: .5rem; }
+.ok { color: var(--pico-ins-color); }
+.elsewhere { text-align: right; margin-bottom: .25rem; }
+
 /* Colour schemes (Settings.theme): each refines Pico's light or dark base. */
 [data-scheme="ocean"][data-theme] {
   --pico-background-color: #d9ebf5; --pico-color: #0d2b3e; --pico-muted-color: #3f6178;

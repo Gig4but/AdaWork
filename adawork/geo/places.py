@@ -8,7 +8,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from adawork.core import ParsedLocation
 from adawork.db.models import Municipality
@@ -89,6 +89,7 @@ class PlaceResolver:
             for psc in muni.postal_codes:
                 self._by_psc[psc].append(muni)
         self._kraje = _kraj_aliases()
+        self._okresy = {fold(m.okres) for m in self.municipalities if m.okres}
         self._kraj_centres: dict[str, tuple[float, float]] = {}
 
     def __bool__(self) -> bool:
@@ -114,6 +115,8 @@ class PlaceResolver:
         if folded in _NOWHERE:
             return None
 
+        if folded in self._okresy and folded not in self._by_name:
+            return self._district(text)  # "Praha-východ", "Brno-venkov": not "Praha" + part
         found = self._municipality(text, psc, region, district)
         if found is None and psc and len(psc) == 5:
             candidates = self._by_psc.get(psc)
@@ -238,3 +241,18 @@ class PlaceResolver:
                 if d <= km and d < nearest.get(m.kraj, math.inf):
                     nearest[m.kraj] = d
         return sorted(nearest, key=nearest.__getitem__)
+
+
+class SharedPlaces:
+    """The app's one PlaceResolver, read once the municipalities are in (the first search
+    fills them): `places()`."""
+
+    def __init__(self, sessions: sessionmaker[Session]) -> None:
+        self.sessions = sessions
+        self._places: PlaceResolver | None = None
+
+    def __call__(self) -> PlaceResolver:
+        if not self._places:  # none yet, or read before the first search filled the table
+            with self.sessions() as s:
+                self._places = PlaceResolver(s)
+        return self._places

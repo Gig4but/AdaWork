@@ -14,12 +14,12 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from adawork.config import Profile
-from adawork.core import Source, utcnow
+from adawork.core import ScrapeQuery, Source, utcnow
 from adawork.db.models import Job, Municipality, Run, SourceState
 from adawork.geo import ruian
 from adawork.geo.geocode import geocode_locations, rebuild_municipalities
 from adawork.geo.places import PlaceResolver
-from adawork.geo.scope import crawl_kraje
+from adawork.geo.scope import build_query
 from adawork.net.http import make_client
 from adawork.net.polite import PoliteFetcher, Stopped
 from adawork.scraper.crawl import MAX_DETAILS, CrawlSource, crawl
@@ -67,12 +67,14 @@ class ScrapeRunner:
         sources: Sequence[Source] = SOURCES,
         fetcher_factory=PoliteFetcher,
         max_details: int = MAX_DETAILS,
+        source_choices: Callable[[], dict[str, bool]] | None = None,
     ) -> None:
         self.sessions = sessions
         self.cache_dir = cache_dir
         self.client_factory = client_factory
         self.geocode = geocode
         self.profile = profile or (lambda: None)
+        self.source_choices = source_choices or dict  # source id -> user's on/off choice
         self.sources = sources
         self.fetcher_factory = fetcher_factory
         self.max_details = max_details
@@ -108,7 +110,10 @@ class ScrapeRunner:
     def scope(self) -> dict:
         """What decides which jobs a run finds."""
         profile = self.profile()
-        return {"profile": profile.model_dump() if profile else None}
+        return {
+            "profile": profile.model_dump() if profile else None,
+            "sources": dict(self.source_choices()),
+        }
 
     def wait(self, timeout: float | None = None) -> None:
         if self._thread:
@@ -162,11 +167,11 @@ class ScrapeRunner:
             with self.sessions() as session:
                 places = PlaceResolver(session)
                 dedup = DedupIndex.load(session, self.sessions)
-            kraje = crawl_kraje(places, self.profile())
+            query = build_query(places, self.profile())
             for source in sources:
                 ran.append(source.id)
                 self._guard(
-                    source.id, partial(self.run_crawl, source, fetcher, places, dedup, kraje)
+                    source.id, partial(self.run_crawl, source, fetcher, places, dedup, query)
                 )
 
     def _guard(self, source_id: str, step: Callable[[], object]) -> None:
@@ -183,15 +188,15 @@ class ScrapeRunner:
 
     def _enabled(self, source: Source) -> bool:
         """The user's choice (else the source's default), unless the site refused us lately."""
+        if not self.source_choices().get(source.id, source.default_enabled):
+            return False
         with self.sessions() as session:
-            state = session.scalar(select(SourceState).where(SourceState.source_id == source.id))
-        if state is None:
-            return source.default_enabled
-        until = (state.state or {}).get("blocked_until")
+            state = session.get(SourceState, source.id)
+        until = ((state and state.state) or {}).get("blocked_until")
         if until and datetime.fromisoformat(until) > utcnow():
             log.info("%s paused until %s", source.id, until)
             return False
-        return state.enabled
+        return True
 
     @contextmanager
     def _record(
@@ -249,7 +254,7 @@ class ScrapeRunner:
         fetcher: PoliteFetcher,
         places: PlaceResolver,
         dedup: DedupIndex,
-        kraje: list[str],
+        query: ScrapeQuery,
     ) -> Run:
         p = self.progress
         p.source_id, p.phase, p.processed = source.id, "listing", 0
@@ -264,7 +269,7 @@ class ScrapeRunner:
             self.sessions() as session,
             self._record(session, source.id, make_store) as (run, store),
         ):
-            result = crawl(source, fetcher, store, places, kraje, self.max_details, progress)
+            result = crawl(source, fetcher, store, places, query, self.max_details, progress)
             state = self._state(session, source.id)
             state.last_run_at = utcnow()
             run.status = "ok" if result.complete else "partial"

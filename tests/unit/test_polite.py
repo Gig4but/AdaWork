@@ -90,19 +90,21 @@ def test_polite_fetcher_waits_and_obeys_robots():
 def test_stop_ends_the_wait_for_a_turn_and_later_requests():
     transport = httpx.MockTransport(lambda request: httpx.Response(200, text="ok"))
     f = PoliteFetcher(httpx.Client(transport=transport), delay=60.0)
+    assert f.get("https://a.cz/1", obey_robots=False).text == "ok"
     threading.Timer(0.2, f.stop.set).start()
     started = time.monotonic()
     with pytest.raises(Stopped):
-        f.get("https://a.cz/1")  # after robots.txt, its turn is a minute away
+        f.get("https://a.cz/2", obey_robots=False)  # its turn is a minute away
     assert time.monotonic() - started < 10
     with pytest.raises(Stopped):
-        f.get("https://a.cz/2")
+        f.get("https://a.cz/3", obey_robots=False)
 
 
 @pytest.mark.parametrize(
     "response",
     [
         httpx.Response(429),
+        httpx.Response(999),  # LinkedIn
         httpx.Response(403, text="Forbidden"),
         httpx.Response(503, text="<html><title>Just a moment...</title>"),
     ],
@@ -121,6 +123,24 @@ def test_refused_robots_txt_stops_the_source():
 
     with pytest.raises(SourceBlocked):
         fetcher(handler).get("https://a.cz/page")
+
+
+def test_login_wall_stops_linkedin():
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/jobs":
+            return httpx.Response(302, headers={"Location": "/authwall?trk=guest"})
+        if request.url.path == "/moved":
+            return httpx.Response(301, headers={"Location": "/jobs-new"})
+        return httpx.Response(200, text="ok")
+
+    clock = Clock()
+    f = fetcher(handler, clock)
+    with pytest.raises(SourceBlocked):
+        f.get("https://cz.linkedin.com/jobs", obey_robots=False, min_delay=5)
+    # Other redirects of an opt-in source skip robots.txt and keep its pace.
+    assert f.get("https://cz.linkedin.com/moved", obey_robots=False, min_delay=5).text == "ok"
+    assert f.requests == 3 and all(5 <= s <= 6.5 for s in clock.slept)
+    assert f.get("https://a.cz/authwall").text == "ok"  # elsewhere just a page
 
 
 def test_server_errors_are_retried_and_robots_errors_mean_disallowed():
@@ -218,3 +238,17 @@ def test_html_to_text():
     assert html_to_text(html) == "O nás\nJsme malý tým.\n• A\n• B"
     assert html_to_text("&lt;p&gt;Escaped&lt;/p&gt;") == "Escaped"
     assert html_to_text("plain   text") == "plain text"
+
+
+def test_opt_in_source_skips_robots_and_goes_slower():
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/robots.txt":
+            return httpx.Response(200, text="User-agent: *\nDisallow: /\n")
+        return httpx.Response(200, text="ok")
+
+    clock = Clock()
+    f = fetcher(handler, clock)
+    assert f.get("https://li.cz/jobs") is None  # robots.txt says no
+    assert f.get("https://li.cz/jobs", obey_robots=False, min_delay=5).text == "ok"
+    assert f.get("https://li.cz/jobs", obey_robots=False, min_delay=5).text == "ok"
+    assert 5 <= clock.slept[-1] <= 6.5

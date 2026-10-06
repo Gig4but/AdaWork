@@ -131,6 +131,7 @@ def test_import_update_and_expire(sessions, tmp_path):
 def test_a_changed_search_or_a_fresh_one_finds_everything_again(sessions, tmp_path):
     transport, calls = make_transport(RECORDS)
     profile = Profile(home_address="Kolín")
+    choices = {}
     runner = ScrapeRunner(
         sessions,
         tmp_path / "cache",
@@ -138,6 +139,7 @@ def test_a_changed_search_or_a_fresh_one_finds_everything_again(sessions, tmp_pa
         geocode=False,
         sources=[mpsv.SOURCE],
         profile=lambda: profile,
+        source_choices=lambda: choices,
     )
 
     def run(fresh=False):
@@ -153,6 +155,8 @@ def test_a_changed_search_or_a_fresh_one_finds_everything_again(sessions, tmp_pa
     profile.max_minutes = 30
     assert run() == 30 and runner.progress.cleared
     assert calls["dump"] == 1  # imported again from the cached file
+    choices["linkedin"] = True
+    assert run() == 30 and runner.progress.cleared
     assert run(fresh=True) == 30 and runner.progress.cleared
     with sessions() as s:
         assert s.scalar(select(func.count(Job.id))) == 30

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from adawork import paths
 from adawork.config import Settings
 from adawork.db.session import db_file, make_engine, make_sessionmaker, migrate
+from adawork.geo.places import SharedPlaces
 from adawork.scraper.runner import ScrapeRunner
 
 
@@ -20,6 +21,7 @@ class Services:
     settings: Settings
     sessions: sessionmaker[Session]
     cache_dir: Path
+    places: SharedPlaces
     runner: ScrapeRunner
 
     def stop(self) -> None:
@@ -37,5 +39,16 @@ def build(
     migrate(engine)
     sessions = make_sessionmaker(engine)
     cache_dir = cache_dir or paths.data_dir() / "cache"
-    runner = (runner_factory or ScrapeRunner)(sessions, cache_dir, profile=lambda: settings.profile)
-    return Services(settings=settings, sessions=sessions, cache_dir=cache_dir, runner=runner)
+    runner = (runner_factory or ScrapeRunner)(
+        sessions,
+        cache_dir,
+        profile=lambda: settings.profile,
+        source_choices=lambda: settings.sources,
+    )
+    return Services(
+        settings=settings,
+        sessions=sessions,
+        cache_dir=cache_dir,
+        places=SharedPlaces(sessions),
+        runner=runner,
+    )

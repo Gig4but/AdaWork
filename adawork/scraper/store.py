@@ -7,7 +7,7 @@ lacks. A job expires when none of its sources offers it any more.
 
 from collections.abc import Collection, Iterable
 from dataclasses import dataclass, fields
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy import ColumnElement, CursorResult, and_, case, exists, func, select, update
 from sqlalchemy.orm import Session, aliased
@@ -330,10 +330,17 @@ class JobStore:
 
         `kraje`: the pass covered only these regions; jobs placed in other regions stay.
         """
+        return self._expire_seen_before(self.started_at, kraje)
+
+    def expire_unseen(self, days: int) -> int:
+        """For searches that show only the newest ads: unseen for `days` means gone."""
+        return self._expire_seen_before(utcnow() - timedelta(days=days))
+
+    def _expire_seen_before(self, cutoff: datetime, kraje: Collection[str] | None = None) -> int:
         self.commit()
         stale = [
             JobSource.source_id == self.source_id,
-            JobSource.last_seen_at < self.started_at,
+            JobSource.last_seen_at < cutoff,
             JobSource.status == "active",
         ]
         if kraje is not None:

@@ -15,7 +15,7 @@ Three main modules:
 Shared services: a small **local AI model** (reads messy ads and posters, summarizes
 reviews) and a **local routing engine** (travel times and routes, offline maps).
 
-Status: **M0–M3 done** (2026-10-06); next is M4. Spike results: `docs/spikes.md`.
+Status: **M0–M4 done** (2026-10-06); next is M5. Spike results: `docs/spikes.md`.
 
 ---
 
@@ -58,8 +58,8 @@ Verified live in the M0 spike (`docs/spikes/sources.md`, 2026-10-06). No source 
 | Source | Access method | Verified facts |
 |---|---|---|
 | **MPSV / Úřad práce ČR open data** | Free JSON, no key | **`volna-mista.json.gz` (17.5 MB**, the plain JSON is 187 MB), updated **daily**, ETag → 304. 39,487 records. CZ-ISCO, salary range, hours, employer **with IČO**, workplace (72 % with a RÚIAN address code), flags, 21 codebooks. Structured → **no AI needed**. Detail link: `up.gov.cz/volna-mista-v-cr#/volna-mista-detail/<portalId>`. **Implemented in M1.** |
-| **python-jobspy** (MIT, v1.2.0, 2026-10-02) | Python library | Indeed and LinkedIn both returned results without errors. **Robots.txt conflicts for both, decided in §14: LinkedIn via jobspy, off by default; Indeed via own public-page adapter**: jobspy uses `apis.indeed.com/graphql` (robots `Disallow: /`); LinkedIn's robots.txt disallows `/jobs-guest/`. |
-| **Indeed CZ (HTML)** | Public search page `cz.indeed.com/jobs` | Allowed by robots.txt; 15 job cards per page as embedded JSON. Robots-compliant alternative to jobspy. |
+| **python-jobspy** (MIT, v1.2.0, 2026-10-02) | Python library | Indeed and LinkedIn both returned results without errors. **Not used** (§14): jobspy reads Indeed through `apis.indeed.com/graphql` (robots `Disallow: /`) and pulls in pandas; LinkedIn is read by an own small adapter on the same guest pages (robots.txt disallows `/jobs-guest/`, so off by default). |
+| **Indeed CZ (HTML)** | Public search page `cz.indeed.com/jobs` | Allowed by robots.txt; 15 job cards per page as embedded JSON. **But** the page answers an honest User-Agent with a Cloudflare "Security Check" (403, checked 2026-10-06); the spike got through only with a browser-like User-Agent. **Link-out only** (§14). |
 | **prace.cz** (19.6k ads), **jenprace.cz** (24.1k) | JSON-LD `JobPosting` on detail pages | prace.cz robots disallows `/search/`, `/hledat/` (not needed). jenprace.cz redirects `/nabidky` by Geo-IP → discover via explicit town slugs. prace.cz shares ads with jobs.cz. |
 | **profesia.cz** (1.4k) | **Microdata** `JobPosting` (not JSON-LD) | Branded employer templates have no structured data → meta tags + AI fallback. |
 | **jobs.cz** (16.5k) | **Server-rendered HTML** (not JS-only) | 30 cards per listing page, stable `data-test="jd-*"` attributes on detail, no JSON-LD → custom HTML adapter, no browser. robots disallows `/api/`, `/iapi/`. |
@@ -237,7 +237,7 @@ at the same time**. A `ResourceManager` lets only one heavy job run at a time, i
 - **Disk:** a budget 256 GB SSD is enough (§11).
 
 ### 3.3 Inside the app
-Python 3.12, uv, httpx, selectolax, parsel, extruct, trafilatura, ijson, python-jobspy,
+Python 3.12, uv, httpx, selectolax, parsel, extruct, trafilatura, ijson,
 SQLite + SQLAlchemy 2/SQLModel + Alembic (auto-migrate), FTS5, sqlite-vec, Pillow,
 imagehash, rapidfuzz, FastAPI + Jinja2, HTMX + Alpine.js + Pico.css (vendored), SSE,
 APScheduler, pydantic v2; ruff, pytest, pytest-asyncio, respx.
@@ -261,7 +261,7 @@ each other; a thin async plugin layer is simpler and shares the app's event loop
 ┌──▼─────────────┐ ┌───▼──────────────────┐ ┌─▼───────────────────┐ ┌▼───────────────┐
 │ 1. SCRAPER     │ │ 3. EMPLOYER REVIEWS  │ │ AI (llama-server)   │ │ ROUTING (MOTIS)│
 │ portals, MPSV, │ │ resolver (name→IČO), │ │ extraction, vision, │ │ OSM + NeTEx +  │
-│ jobspy, social,│ │ ARES/ISIR/VAT/agency │ │ ISCO, embeddings,   │ │ GTFS; routes,  │
+│ LinkedIn,social│ │ ARES/ISIR/VAT/agency │ │ ISCO, embeddings,   │ │ GTFS; routes,  │
 │ forums, manual │ │ Atmoskop, Indeed,    │ │ review summaries,   │ │ one-to-many,   │
 │                │ │ Google*, Facebook,   │ │ NL query            │ │ isochrones,    │
 │                │ │ web mentions         │ │                     │ │ geocoder, tiles│
@@ -296,13 +296,16 @@ Per-domain rate limits, robots.txt, honest User-Agent, retries/backoff, pause on
 ETag, raw cache.
 
 ### 4.3 LinkedIn, Facebook, Instagram, forums
-- **LinkedIn:** python-jobspy guest endpoints (no login), generated searches, ≤ 100 ads/run,
-  pause on 429. **Off by default** with a warning and opt-in like Facebook/Instagram, because
-  LinkedIn's robots.txt disallows these endpoints. The risk is a temporary IP block, not the
-  user's account (no login is used).
-- **Indeed CZ:** own small adapter on the public search page `cz.indeed.com/jobs` (allowed by
-  robots.txt), reading the embedded `mosaic-provider-jobcards` JSON; ≤ 100 ads/run. Not
-  python-jobspy, which uses Indeed's internal API.
+- **LinkedIn** (`scraper/sources/linkedin.py`): own small adapter on the public guest pages
+  (`/jobs-guest/jobs/api/seeMoreJobPostings/search`, `/jobs-guest/jobs/api/jobPosting/<id>`),
+  no login. A search near home (distance in miles from the travel-time radius, one per kind
+  of work), newest first, ≤ 100 cards and ≤ 30 detail pages per run, 5 s between requests,
+  a 429 pauses it for 12 h; unseen for 21 days = gone. **Off by default** with a warning and
+  opt-in like Facebook/Instagram, because LinkedIn's robots.txt disallows these pages. The
+  risk is a temporary IP block, not the user's account.
+- **Indeed CZ:** **link-out only.** The search page has "Hledat také na Indeed", which opens
+  the same search (keywords, home town, radius) on Indeed in the user's browser. Indeed's
+  Cloudflare check refuses the app's honest User-Agent, and disguising the app is not done.
 - **Facebook/Instagram `social_reader`:**
   - **Off by default.** Enabled only by an explicit opt-in in the wizard (step 4) or in
     Settings, each time after the risk warning.
@@ -717,7 +720,7 @@ AdaWork/
 │  ├─ scraper/                      # MODULE 1
 │  │  ├─ base.py, registry.py, query_builder.py, http.py, browser.py, pipeline.py, scheduler.py
 │  │  ├─ extract/  jsonld.py, nextdata.py, text.py, forum_blocks.py
-│  │  └─ sources/  mpsv, jobspy_src, jsonld_generic, prace_cz, jenprace_cz, profesia_cz,
+│  │  └─ sources/  mpsv, linkedin, indeed (link), prace_cz, jenprace, profesia,
 │  │               startupjobs_cz, jobs_cz, bazos_cz, hitprace_cz,
 │  │               dobraprace_cz, fajnbrigady_cz, forum_generic, facebook, instagram,
 │  │               manual, jooble, careerjet
@@ -793,9 +796,15 @@ AdaWork/
   errors, and re-listed ads appear once with several source links. Measured 2026-10-06:
   see `docs/spikes.md` § M3.
 
-### M4 — Indeed CZ + LinkedIn (2 days)
-- Indeed: own adapter on the public search page (embedded job-card JSON).
-- LinkedIn: python-jobspy, off by default with the wizard warning and opt-in.
+### M4 — Indeed CZ + LinkedIn (2 days) — done
+- Indeed: link-out only (the search page blocks an honest User-Agent; §14 item 7).
+- LinkedIn: own guest-page adapter, off by default; switched on in the wizard's new
+  "Zdroje nabídek" step or on the Sources page, only after ticking "Rozumím riziku…".
+- Sources page (`/sources`): every source can be switched off; choices live in settings.
+- Crawl framework generalized: a source lists region listings or searches near home
+  (`ScrapeQuery`), with its own pace, lead/detail limits and expiry rule.
+- **Done when:** LinkedIn stays silent until opted in; with opt-in a live run for Kolín read
+  29 ads in 3 min without refusals (15 were Úřad práce ads already known, merged).
 
 ### M5 — AI layer + model picker + dynamic hardware adaptation (6–7 days)
 - llama-server management, `HardwareProfile` probe, **`ModelAdvisor` (Auto mode)**, model
@@ -953,7 +962,7 @@ next to the model icons.
 - Map tiles: OpenFreeMap (free, no key, attribution "OpenFreeMap © OpenMapTiles, data ©
   OpenStreetMap" shown by the map) until offline MOTIS tiles replace them in M8.
 - LinkedIn: guest endpoints only, no login; off by default because its robots.txt disallows
-  them. Indeed: only the public search page that robots.txt allows.
+  them. Indeed: not read at all, only linked.
 - Facebook/Instagram: breaks Meta's terms; runs only after explicit consent, low limits, stops
   on verification; no password storage.
 - Reviews and mentions are shown with their sources; AI summaries are labelled as
@@ -998,9 +1007,11 @@ next to the model icons.
    are decided dynamically per computer (§3.2.1, §6.6). The minimum test machine is 8 GB RAM
    with a budget Ryzen and integrated Radeon.
 6. ~~LinkedIn~~ — **confirmed:** same as Facebook: off by default, visible warning, opt-in
-   (§7.1 step 4). Uses python-jobspy (existing library, no login). No robots-compliant
-   LinkedIn tool exists; the logged-in alternatives risk the user's account.
-7. ~~Indeed~~ — **confirmed:** own small adapter on the robots-allowed public search page
-   instead of python-jobspy (no maintained library reads that page).
+   (§7.1 step 4). Built in M4 as an own small adapter on the guest pages python-jobspy
+   uses (no pandas/tls-client dependency, same polite fetcher). No robots-compliant LinkedIn
+   tool exists; the logged-in alternatives risk the user's account.
+7. ~~Indeed~~ — **confirmed, then changed in M4 (2026-10-06):** the public search page
+   blocks the app's honest User-Agent with a Cloudflare check, so Indeed is **link-out only**
+   (user's choice over a browser-like User-Agent, a later Edge reader or dropping it).
 8. ~~Public-transport timetables~~ — **confirmed:** Spojenka GTFS (nationwide, non-commercial
    license). The app stays personal/free; replacing the feed is needed only if that changes.

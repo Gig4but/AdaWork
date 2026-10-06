@@ -8,14 +8,16 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from adawork.config import Language, Theme, TravelMode
 from adawork.services import Services
 from adawork.web.pages import THEMES, Svc, render
+from adawork.web.routes.sources import apply_source_choices, source_rows
 
 router = APIRouter()
 
-STEPS = ("welcome", "profile", "done")  # plan §7.1 steps 1, 2 and 7; more come later
+STEPS = ("welcome", "profile", "sources", "done")  # plan §7.1 steps 1, 2, 4, 7 so far
 TRAVEL_MODES = ("any", "car", "transit", "walk", "bike")
 
 
 def render_step(request: Request, svc: Services, step: str, **context) -> HTMLResponse:
+    context.setdefault("sources", source_rows(svc))
     return render(
         request,
         "wizard.html",
@@ -59,6 +61,15 @@ def wizard_profile(
     profile.max_minutes = max_minutes
     profile.kinds_of_work = [k.strip() for k in kinds_of_work.split(",") if k.strip()]
     svc.settings.save()
+    return RedirectResponse("/wizard/sources", status_code=303)
+
+
+@router.post("/wizard/sources", response_class=HTMLResponse)
+async def wizard_sources(request: Request, svc: Svc) -> Response:
+    form = await request.form()
+    error = apply_source_choices(svc.settings, form)
+    if error:
+        return render_step(request, svc, "sources", sources=source_rows(svc, form), error=error)
     return RedirectResponse("/wizard/done", status_code=303)
 
 

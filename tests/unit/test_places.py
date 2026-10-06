@@ -6,7 +6,7 @@ import pytest
 from adawork.config import Profile
 from adawork.db.session import make_engine, make_sessionmaker, migrate
 from adawork.geo.places import PlaceResolver
-from adawork.geo.scope import crawl_kraje
+from adawork.geo.scope import build_query
 from adawork.scraper.structured import find_job_postings, posting_to_job
 
 SOURCES = Path(__file__).parents[1] / "fixtures" / "sources"
@@ -33,6 +33,7 @@ def places(tmp_path, municipalities):
         ("Kolín IV", "part:533165:kolin iv", "part"),
         ("Příbram VI-Březové Hory", None, None),  # not in the test data
         ("Okres Kolín", "okres:9533", "district"),
+        ("Praha-východ", "okres:9538", "district"),  # a district, not a part of Praha
         ("Brandýs nad Labem-Stará Boleslav", "obec:538094", "municipality"),
         ("Kraj Vysočina", "kraj:kraj vysocina", "region"),
         ("Středočeský", "kraj:stredocesky kraj", "region"),
@@ -66,15 +67,16 @@ def test_home_and_crawl_scope(places):
     assert places.find_home("Nádražní 5, 280 02 Kolín").name == "Kolín"
     assert places.find_home("Kolín").name == "Kolín"
     assert places.find_home("nowhere") is None
-    near = crawl_kraje(places, Profile(home_address="Kolín", max_minutes=45, travel_mode="car"))
+    car = Profile(home_address="Kolín", max_minutes=45, travel_mode="car")
+    near = build_query(places, car).kraje
     assert near[0] == "Středočeský kraj" and "Pardubický kraj" in near
     assert "Jihomoravský kraj" not in near
-    walk = crawl_kraje(places, Profile(home_address="Kolín", max_minutes=30, travel_mode="walk"))
-    assert walk == ["Středočeský kraj"]
-    assert len(crawl_kraje(places, Profile())) == 14  # home unknown: everywhere
+    walk = Profile(home_address="Kolín", max_minutes=30, travel_mode="walk")
+    assert build_query(places, walk).kraje == ["Středočeský kraj"]
+    assert len(build_query(places, Profile()).kraje) == 14  # home unknown: everywhere
     for m in places.municipalities:
         m.kraj = None
-    assert len(crawl_kraje(places, Profile(home_address="Kolín"))) == 14
+    assert len(build_query(places, car).kraje) == 14
 
 
 def detail(path: str) -> dict:

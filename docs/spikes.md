@@ -84,3 +84,13 @@ At most 15 detail pages per portal (the default is 300), on a copy of the real d
   after the run.
 - Salary is known for 66 % of jenprace, 49 % of prace.cz and 62 % of profesia jobs (from
   listing cards; detail pages add some).
+
+## M4 checks (2026-10-06)
+
+- **Indeed** `cz.indeed.com/jobs` answers the app's honest User-Agent with HTTP 403 "Security
+  Check" (Cloudflare). The M0 spike got through only with a browser-like User-Agent.
+  Decision: link-out only ("Hledat také na Indeed" opens the search in the user's browser).
+- **LinkedIn** guest search and job pages answer the honest User-Agent normally. A live run
+  for Kolín (25 miles, newest first, opted in) read 3 search pages and 29 detail pages in
+  3 min, without refusals: 14 new jobs, 15 merged into Úřad práce jobs (LinkedIn re-lists
+  them too). Fixtures: `tests/fixtures/sources/linkedin/guest_{search,detail}.html`.

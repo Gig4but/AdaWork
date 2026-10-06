@@ -1,4 +1,5 @@
 import time
+from datetime import timedelta
 from pathlib import Path
 
 import httpx
@@ -9,10 +10,12 @@ from sqlalchemy import func, select
 from adawork.config import Profile
 from adawork.db.models import Job, JobSource, Location, Run, SourceState
 from adawork.db.session import make_engine, make_sessionmaker, migrate
+from adawork.geo.places import PlaceResolver
+from adawork.geo.scope import build_query
 from adawork.net.polite import PoliteFetcher
 from adawork.scraper.crawl import has_page_link
 from adawork.scraper.runner import ScrapeRunner
-from adawork.scraper.sources import jenprace, prace_cz, profesia
+from adawork.scraper.sources import jenprace, linkedin, prace_cz, profesia
 
 SOURCES = Path(__file__).parents[1] / "fixtures" / "sources"
 LAST_PAGE = """<html><body>
@@ -294,3 +297,95 @@ def test_branded_profesia_detail_uses_the_card():
     assert job.title == "Finanční analytik - i pro absolventy bez praxe"
     assert job.description.startswith("Popis pozice") and "Odpovědět" not in job.description
     assert job.posted_at.date().isoformat() == "2026-10-06"
+
+
+class LinkedInSite:
+    """LinkedIn guest pages as a mock; robots.txt disallows everything, like the real one."""
+
+    def __init__(self) -> None:
+        self.requests: list[str] = []
+        self.search = (SOURCES / "linkedin/guest_search.html").read_bytes()
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(str(request.url))
+        if request.url.path == "/robots.txt":
+            return httpx.Response(200, text="User-agent: *\nDisallow: /\n")
+        if request.url.path.endswith("/seeMoreJobPostings/search"):
+            return httpx.Response(200, content=self.search)
+        if "/jobPosting/" in request.url.path:
+            detail = SOURCES / "linkedin/guest_detail.html"
+            return httpx.Response(200, content=detail.read_bytes())
+        return httpx.Response(404)
+
+
+def run_linkedin(sessions, tmp_path, site, choices):
+    transport = httpx.MockTransport(site)
+    runner = ScrapeRunner(
+        sessions,
+        tmp_path / "cache",
+        lambda: httpx.Client(transport=transport),
+        geocode=False,
+        profile=lambda: Profile(home_address="Kolín", max_minutes=30, travel_mode="car"),
+        sources=[linkedin.SOURCE],
+        fetcher_factory=lambda client: PoliteFetcher(client, delay=0, sleep=lambda s: None),
+        source_choices=lambda: choices,
+    )
+    site.requests.clear()
+    runner.start()
+    runner.wait(60)
+    return runner
+
+
+def test_linkedin_only_after_opt_in(sessions, tmp_path):
+    site = LinkedInSite()
+    run_linkedin(sessions, tmp_path, site, {})
+    assert site.requests == []  # off by default
+
+    runner = run_linkedin(sessions, tmp_path, site, {"linkedin": True})
+    assert runner.progress.phase == "done", runner.progress.errors
+    assert runner.progress.results["linkedin"]["new"] == 10
+    searches = [u for u in site.requests if "/search" in u]
+    # Page 2 repeats page 1 (nothing new), so the newest-first search stops there.
+    assert len(searches) == 2 and "robots.txt" not in " ".join(site.requests)
+    assert "location=Kol%C3%ADn%2C+Czechia" in searches[0] and "distance=25" in searches[0]
+    assert "sortBy=DD" in searches[0]
+    assert sum("/jobPosting/" in u for u in site.requests) == 10
+    with sessions() as s:
+        job = s.scalar(select(Job).join(JobSource).where(JobSource.external_id == "4442737384"))
+        assert job.employer_name == "Comms8" and job.contract_types == ["full_time"]
+        assert job.description.startswith("About The Role")
+        assert job.sources[0].url.startswith("https://cz.linkedin.com/jobs/view/")
+
+    # Three weeks unseen: gone.
+    site.search = b"<html></html>"
+    with sessions() as s:
+        for src in s.scalars(select(JobSource)):
+            src.last_seen_at -= timedelta(days=22)
+        s.commit()
+    runner = run_linkedin(sessions, tmp_path, site, {"linkedin": True})
+    assert runner.progress.results["linkedin"]["removed"] == 10
+
+
+def test_linkedin_listing_and_detail():
+    page = listing("linkedin/guest_search.html", linkedin.SOURCE)
+    assert len(page.leads) == 10 and page.has_next
+    lead = page.leads[2]
+    assert lead.card.title == "Praktické sestry" and lead.card.place_text == "Praha-východ"
+    assert lead.card.posted_at.date().isoformat() == "2026-09-23"
+    assert lead.fetch_url == "https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/4471189120"
+    html = (SOURCES / "linkedin/guest_detail.html").read_text(encoding="utf-8")
+    job = linkedin.SOURCE.parse_detail(html, page.leads[0], _NoPlaces())
+    assert job.title == "Media Assistant - Intern"
+    assert job.extra["criteria"]["Druh zaměstnání"] == "Plný úvazek"
+
+
+def test_query_from_profile(sessions):
+    with sessions() as s:
+        places = PlaceResolver(s)
+    query = build_query(places, Profile(home_address="Kolín", max_minutes=30, kinds_of_work=["a"]))
+    assert query.home == "Kolín" and query.radius_km == 39 and query.keywords == ["a"]
+    assert query.kraje[0] == "Středočeský kraj"
+    nowhere = build_query(places, Profile())
+    assert nowhere.home is None and len(nowhere.kraje) == 14
+    urls = [f(1) for _, f in linkedin.SOURCE.listings(query)]
+    assert len(urls) == 1 and "keywords=a" in urls[0]

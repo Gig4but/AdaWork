@@ -80,6 +80,23 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
         "kinds_of_work": "skladník, řidič ,",
     }
     r = client.post("/wizard/profile", data=form, follow_redirects=False)
+    assert r.headers["location"] == "/wizard/sources"
+    page = client.get("/wizard/sources").text
+    assert 'name="source_prace_cz" checked' in page
+    assert 'name="source_linkedin" >' in page or 'name="source_linkedin">' in page  # off
+
+    # LinkedIn without ticking the risk box stays off.
+    portals = {"source_mpsv": "on", "source_prace_cz": "on", "source_jenprace": "on"}
+    r = client.post("/wizard/sources", data=portals | {"source_linkedin": "on"})
+    assert "zaškrtnete, že rozumíte riziku" in r.text
+    assert app.state.services.settings.sources == {}
+    assert 'name="source_linkedin" checked' in r.text  # the choices made are kept
+    assert 'name="source_profesia" checked' not in r.text
+    r = client.post(
+        "/wizard/sources",
+        data=portals | {"source_linkedin": "on", "consent_linkedin": "on"},
+        follow_redirects=False,
+    )
     assert r.headers["location"] == "/wizard/done"
     done = client.get("/wizard/done").text
     assert "Automatické hledání je vypnuté" in done
@@ -93,7 +110,53 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
     assert saved.profile.home_address == "Kolín"
     assert saved.profile.travel_mode == "transit" and saved.profile.max_minutes == 40
     assert saved.profile.kinds_of_work == ["skladník", "řidič"]
+    assert saved.sources == {
+        "mpsv": True,
+        "prace_cz": True,
+        "jenprace": True,
+        "profesia": False,
+        "linkedin": True,
+    }
     assert saved.automation.enabled is False
+
+
+def test_sources_page_and_indeed_link(app, client, municipalities):
+    app.state.services.settings.wizard_completed = True
+    assert "Zdroje nabídek" in client.get("/sources").text
+    r = client.post("/sources", data={"source_mpsv": "on"}, follow_redirects=False)
+    assert r.headers["location"] == "/sources?saved=1"
+    assert app.state.services.settings.sources["prace_cz"] is False
+    assert "Uloženo" in client.get("/sources?saved=1").text
+
+    with app.state.services.sessions() as s:
+        municipalities(s)
+    app.state.services.settings.profile.home_address = "Kolín"
+    app.state.services.settings.profile.max_minutes = 30
+    r = client.get("/out/indeed", params={"q": "skladník"}, follow_redirects=False)
+    assert r.headers["location"] == (
+        "https://cz.indeed.com/jobs?q=skladn%C3%ADk&l=Kol%C3%ADn&sort=date&radius=50"
+    )
+    places = app.state.services.places()
+    app.state.services.settings.profile.home_address = "Nádražní 5, 999 99 Nikde"
+    r = client.get("/out/indeed", params={"q": "skladník"}, follow_redirects=False)
+    assert r.headers["location"] == "https://cz.indeed.com/jobs?q=skladn%C3%ADk&l=&sort=date"
+    assert app.state.services.places() is places  # the municipalities are read once
+    assert "/out/indeed" in client.get("/").text
+
+
+def test_linkedin_needs_consent_ticked_by_the_user(app, client):
+    app.state.services.settings.wizard_completed = True
+    form = {"source_mpsv": "on", "source_linkedin": "on"}
+    r = client.post("/sources", data=form, follow_redirects=False)
+    assert r.status_code == 200 and 'name="source_linkedin" checked' in r.text
+    # The refused form comes back without the consent ticked, so saving it again fails too.
+    assert 'name="consent_linkedin" checked' not in r.text
+    r = client.post("/sources", data=form, follow_redirects=False)
+    assert r.status_code == 200 and app.state.services.settings.sources.get("linkedin") is not True
+    r = client.post("/sources", data=form | {"consent_linkedin": "on"}, follow_redirects=False)
+    assert r.headers["location"] == "/sources?saved=1"
+    assert app.state.services.settings.sources["linkedin"] is True
+    assert 'name="consent_linkedin" checked' in client.get("/sources").text
 
 
 def test_wizard_rejects_bad_input(client):
@@ -286,6 +349,7 @@ def test_filters_from_url_and_facets_panel(app, client):
     assert 'name="categories" value="14" checked' in panel
     assert 'name="source_off" value="mpsv" disabled' in panel  # every source on
     assert 'name="source_off" value="prace_cz" disabled' in panel  # no jobs from it yet
+    assert 'value="linkedin"' not in panel  # off unless the user turns it on
     assert panel.index("Zdroje") < panel.index("Typ úvazku") < panel.index("Obor")
     assert panel.index("Obor") < panel.index("Kraj")
     off = client.get("/facets", params=[*params, ("source_off", "mpsv")]).text

@@ -80,13 +80,24 @@
       </div>
     </form>
 
+  {% elif step == "sources" %}
+    <h2>{{ t("wizard.sources") }}</h2>
+    <p>{{ t("sources.text") }}</p>
+    <form method="post" action="/wizard/sources">
+      {% include "_sources_form.html" %}
+      <div class="grid">
+        <a href="/wizard/profile" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
+        <button type="submit">{{ t("wizard.next") }}</button>
+      </div>
+    </form>
+
   {% elif step == "done" %}
     <h2>{{ t("wizard.done") }}</h2>
     <p>{{ t("wizard.done.text") }}</p>
     <p class="muted">{{ t("wizard.auto_off") }}</p>
     <form method="post" action="/wizard/done">
       <div class="grid">
-        <a href="/wizard/profile" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
+        <a href="/wizard/sources" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
         <button type="submit">{{ t("wizard.start") }}</button>
       </div>
     </form>

@@ -1,25 +1,27 @@
-"""Portals read page by page: region listings → leads → detail pages (PLAN §4.1).
+"""Portals read page by page: listings → leads → detail pages (PLAN §4.1).
 
 A source adapter only knows its own pages: listing URLs, how to read a listing card and a
 detail page. `crawl` does the rest the same way for every portal:
-- walks the listings of the regions in scope until the last page;
+- walks each listing (a region, or a search near home) until the last page;
 - jobs it already knows are only marked as still offered;
 - reads detail pages of new jobs (at most `max_details` per run, the rest stay card-only
   and are completed on later runs);
-- expires jobs the source no longer lists, but only in the regions whose listing it read to
-  the end.
+- expires jobs the source no longer lists: after a complete pass over a region's listing
+  (only in that region), or, for searches that show only the newest ads, when unseen for
+  some days.
 """
 
 import logging
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, fields
+from functools import partial
 from urllib.parse import urlsplit, urlunsplit
 
 import httpx
 from selectolax.lexbor import LexborHTMLParser, LexborNode
 
-from adawork.core import ParsedJob, SourceKind
+from adawork.core import ParsedJob, ScrapeQuery, SourceKind
 from adawork.geo.places import PlaceResolver
 from adawork.net.polite import PoliteFetcher, SourceBlocked
 from adawork.normalize.text import clean_spaces, parse_salary
@@ -48,6 +50,10 @@ MAX_DETAILS = 300  # detail pages per source and run (~8 min at the polite pace)
 MAX_FAILED_DETAILS = 10  # in a row: the page layout probably changed
 
 
+# (region, page number -> URL); region None: the listing is not one region's.
+Listing = tuple[str | None, Callable[[int], str]]
+
+
 @dataclass
 class Lead:
     external_id: str
@@ -65,10 +71,23 @@ class ListingPage:
 class CrawlSource:
     id: str
     label: str
-    max_pages: int = 300  # per region; prace.cz Praha has ~150
-    default_enabled: bool = True
+    max_pages: int = 300  # per listing; prace.cz Praha has ~150
+    default_enabled: bool = True  # False: only after the user opts in
+    obey_robots: bool = True  # False only for a source the user enabled despite robots.txt
+    delay: float | None = None  # seconds between requests, when slower than the default
+    max_leads: int | None = None  # cards per run
+    max_details: int | None = None  # detail pages per run, when lower than the run's limit
+    newest_first: bool = False  # stop a listing at the first page with nothing new
+    expire_after_days: int | None = None  # None: expire after a complete pass instead
     kind: SourceKind = "portal"
     needs_consent = False
+
+    def detail_limit(self, max_details: int) -> int:
+        return min(max_details, self.max_details or max_details)
+
+    def listings(self, query: ScrapeQuery) -> list[Listing]:
+        """The listings to walk. Default: one per region in scope."""
+        return [(kraj, partial(self.listing_url, KRAJ_SLUGS[kraj])) for kraj in query.kraje]
 
     def listing_url(self, region_slug: str, page: int) -> str:
         raise NotImplementedError
@@ -124,17 +143,13 @@ def merge_card(job: ParsedJob, card: ParsedJob | None) -> ParsedJob:
     """Detail page values win; the card fills what the detail page lacks (e.g. salary)."""
     if card is None:
         return job
+    empty = (None, "", [], {})
     for f in fields(ParsedJob):
         if f.name in ("external_id", "url", "salary_currency"):
             continue
-        if getattr(job, f.name) in (None, "", [], {}) and getattr(card, f.name) not in (
-            None,
-            "",
-            [],
-            {},
-        ):
+        if getattr(job, f.name) in empty and getattr(card, f.name) not in empty:
             setattr(job, f.name, getattr(card, f.name))
-            if f.name == "salary_min" or f.name == "salary_max":
+            if f.name in ("salary_min", "salary_max"):
                 job.salary_currency = card.salary_currency
     return job
 
@@ -147,12 +162,16 @@ def set_salary(job: ParsedJob, text: str | None) -> None:
         job.salary_unit, job.salary_currency = salary.unit, salary.currency
 
 
+def _full(source: CrawlSource, seen: set[str]) -> bool:
+    return source.max_leads is not None and len(seen) >= source.max_leads
+
+
 def crawl(
     source: CrawlSource,
     fetcher: PoliteFetcher,
     store: JobStore,
     places: PlaceResolver,
-    kraje: list[str],
+    query: ScrapeQuery,
     max_details: int = MAX_DETAILS,
     progress: Callable[[str, int], None] = lambda phase, n: None,
 ) -> CrawlResult:
@@ -161,17 +180,17 @@ def crawl(
     new: list[Lead] = []
     incomplete: list[Lead] = []  # known, but only from a card so far
     done_kraje: list[str] = []  # regions whose listing was read to the end
+    get = partial(fetcher.get, obey_robots=source.obey_robots, min_delay=source.delay)
     try:
         whole = True  # every listing was read to the end
-        for kraj in kraje:
-            slug = KRAJ_SLUGS[kraj]
+        for kraj, listing_url in source.listings(query):
             complete = True
             page = 1
             while True:
-                if page > source.max_pages:
+                if page > source.max_pages or _full(source, seen):
                     complete = False
                     break
-                resp = fetcher.get(source.listing_url(slug, page))
+                resp = get(listing_url(page))
                 if resp is None:
                     complete = complete and page > 1  # robots.txt or gone
                     break
@@ -180,8 +199,9 @@ def crawl(
                     break
                 result.pages += 1
                 listing = source.parse_listing(resp.text, page, places)
+                fresh = 0
                 for lead in listing.leads:
-                    if lead.external_id in seen:
+                    if lead.external_id in seen or _full(source, seen):
                         continue
                     seen.add(lead.external_id)
                     if store.knows(lead.external_id):
@@ -190,24 +210,29 @@ def crawl(
                             incomplete.append(lead)
                     else:
                         new.append(lead)
+                        fresh += 1
                 progress("listing", len(seen))
-                if not listing.leads:
+                if not listing.leads and source.expire_after_days is None:
                     complete = False  # an error page or a new layout, not an empty region
                 if not listing.has_next or not listing.leads:
                     break
+                if source.newest_first and not fresh:
+                    complete = False  # the rest is known already
+                    break
                 page += 1
             whole = whole and complete
-            if complete:
+            if complete and kraj is not None:
                 done_kraje.append(kraj)
         store.commit()
 
-        queue = [lead for lead in new + incomplete if lead.fetch_url][:max_details]
+        limit = min(max_details, source.max_details or max_details)
+        queue = [lead for lead in new + incomplete if lead.fetch_url][:limit]
         failed_in_row = 0
         for lead in queue:
             url = lead.fetch_url
             assert url is not None  # queued for its detail page
             try:
-                resp = fetcher.get(url)
+                resp = get(url)
                 job = source.parse_detail(resp.text, lead, places) if resp else None
             except (SourceBlocked, httpx.TransportError):
                 raise
@@ -236,7 +261,9 @@ def crawl(
             if lead.card is not None and not store.knows(lead.external_id):
                 store.add(lead.card, detail=False)
         store.commit()
-    if result.complete or done_kraje:
+    if source.expire_after_days is not None:
+        store.expire_unseen(source.expire_after_days)
+    elif result.complete or done_kraje:
         # A region read to the end counts even when another one's listing broke off.
-        store.expire_missing(kraje if result.complete else done_kraje)
+        store.expire_missing(query.kraje if result.complete else done_kraje)
     return result

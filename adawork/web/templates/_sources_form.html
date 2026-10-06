@@ -1,0 +1,20 @@
+{# Source switches; shared by the wizard and the Sources page. #}
+{% if error %}<p class="error" role="alert">{{ t(error) }}</p>{% endif %}
+<fieldset>
+  <legend>{{ t("sources.portals") }}</legend>
+  {% for s in sources if not s.consent %}
+    <label><input type="checkbox" role="switch" name="source_{{ s.id }}" {% if s.on %}checked{% endif %}> {{ s.label }}</label>
+  {% endfor %}
+</fieldset>
+
+{% for s in sources if s.consent %}
+  <article class="risk">
+    <label><input type="checkbox" role="switch" name="source_{{ s.id }}" {% if s.on %}checked{% endif %}>
+      <strong>{{ s.label }}</strong> <small class="muted">({{ t("sources.off_default") }})</small></label>
+    <p>⚠ {{ t("sources." ~ s.id ~ ".warning") }}</p>
+    <label class="small"><input type="checkbox" name="consent_{{ s.id }}" {% if s.consented %}checked{% endif %}> {{ t("sources.consent") }}</label>
+  </article>
+{% endfor %}
+
+<p class="muted small">{{ t("sources.indeed") }}</p>
+<p class="muted small">{{ t("sources.social") }}</p>

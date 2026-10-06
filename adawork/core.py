@@ -78,3 +78,13 @@ class ParsedJob:
         data.pop("external_id")
         raw = json.dumps(data, sort_keys=True, default=str, ensure_ascii=False)
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+@dataclass
+class ScrapeQuery:
+    """What to look for, from the wizard profile (see geo/scope.py)."""
+
+    kraje: list[str]
+    home: str | None = None  # municipality name
+    radius_km: float = 50
+    keywords: list[str] = field(default_factory=list)  # empty = every kind of work

@@ -7,7 +7,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from adawork.db.models import Job
-from adawork.scraper.sources import LABELS as SOURCE_LABELS
+from adawork.geo.scope import radius_km
+from adawork.scraper.sources import SWITCHABLE, indeed
 from adawork.search.service import jobs_found_since, search_jobs
 from adawork.services import Services
 from adawork.web.pages import (
@@ -114,7 +115,7 @@ def facets(request: Request, svc: Svc) -> HTMLResponse:
         request,
         "_facets.html",
         f=f,
-        sources_on=list(SOURCE_LABELS),
+        sources_on=[sid for sid, on in SWITCHABLE if svc.settings.sources.get(sid, on)],
         facets=result.facets,
         salary_steps=SALARY_STEPS,
         posted_days=POSTED_DAYS,
@@ -154,3 +155,14 @@ def scrape_progress(request: Request, svc: Svc) -> HTMLResponse:
 @router.get("/status", response_class=HTMLResponse)
 def status(request: Request, svc: Svc) -> HTMLResponse:
     return render(request, "_status.html", **status_context(svc))
+
+
+@router.get("/out/indeed")
+def out_indeed(svc: Svc, q: str = "") -> RedirectResponse:
+    """The same search on Indeed, opened in the user's browser (link-out only)."""
+    profile = svc.settings.profile
+    home = None
+    if profile.home_address:
+        found = svc.places().find_home(profile.home_address)
+        home = found.name if found else None
+    return RedirectResponse(indeed.search_url(q, home, radius_km(profile)), status_code=303)

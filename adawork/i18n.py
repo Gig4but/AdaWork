@@ -3,6 +3,7 @@
 TEXTS: dict[str, dict[str, str]] = {
     "nav.search": {"cs": "Hledat", "en": "Search"},
     "nav.wizard": {"cs": "Průvodce nastavením", "en": "Setup wizard"},
+    "nav.sources": {"cs": "Zdroje", "en": "Sources"},
     "wizard.title": {"cs": "Průvodce nastavením", "en": "Setup wizard"},
     "wizard.step": {"cs": "Krok {n} ze {total}", "en": "Step {n} of {total}"},
     "wizard.next": {"cs": "Další", "en": "Next"},
@@ -55,14 +56,61 @@ TEXTS: dict[str, dict[str, str]] = {
     "wizard.done": {"cs": "Hotovo", "en": "Done"},
     "wizard.done.text": {
         "cs": "Po kliknutí na Start stáhneme nabídky z úřadu práce (všechny obory, asi minuta) "
-        "a potom z portálů prace.cz, jenprace.cz a profesia.cz pro kraje ve vašem dosahu. "
-        "Portály čteme pomalu, aby nás nezablokovaly, takže to může trvat i desítky minut. "
-        "Nabídky přibývají průběžně.",
+        "a potom z vybraných portálů pro kraje ve vašem dosahu. Portály čteme pomalu, aby "
+        "nás nezablokovaly, takže to může trvat i desítky minut. Nabídky přibývají průběžně.",
         "en": "Start downloads job offers from the labour office (every field, about a "
-        "minute), then from prace.cz, jenprace.cz and profesia.cz for the regions within "
-        "your reach. Portals are read slowly so they do not block us, which can take tens "
-        "of minutes. Jobs appear as they come in.",
+        "minute), then from the chosen portals for the regions within your reach. Portals "
+        "are read slowly so they do not block us, which can take tens of minutes. Jobs "
+        "appear as they come in.",
     },
+    "wizard.sources": {"cs": "Zdroje nabídek", "en": "Job sources"},
+    "sources.title": {"cs": "Zdroje nabídek", "en": "Job sources"},
+    "sources.text": {
+        "cs": "Vyberte, odkud má aplikace nabídky stahovat.",
+        "en": "Choose where the app downloads job offers from.",
+    },
+    "sources.portals": {"cs": "Úřad práce a portály", "en": "Labour office and portals"},
+    "sources.off_default": {"cs": "ve výchozím stavu vypnuto", "en": "off by default"},
+    "sources.linkedin.warning": {
+        "cs": "LinkedIn automatické čtení svých stránek zakazuje, a to v podmínkách použití "
+        "(User Agreement) i v souboru robots.txt. Aplikace čte jen veřejné nabídky bez "
+        "přihlášení, váš účet tedy v ohrožení není. LinkedIn ale může váš počítač (IP adresu) "
+        "na čas zablokovat. Aplikace proto čte pomalu, nejvýš 100 nabídek za jedno hledání, "
+        "a při prvním odmítnutí na 12 hodin přestane.",
+        "en": "LinkedIn forbids automatic reading of its pages, both in its User Agreement and "
+        "in its robots.txt rules. The app reads only public job ads without logging in, so "
+        "your account is not at risk. LinkedIn may still block your computer (IP address) for "
+        "a while. The app therefore reads slowly, at most 100 ads per check, and stops for 12 "
+        "hours at the first refusal.",
+    },
+    "sources.consent": {
+        "cs": "Rozumím riziku a chci tento zdroj zapnout",
+        "en": "I understand the risk and want to switch this source on",
+    },
+    "sources.consent_missing": {
+        "cs": "LinkedIn se zapne, až zaškrtnete, že rozumíte riziku.",
+        "en": "LinkedIn is switched on only after you tick that you understand the risk.",
+    },
+    "sources.indeed": {
+        "cs": "Indeed automatické čtení blokuje. Ve vyhledávání najdete odkaz, který stejné "
+        "hledání otevře na Indeedu ve vašem prohlížeči.",
+        "en": "Indeed blocks automatic reading. The search page has a link that opens the same "
+        "search on Indeed in your browser.",
+    },
+    "sources.social": {
+        "cs": "Facebook a Instagram přibudou v pozdější verzi (ve výchozím stavu vypnuté).",
+        "en": "Facebook and Instagram come in a later version (off by default).",
+    },
+    "social.stopped.failed": {
+        "cs": "stránka se nenačetla nebo bylo okno Edge zavřeno",
+        "en": "a page did not load or the Edge window was closed",
+    },
+    "sources.save": {"cs": "Uložit", "en": "Save"},
+    "sources.saved": {
+        "cs": "Uloženo. Projeví se při příštím hledání.",
+        "en": "Saved. It applies from the next check.",
+    },
+    "search.indeed": {"cs": "Hledat také na Indeed", "en": "Also search on Indeed"},
     "wizard.auto_off": {
         "cs": "Automatické hledání je vypnuté. Zapnout ho můžete později v Nastavení.",
         "en": "Automatic checks are off. You can switch them on later in Settings.",
