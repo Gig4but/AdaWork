@@ -13,7 +13,13 @@ from selectolax.lexbor import LexborHTMLParser, LexborNode
 
 from adawork.core import ParsedJob, ParsedLocation
 from adawork.geo.places import PlaceResolver
-from adawork.normalize.text import clean_spaces, contract_types, fold, html_to_text
+from adawork.normalize.text import (
+    clean_spaces,
+    contract_types,
+    education_code,
+    fold,
+    html_to_text,
+)
 
 _HTML_VALUE_TAGS = {"div", "section", "article", "ul", "ol", "td"}
 
@@ -206,17 +212,26 @@ def addresses(posting: dict[str, Any]) -> list[dict[str, str] | str]:
     return result
 
 
+# "CS" is the old code dobraprace.cz still sends; startupjobs.cz writes "Česko".
+CZECH = ("cz", "cze", "cs", "czech republic", "ceska republika", "czechia", "cesko")
+WITH_DISTRICT = re.compile(r"^(.+?),?\s+okres\s+(.+)$", re.IGNORECASE)
+
+
 def resolve_address(address: dict[str, str] | str, places: PlaceResolver) -> ParsedLocation | None:
     if isinstance(address, str):
         return places.resolve(address.split(",")[0])
     country = fold(address.get("addressCountry", "cz"))
-    if country not in ("cz", "cze", "czech republic", "ceska republika", "czechia"):
+    if country not in CZECH:
         return None
+    locality, district = address.get("addressLocality"), None
+    if m := WITH_DISTRICT.match(locality or ""):  # "Hostivice okres Praha-západ" (dobraprace)
+        locality, district = m.group(1), m.group(2)
     return places.resolve(
-        address.get("addressLocality"),
+        locality,
         street=address.get("streetAddress"),
         postal_code=address.get("postalCode"),
         region=address.get("addressRegion"),
+        district=district,
     )
 
 
@@ -226,30 +241,15 @@ def place_text(address: dict[str, str] | str) -> str | None:
     return address.get("addressLocality") or address.get("addressRegion")
 
 
-_EDUCATION_WORDS = (
-    ("doctoral", ("doktor", "phd", "doctor")),
-    ("master", ("magist", "master", "postgraduate")),
-    ("bachelor", ("bakal", "bachelor")),
-    ("higher_vocational", ("vyssi odborn", "associate")),
-    ("maturita", ("maturit", "high school")),
-    ("vocational", ("vyuc", "bez maturity", "professional certificate")),
-    ("basic", ("zakladni",)),
-)
-
-
-def education_code(value: Any) -> str | None:
+def posting_education(value: Any) -> str | None:
+    """educationRequirements: text, a credential dict or a list of them."""
     texts = []
     for item in value if isinstance(value, list) else [value]:
         if isinstance(item, dict):
             item = item.get("credentialCategory") or item.get("name")
         if isinstance(item, str):
-            texts.append(fold(item))
-    joined = " ".join(texts)
-    # The lowest level named is the requirement ("SŠ nebo VŠ" means SŠ is enough).
-    for code, words in reversed(_EDUCATION_WORDS):
-        if any(w in joined for w in words):
-            return code
-    return None
+            texts.append(item)
+    return education_code(", ".join(texts))
 
 
 def posting_to_job(
@@ -272,7 +272,7 @@ def posting_to_job(
         place_text=", ".join(dict.fromkeys(names)) or None,
         location=location,
         contract_types=contract_types(*_strings(posting.get("employmentType"))),
-        education=education_code(posting.get("educationRequirements")),
+        education=posting_education(posting.get("educationRequirements")),
         posted_at=parse_date(_first(posting.get("datePosted"))),
         expires_at=parse_date(_first(posting.get("validThrough"))),
         **salary_fields(posting.get("baseSalary")),

@@ -155,7 +155,8 @@ class ModelManager:
         choice = self.settings().choice
         if choice == "off":
             return None
-        if choice == "auto":
+        if choice == "auto" or (choice not in TIERS and choice not in MODELS):
+            # Also a model removed from the catalog since the user picked it.
             pick = self.advice().pick
             if pick is None or self.state.rejected.get(pick.model.id) == self.state.fingerprint:
                 return None

@@ -1,8 +1,9 @@
 """Models the app can download (PLAN §6.6). Every entry is pinned to a Hugging Face commit and
 checked by SHA-256, so a model never changes under the user.
 
-`TIERS` maps the three friendly tiers to models; the other entries are evaluation candidates
-(`adawork eval`) and can be picked under "Pokročilé" (advanced).
+`TIERS` maps the three friendly tiers to models; the other entries can be picked under
+"Pokročilé" (advanced). Models below 2B and 8–14B models were evaluated and removed: they
+were no better than the tiers (docs/spikes.md).
 """
 
 from dataclasses import dataclass
@@ -20,6 +21,8 @@ class PromptStyle:
     shares: bool = False  # show how often similar Úřad práce ads used each candidate
     by_name: bool = False  # answer with the occupation's name instead of its code
     english: bool = False  # instructions in English (the ad and the answer values stay Czech)
+    # First the 2-digit occupation group, then the occupation within it (a second, short call).
+    two_step: bool = False
 
 
 DEFAULT_STYLE = PromptStyle()
@@ -172,118 +175,6 @@ MODELS: dict[str, ModelSpec] = {
             ),
             params_b=4.0,
             kv_mb_per_1k=56,
-            prompt=SHARES,
-        ),
-        ModelSpec(
-            id="qwen3-vl-8b",
-            name="Qwen3-VL 8B",
-            repo="Qwen/Qwen3-VL-8B-Instruct-GGUF",
-            revision="f982a07559d4a2f6c8744d840bf6fccab30eea96",
-            weights=(
-                "Qwen3VL-8B-Instruct-Q4_K_M.gguf",
-                5027784800,
-                "67d1659bfe71b89d50b45a4ad1a9e5b997e5bb16ce5da66a6a6167abd569e9e2",
-            ),
-            mmproj=(
-                "mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf",
-                752289728,
-                "c6ba85508d82f42590e6eb77d5340369ab6fecf107a7561d809523d8aa5f3bfd",
-            ),
-            params_b=8.2,
-            kv_mb_per_1k=144,
-            prompt=SHARES,
-        ),
-        ModelSpec(
-            id="qwen3.5-9b",
-            name="Qwen3.5 9B",
-            repo="unsloth/Qwen3.5-9B-GGUF",
-            revision="3885219b6810b007914f3a7950a8d1b469d598a5",
-            weights=(
-                "Qwen3.5-9B-Q4_K_M.gguf",
-                5680522464,
-                "03b74727a860a56338e042c4420bb3f04b2fec5734175f4cb9fa853daf52b7e8",
-            ),
-            mmproj=(
-                "mmproj-F16.gguf",
-                918166080,
-                "f70dc3509053962b0d0d3ee8a7eacebf5d60aa560cad78254ae8698516ae029f",
-            ),
-            params_b=9.0,
-            kv_mb_per_1k=32,
-            chat_kwargs=NO_THINKING,
-            prompt=SHARES,
-        ),
-        ModelSpec(
-            id="ministral-3-8b",
-            name="Ministral 3 8B",
-            repo="mistralai/Ministral-3-8B-Instruct-2512-GGUF",
-            revision="0102285ad796bd99af90f58de616092e5630e970",
-            weights=(
-                "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
-                5198911904,
-                "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
-            ),
-            mmproj=(
-                "Ministral-3-8B-Instruct-2512-BF16-mmproj.gguf",
-                858283168,
-                "e799380f596d152ff4026a72d409ecc89c96cd437676804bc3f2ab3bd6b486ec",
-            ),
-            params_b=8.4,
-            kv_mb_per_1k=136,
-            prompt=SHARES,
-        ),
-        ModelSpec(
-            id="gemma-4-12b",
-            name="Gemma 4 12B",
-            repo="google/gemma-4-12B-it-qat-q4_0-gguf",
-            revision="29d097773436b69ff9feafd636ab4cf873786537",
-            weights=(
-                "gemma-4-12b-it-qat-q4_0.gguf",
-                6975879296,
-                "93567e57a8fe10b23569b9d9ec38cd005deedf71e29477c421a4b83f418a538b",
-            ),
-            mmproj=(
-                "mmproj-gemma-4-12b-it-qat-q4_0.gguf",
-                175115616,
-                "cb018338a7538a9814d994bfe54644c71eb7ed54e31eae2f721e45fd3c260da7",
-            ),
-            params_b=12.0,
-            kv_mb_per_1k=96,
-            prompt=SHARES,
-        ),
-        ModelSpec(
-            id="ministral-3-14b",
-            name="Ministral 3 14B",
-            repo="mistralai/Ministral-3-14B-Instruct-2512-GGUF",
-            revision="74fac473c43357d7fb2671713608183cc72496d0",
-            weights=(
-                "Ministral-3-14B-Instruct-2512-Q4_K_M.gguf",
-                8239593024,
-                "824e0f3373e69b84f2cae46fdcb9bd1ebc6ab3bfc7acc125d818b7b8178cc613",
-            ),
-            mmproj=(
-                "Ministral-3-14B-Instruct-2512-BF16-mmproj.gguf",
-                879258784,
-                "ab7616148b7081030fd38e410c9213ce8346a8b0588291c8ca279058e78cfae7",
-            ),
-            params_b=13.5,
-            kv_mb_per_1k=160,
-            prompt=SHARES,
-        ),
-        ModelSpec(
-            id="qwen3-14b",
-            name="Qwen3 14B (text)",
-            repo="Qwen/Qwen3-14B-GGUF",
-            revision="530227a7d994db8eca5ab5ced2fb692b614357fd",
-            weights=(
-                "Qwen3-14B-Q4_K_M.gguf",
-                9001752960,
-                "500a8806e85ee9c83f3ae08420295592451379b4f8cf2d0f41c15dffeb6b81f0",
-            ),
-            mmproj=None,
-            params_b=14.8,
-            kv_mb_per_1k=160,
-            chat_kwargs=NO_THINKING,
             prompt=SHARES,
         ),
     )

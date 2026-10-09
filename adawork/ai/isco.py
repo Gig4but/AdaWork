@@ -170,15 +170,9 @@ class IscoIndex:
         if vector is None:
             vector = np.asarray(self.embedder.embed([title])[0])
         votes = self._votes(title, vector)
-        ranked = sorted(votes.items(), key=lambda kv: -sum(s for s, _ in kv[1]))[:limit]
-        candidates = []
-        for code, hits in ranked:
-            hits = sorted(hits, reverse=True)
-            examples = tuple(dict.fromkeys(self.titles[i] for _, i in hits))[:3]
-            candidates.append(
-                Candidate(code, self.codebook.name(code), sum(s for s, _ in hits), examples)
-            )
-        return Lookup(candidates, votes, self.codes)
+        found = Lookup([], votes, self.codes, self.titles, self.codebook)
+        found.candidates = found._ranked(votes, limit)
+        return found
 
     def lookup_many(self, titles: list[str]) -> list["Lookup"]:
         """Same as `lookup` for many titles, with one batched embedding call."""
@@ -191,6 +185,31 @@ class Lookup:
     candidates: list[Candidate]
     votes: dict[str, list[tuple[float, int]]]
     codes: list[str]
+    titles: list[str]
+    codebook: IscoCodebook
+
+    def _ranked(self, hits_by_code: dict[str, list[tuple[float, int]]], limit: int):
+        ranked = sorted(hits_by_code.items(), key=lambda kv: -sum(s for s, _ in kv[1]))
+        result = []
+        for code, hits in ranked[:limit]:
+            hits = sorted(hits, reverse=True)
+            examples = tuple(dict.fromkeys(self.titles[i] for _, i in hits))[:3]
+            result.append(
+                Candidate(code, self.codebook.name(code), sum(s for s, _ in hits), examples)
+            )
+        return result
+
+    def groups(self, limit: int = 6) -> list[Candidate]:
+        """2-digit sub-major groups that similar titles voted for (two-step choice)."""
+        by_group: dict[str, list[tuple[float, int]]] = defaultdict(list)
+        for code, hits in self.votes.items():
+            by_group[code[:2]].extend(hits)
+        return self._ranked(by_group, limit)
+
+    def within(self, group: str, limit: int = 8) -> list[Candidate]:
+        """The voted 4-digit unit groups inside a 2-digit group."""
+        inside = {code: hits for code, hits in self.votes.items() if code.startswith(group)}
+        return self._ranked(inside, limit)
 
     def clear_winner(self) -> Candidate | None:
         total = sum(c.score for c in self.candidates)

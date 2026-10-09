@@ -8,6 +8,7 @@ from selectolax.lexbor import LexborHTMLParser
 from sqlalchemy import func, select
 
 from adawork.config import Profile
+from adawork.core import utcnow
 from adawork.db.models import Job, JobSource, Location, Run, SourceState
 from adawork.db.session import make_engine, make_sessionmaker, migrate
 from adawork.geo.places import PlaceResolver
@@ -198,6 +199,19 @@ def test_an_empty_region_expires_nothing_there(sessions, tmp_path):
         assert s.scalar(select(Run.status).order_by(Run.id.desc()).limit(1)) == "partial"
 
 
+def test_old_detail_pages_are_read_again(sessions, tmp_path):
+    site = Site()
+    run(sessions, tmp_path, site, max_details=100)
+    with sessions() as s:
+        old = s.scalar(select(JobSource).where(JobSource.detail_at.is_not(None)).limit(1))
+        old.detail_at = utcnow() - timedelta(days=31)
+        s.commit()
+    run(sessions, tmp_path, site, max_details=100)
+    assert site.details() == 1
+    run(sessions, tmp_path, site, max_details=100)
+    assert site.details() == 0
+
+
 def test_failing_detail_pages_keep_the_cards(sessions, tmp_path):
     site = Site()
     site.detail_status = 500
@@ -212,6 +226,21 @@ def test_next_page_link_is_exact():
     tree = LexborHTMLParser('<a href="/nabidky/?page=20">20</a><a href="?x=1&amp;page=3">3</a>')
     assert not has_page_link(tree, "page", 2)
     assert has_page_link(tree, "page", 3) and has_page_link(tree, "page", 20)
+
+
+def test_title_words_are_not_places_near_home():
+    from types import SimpleNamespace
+
+    from adawork.scraper import crawl
+    from adawork.scraper.sources import startupjobs
+
+    towns = [SimpleNamespace(name=n, kraj="Jihomoravský kraj") for n in ("Práce", "Brno")]
+    source = type(startupjobs.SOURCE)()
+    source.prepare(
+        crawl.ScrapeQuery(kraje=["Jihomoravský kraj"]), SimpleNamespace(municipalities=towns)
+    )
+    assert source.near_home("https://www.startupjobs.cz/nabidka/1/skladnik-brno")
+    assert not source.near_home("https://www.startupjobs.cz/nabidka/2/prace-v-brne-skladnik")
 
 
 def test_blocked_source_is_paused(sessions, tmp_path):

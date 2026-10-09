@@ -267,6 +267,83 @@ plateaus at ~73 % (2-digit) for every model from 2B to 14B because the reference
 inconsistent between "Specialisté" and "Odborní pracovníci" and the candidates come from the
 same title vote; place and salary are near their ceiling already at 2B. Bigger models are
 3–6× slower for at most a few points on salary and shifts. Tiers stay Qwen3-VL 2B / Gemma 4
-E2B / Qwen3-VL 4B; the 8–14B models remain selectable under "Pokročilé". To gain more,
+E2B / Qwen3-VL 4B; the 8–14B models were later removed from the catalog (2026-10-09). To gain more,
 the next step is better candidates and labels (e.g. a 2-level choice: major group first),
 not a bigger model.
+
+### Two-step occupation choice (tried 2026-10-07, not adopted)
+
+First the 2-digit group (with a short guide to the ISCO main classes by qualification), then
+the occupation within the group (a second, short call reusing the cached ad prompt). On the
+46 unclear ads, 2-digit group right:
+
+| Model | one-step (best style) | two-step | two-step + shares | two-step + names |
+|---|---|---|---|---|
+| Qwen3-VL 2B | 61 % | 50 % | 50 % | 46 % |
+| Gemma 4 E2B | 61 % | 48 % | 50 % | 52 % |
+| Qwen3-VL 4B | 63 % | 52 % | 48 % | 48 % |
+| Qwen3.5 9B | 61 % | 46 % | – | – |
+
+Every model got worse. The 2-digit group names are broad ("Úředníci pro zpracování
+číselných údajů a v logistice"), so the model loses the concrete anchor that a specific
+occupation name and example titles give in the one-step choice, and a wrong group cannot be
+repaired in step 2. The option stays in the code (`PromptStyle(two_step=True)`), off for all
+models.
+
+## M6 live smoke run (2026-10-07)
+
+Home Kolín, 30 min by car (Středočeský, Pardubický, Královéhradecký kraj), on a copy of the
+live database; at most 2 listing pages per region and 5 detail pages per portal.
+
+| Portal | How it is read | Result |
+|---|---|---|
+| jobs.cz | region listings (30/page), `data-test` hooks | 162 cards, details OK; big employers' career sites (`<firma>.jobs.cz/detail-pozice`) load the ad with JavaScript → card only |
+| Práce za rohem | region listings with `__NEXT_DATA__` JSON (50/page, GPS, IČO, occupations) | 298 cards (178 merged), own ads' details OK; re-listed `PROF…`/`G2…` ads card only |
+| dobraprace.cz | sitemap + JSON-LD; full text from the page (JSON-LD has a one-line summary) | details OK, towns from "X okres Y" |
+| Easy-práce.cz | own-ads sitemap with lastmod (no region in URLs) | details OK |
+| Personálka.cz | region listings (newest first, 150–400 pages each) | 180 cards (31 merged), details OK |
+| inwork.cz | region listings (`?start=N`, 40/page); the sitemap lags weeks and keeps expired ads | 240 cards placed from the URL, details OK |
+| Fajn brigády | sitemap with lastmod (current, regenerated daily) | details OK, two label layouts |
+| StartupJobs.cz | offers sitemap + JSON-LD | details OK ("Česko" as country) |
+| HitPráce.cz | search around home (radius from the travel time) + JSON-LD | details OK |
+| Bazoš – práce | 24 category pages, region filter by PSČ before reading details | 151 ads in the region |
+
+No portal refused us. Fixes found by the live run: JSON-LD country codes "CS"/"Česko",
+"X okres Y" localities, inwork sitemap replaced by listings, a second fajn-brigady label
+layout, branded jobs.cz pages kept as cards. Personal data (contact names, phones) were
+removed from all new fixtures and from the older bazos and jobs.cz fixtures.
+
+Not measured yet: the duration of a complete first run with all 15 sources. Estimate at the
+polite pace: 1.5–2 h (listings plus ≤ 300 detail pages per portal), later runs much shorter.
+Reading different portals in parallel (politeness is per host) would cut it substantially.
+
+### Models below 2B (2026-10-08)
+
+Full eval on the 70 golden ads, current prompt; "rules" = what the title vote and the rules
+give without any model (occupation 67 %, kraj 99 %).
+
+| Model | Occupation group | Kraj | Salary | Shifts / education given | s per ad (iGPU) | s per ad (CPU, 4 threads) |
+|---|---|---|---|---|---|---|
+| **Qwen3-VL 2B** (Simple) | 73 % | 99 % | 91 % | 4 / 30 % | 7.9 | 41.1 |
+| Qwen3 1.7B (text) | 69 % | 97 % | 37 % | 9 / 27 % | 10.7 | – |
+| Qwen3.5 0.8B (text) | 66 % | 99 % | 27–30 % | 13 / 6–9 % | 6.0 | **14.5** |
+| Gemma 3 1B (text) | 57 % | 99 % | 26 % | 19 / 0 % | 8.9 | – |
+| Qwen3 0.6B (text) | 67 % | 99 % | 19 % | 11 / 14 % | 5.4 | 27.4 |
+| LFM2.5 1.2B (text) | 67 % | 99 % | 16 % | 7 / 21 % | 10.1 | – |
+| LFM2.5-VL 1.6B | 67 % | 99 % | 16 % | 0 / 0 % | 5.4 | 22.3 |
+
+All 100 % valid JSON. Re-run on 2026-10-09 with the reviewed code: the same within one ad (iGPU
+seconds from the first run). **Conclusion:** below 2B the models only repeat what the rules already
+give (occupation, place) and mostly fail at the one field where the model matters, salary
+(16–37 % vs 91 %). On a GPU they save 2–3 s per ad; on a CPU only Qwen3.5 0.8B is markedly
+faster (14.5 vs 41 s) and still adds almost nothing. No tier below Simple is added: on a
+CPU-only PC Auto keeps Simple and works only through the ads matching the profile, or the
+user chooses rules only. Output length, not model size, sets the speed on the iGPU: every
+answer needs ~60–80 tokens, and small models in 8-bit read about as many bytes per token as
+a 2B model in 4-bit. These models were removed from the catalog on 2026-10-09.
+
+**Rule added instead:** the pay stated in the ad text ("Mzda 32 000 – 38 000 Kč měsíčně",
+"180 Kč/hod.", "35 tis.", "32-38k"; bonuses, meal vouchers and course prices ignored) is
+now read by the rules for every job without a structured salary, with or without a model.
+On the golden ads' text bodies it found 10 pay lines, 8 matching the label (the other 2 ads
+state hourly and monthly pay).

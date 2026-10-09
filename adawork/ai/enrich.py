@@ -19,7 +19,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from adawork.ai import wanted
@@ -42,7 +42,7 @@ from adawork.core import ParsedLocation, utcnow
 from adawork.db.models import Job, JobSource, LlmCache, Location
 from adawork.geo.places import PlaceResolver
 from adawork.geo.scope import build_query
-from adawork.normalize.text import contract_types
+from adawork.normalize.text import contract_types, salary_in_text
 from adawork.normalize.vocab import UNCATEGORIZED
 from adawork.search import kinds
 
@@ -165,7 +165,11 @@ class Enricher:
                 return 0
             stmt = select(Job.id).where(
                 Job.status == "active",
-                or_(Job.isco_code.is_(None), func.json_array_length(Job.contract_types) == 0),
+                or_(
+                    Job.isco_code.is_(None),
+                    func.json_array_length(Job.contract_types) == 0,
+                    and_(Job.salary_min.is_(None), Job.salary_max.is_(None)),
+                ),
                 or_(Job.rules_hash.is_(None), Job.rules_hash != Job.content_hash),
             )
             ids = list(session.scalars(stmt))
@@ -178,13 +182,17 @@ class Enricher:
                     session.scalars(select(Job).where(Job.id.in_(ids[start : start + BATCH])))
                 )
                 for job, found in zip(
-                    chunk, index.lookup_many([j.title for j in chunk]), strict=True
+                    chunk, index.lookup_many([isco_title(j) for j in chunk]), strict=True
                 ):
                     if not job.contract_types and job.description:
                         found_types = contract_types(job.description)
                         if found_types:
                             job.contract_types = found_types
                             _mark(job, ["contract_types"], "rules")
+                    no_salary = job.salary_min is None and job.salary_max is None
+                    if no_salary and (salary := salary_in_text(job.description)):
+                        _set_salary(job, salary)
+                        _mark(job, ["salary"], "rules")
                     winner = found.clear_winner() if job.isco_code is None else None
                     if winner:
                         _set_isco(job, index.codebook, found.detail_code(winner.code), "knn")
@@ -225,6 +233,13 @@ class Enricher:
             except (Busy, LlmError) as exc:
                 log.info("kinds of work mapped without the model: %s", exc)
         return {p: wanted.resolve(index, p) for p in phrases}
+
+    @staticmethod
+    def _set_isco(job: Job, codebook: IscoCodebook, code: str, origin: str) -> None:
+        job.isco_code = code
+        if not job.categories or job.categories == [UNCATEGORIZED]:
+            job.categories = codebook.categories(code) or [UNCATEGORIZED]
+        _mark(job, ["isco_code", "categories"], origin)
 
     # --- 2. AI --------------------------------------------------------------------------
 
@@ -303,7 +318,9 @@ class Enricher:
 
     def _enrich(self, session, job: Job, index, client, places: PlaceResolver) -> None:
         fields = missing_fields(job)
-        found: Lookup | None = index.lookup(job.title) if index and "profese" in fields else None
+        found: Lookup | None = (
+            index.lookup(isco_title(job)) if index and "profese" in fields else None
+        )
         candidates = found.candidates if found else []
         if not candidates:  # no occupation to choose from: not asked
             fields = tuple(f for f in fields if f != "profese")
@@ -318,7 +335,7 @@ class Enricher:
         elif not fields:
             result = Extraction()
         else:
-            result = extract(client, text, candidates, fields, style=style)
+            result = extract(client, text, candidates, fields, style=style, found=found)
             self.manager.record(result.timing)
             session.add(
                 LlmCache(
@@ -335,6 +352,13 @@ class Enricher:
 def _ad_text(job: Job) -> str:
     head = [job.title, job.employer_name or "", job.place_text or ""]
     return "\n".join(x for x in head if x) + "\n\n" + (job.description or "")
+
+
+def isco_title(job: Job) -> str:
+    """What the occupation lookup compares: the portal's own occupation name when it gives one
+    (jobs.cz, Práce za rohem: "Skladník/manipulant"), else the ad title."""
+    occupations = (job.extra or {}).get("occupations") or ()
+    return occupations[0] if occupations else job.title
 
 
 def missing_fields(job: Job) -> tuple[str, ...]:
@@ -377,6 +401,20 @@ def _raw(result: Extraction) -> dict:
         "vzdelani": next(iter(back(EDUCATION, [result.education])), None),
         "varovani": back(WARNINGS, result.warnings),
     }
+
+
+def _set_isco(job: Job, codebook: IscoCodebook, code: str, origin: str) -> None:
+    job.isco_code = code
+    if not job.categories or job.categories == [UNCATEGORIZED]:
+        job.categories = codebook.categories(code) or [UNCATEGORIZED]
+    _mark(job, ["isco_code", "categories"], origin)
+
+
+def _set_salary(job: Job, salary) -> None:
+    job.salary_min, job.salary_max = salary.min, salary.max
+    job.salary_unit, job.salary_currency = salary.unit, salary.currency
+    job.update_derived()
+    job.updated_at = utcnow()
 
 
 def _mark(job: Job, fields: list[str], origin: str) -> None:
@@ -451,10 +489,3 @@ def apply(
         job.updated_at = utcnow()
     job.ai_hash = job.content_hash
     return filled
-
-
-def _set_isco(job: Job, codebook: IscoCodebook, code: str, origin: str) -> None:
-    job.isco_code = code
-    if not job.categories or job.categories == [UNCATEGORIZED]:
-        job.categories = codebook.categories(code) or [UNCATEGORIZED]
-    _mark(job, ["isco_code", "categories"], origin)

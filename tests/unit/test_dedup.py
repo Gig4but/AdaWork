@@ -149,3 +149,16 @@ def test_store_merges_fills_gaps_and_expires_by_source(session):
     assert session.scalar(select(JobSource.status).where(JobSource.external_id == "p2")) == (
         "active"
     )
+
+
+def test_store_counts_each_job_once_per_run(session):
+    JobStore(session, "jobs_cz").add_all(
+        [job("a", description=LONG), job("b", "Účetní", description=OTHER)]
+    )
+    store = JobStore(session, "jobs_cz")
+    store.touch("a")
+    store.add(job("a", description=LONG))
+    store.touch("b")
+    store.add(job("b", "Účetní", description=OTHER + "Nově i o víkendech."))
+    store.commit()
+    assert (store.stats.unchanged, store.stats.updated) == (1, 1)

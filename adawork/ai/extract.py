@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 
 from adawork.ai.catalog import DEFAULT_STYLE, PromptStyle
 from adawork.ai.client import LlmClient, Timing
-from adawork.ai.isco import Candidate
+from adawork.ai.isco import Candidate, Lookup
 from adawork.core import SalaryUnit
 from adawork.normalize.text import clean_spaces, fold
 
@@ -159,7 +159,18 @@ PROFESE_SHARES = """
   Když si nejsi jistý, vyber tu nejčastější."""
 
 
+SKUPINA = """- "skupina": skupina profesí ze seznamu, do které pozice patří;
+  když žádná nesedí, "jiná".
+  Hlavní třídy podle kvalifikace: 1 řídící pracovníci; 2 specialisté (obvykle VŠ);
+  3 techničtí a odborní pracovníci (obvykle SŠ s maturitou nebo VOŠ); 4 úředníci;
+  5 pracovníci ve službách a prodeji; 6 zemědělci a lesníci; 7 řemeslníci a opraváři;
+  8 obsluha strojů, montéři a řidiči; 9 pomocní a nekvalifikovaní pracovníci."""
+
+
 def system_prompt(style: PromptStyle = DEFAULT_STYLE) -> str:
+    if style.two_step:
+        profese = SKUPINA + "\n" + (PROFESE_NAME if style.by_name else PROFESE_CODE)
+        return SYSTEM.format(profese=profese + (PROFESE_SHARES if style.shares else ""))
     if style.english:
         profese = PROFESE_NAME_EN if style.by_name else PROFESE_CODE_EN
         return SYSTEM_EN.format(profese=profese + (PROFESE_SHARES_EN if style.shares else ""))
@@ -181,9 +192,9 @@ LABELS_CS = {"list": "Možné profese:", "share": "podobné inzeráty", "eg": "n
 LABELS_EN = {"list": "Possible occupations:", "share": "similar ads", "eg": "e.g.", "ad": "Job ad:"}
 
 
-def user_message(text: str, candidates: list[Candidate], style: PromptStyle = DEFAULT_STYLE) -> str:
+def _options(header: str, candidates: list[Candidate], style: PromptStyle) -> list[str]:
     words = LABELS_EN if style.english else LABELS_CS
-    lines = [words["list"]] if candidates else []
+    lines = [header]
     total = sum(c.score for c in candidates) or 1.0
     for answer, c in zip(choices(candidates, style), candidates, strict=True):
         notes = []
@@ -193,8 +204,21 @@ def user_message(text: str, candidates: list[Candidate], style: PromptStyle = DE
             notes.append(f"{words['eg']} " + ", ".join(c.examples[:2]))
         head = f"- {answer}" if style.by_name else f"{c.code} {c.name}"
         lines.append(head + (f" ({'; '.join(notes)})" if notes else ""))
-    lines += (["", words["ad"]] if candidates else [words["ad"]]) + [trim(text)]
+    return lines
+
+
+def ad_first_message(text: str, header: str, options: list[Candidate], style) -> str:
+    """The ad first, so a second call about the same ad reuses the processed prompt."""
+    lines = ["Inzerát:", trim(text)]
+    if options:
+        lines += [""] + _options(header, options, style)
     return "\n".join(lines)
+
+
+def user_message(text: str, candidates: list[Candidate], style: PromptStyle = DEFAULT_STYLE) -> str:
+    words = LABELS_EN if style.english else LABELS_CS
+    lines = [*_options(words["list"], candidates, style), ""] if candidates else []
+    return "\n".join([*lines, words["ad"], trim(text)])
 
 
 def extract(
@@ -204,7 +228,10 @@ def extract(
     fields: tuple[str, ...] = FIELDS,
     untrusted: bool = False,
     style: PromptStyle = DEFAULT_STYLE,
+    found: Lookup | None = None,
 ) -> Extraction:
+    if style.two_step and found is not None and "profese" in fields:
+        return _extract_two_step(client, text, found, fields, untrusted, style)
     offered = candidates if "profese" in fields else []
     answers = choices(offered, style)
     reply = client.chat(
@@ -217,6 +244,47 @@ def extract(
     )
     result = validate(reply.data, text, answers)
     result.timing = reply.timing
+    return result
+
+
+GROUPS = "Možné skupiny profesí:"
+
+
+def _extract_two_step(client, text, found, fields, untrusted, style) -> Extraction:
+    """Group first, then the occupation within the group (only if there is a choice)."""
+    groups = found.groups()
+    group_answers = choices(groups, style)
+    first = schema(list(group_answers), fields, untrusted)
+    properties = {("skupina" if k == "profese" else k): v for k, v in first["properties"].items()}
+    first = first | {"properties": properties, "required": list(properties)}
+    system = {"role": "system", "content": system_prompt(style)}
+    reply = client.chat(
+        [system, {"role": "user", "content": ad_first_message(text, GROUPS, groups, style)}],
+        schema=first,
+        max_tokens=200,
+    )
+    data = dict(reply.data)
+    group = group_answers.get(data.pop("skupina", None) or "")
+    result = validate(data, text, {})
+    timings = [reply.timing]
+    if group:
+        inside = found.within(group)
+        if len(inside) == 1:
+            result.isco_group = inside[0].code
+        elif inside:
+            answers = choices(inside, style)
+            header = f"Možné profese ve skupině {found.codebook.name(group)}:"
+            second = client.chat(
+                [
+                    system,
+                    {"role": "user", "content": ad_first_message(text, header, inside, style)},
+                ],
+                schema=schema(list(answers), ("profese",)),
+                max_tokens=40,
+            )
+            result.isco_group = answers.get(second.data.get("profese") or "")
+            timings.append(second.timing)
+    result.timing = Timing.total(timings)
     return result
 
 

@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /b2c
+Disallow: /apply
+Disallow: /cv
+Disallow: /deeplink
+Disallow: /deeplink2
+Disallow: /deeplinks
+
+Sitemap: https://www.pracezarohem.cz/sitemap.xml
+Sitemap: https://www.pracazarogiem.pl/sitemap.xml
+Sitemap: https://www.pracazarohom.sk/sitemap.xml

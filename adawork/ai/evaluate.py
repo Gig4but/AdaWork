@@ -143,7 +143,7 @@ def evaluate_ad(ad, index, client, places, codebook, style=DEFAULT_STYLE, fields
     gold = labels["isco"]
     row = {"id": ad["id"], "valid": False, "seconds": None, "prompt_tokens": 0, "output_tokens": 0}
     try:
-        result = extract(client, text, candidates, fields, style=style)
+        result = extract(client, text, candidates, fields, style=style, found=found)
         row["valid"] = True
         row["seconds"] = result.timing.wall_seconds
         row["prompt_tokens"] = result.timing.prompt_tokens
@@ -249,7 +249,7 @@ def run(
         server.stop()
     report = {
         "model": spec.id,
-        "style": f"shares={style.shares} by_name={style.by_name}",
+        "style": str(style),
         "fields": ",".join(fields),
         "backend": launch.backend,
         "threads": launch.threads,
@@ -275,7 +275,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--threads", type=int)
     parser.add_argument("--out", type=Path, help="write per-ad results as JSON")
     parser.add_argument(
-        "--style", help="prompt style instead of the model's: code, code+shares, name+shares"
+        "--style",
+        help="prompt style instead of the model's, e.g. code, code+shares, two+shares, name+en",
     )
     parser.add_argument("--fields", help=f"comma-separated subset of {','.join(FIELDS)}")
     parser.add_argument("--only-unclear", action="store_true")
@@ -283,7 +284,16 @@ def main(argv: list[str] | None = None) -> int:
     style = None
     if args.style:
         parts = set(args.style.split("+"))
-        style = PromptStyle(shares="shares" in parts, by_name="name" in parts)
+        if unknown := parts - {"code", "shares", "name", "en", "two"}:
+            parser.error(f"unknown --style parts: {', '.join(sorted(unknown))}")
+        if {"two", "en"} <= parts:
+            parser.error("two-step prompts are Czech only: use two or en, not both")
+        style = PromptStyle(
+            shares="shares" in parts,
+            by_name="name" in parts,
+            english="en" in parts,
+            two_step="two" in parts,
+        )
     fields = tuple(args.fields.split(",")) if args.fields else FIELDS
     from adawork.db.session import db_file
 

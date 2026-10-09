@@ -10,7 +10,7 @@ from sqlalchemy import func, select, update
 from adawork.config import Settings
 from adawork.db.models import Job
 from adawork.scraper.runner import Progress
-from adawork.scraper.sources import mpsv
+from adawork.scraper.sources import SWITCHABLE, mpsv
 from adawork.scraper.store import JobStore
 from adawork.web.app import create_app
 from adawork.web.routes import maps
@@ -119,13 +119,8 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
     assert saved.profile.home_address == "Kolín"
     assert saved.profile.travel_mode == "transit" and saved.profile.max_minutes == 40
     assert saved.profile.kinds_of_work == ["skladník", "řidič"]
-    assert saved.sources == {
-        "mpsv": True,
-        "prace_cz": True,
-        "jenprace": True,
-        "profesia": False,
-        "linkedin": True,
-    }
+    chosen = {"mpsv", "prace_cz", "jenprace", "linkedin"}  # ticked in the form above
+    assert saved.sources == {source_id: source_id in chosen for source_id, _ in SWITCHABLE}
     assert saved.automation.enabled is False
 
 

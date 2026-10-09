@@ -3,6 +3,7 @@
 import re
 import unicodedata
 from dataclasses import dataclass
+from datetime import date, datetime, time, timedelta
 from functools import lru_cache
 from html import unescape
 
@@ -15,6 +16,8 @@ _BLOCK_TAGS = {
     "section", "article", "header", "footer", "blockquote", "pre", "dd", "dt", "hr",
 }  # fmt: skip
 _SKIP_TAGS = {"script", "style", "noscript", "template", "svg", "button", "form"}
+_LEADING_SYMBOLS = re.compile(r"^[^\w(]+")
+_DATE = re.compile(r"(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})")
 
 
 def fold(text: str) -> str:
@@ -44,6 +47,34 @@ def has_word_starts(text: str | None, words: str) -> int:
 
 def clean_spaces(text: str) -> str:
     return re.sub(r"\s+", " ", text.replace("\xa0", " ")).strip()
+
+
+def clean_title(text: str | None) -> str:
+    """ "⭐Vedoucí směny" -> "Vedoucí směny": without the emoji or symbols titles start with."""
+    return _LEADING_SYMBOLS.sub("", clean_spaces(text or ""))
+
+
+def czech_date(text: str | None) -> date | None:
+    """The first date written "7. 10. 2026" in a text."""
+    m = _DATE.search(text or "")
+    if not m:
+        return None
+    try:
+        return date(int(m[3]), int(m[2]), int(m[1]))
+    except ValueError:
+        return None
+
+
+def card_date(text: str | None) -> datetime | None:
+    """ "Dnes", "Včera" or "7. 10. 2026", as listing cards show the day an ad was posted."""
+    folded = fold(text or "")
+    if folded == "dnes":
+        day = date.today()
+    elif folded == "vcera":
+        day = date.today() - timedelta(days=1)
+    else:
+        day = czech_date(folded)
+    return datetime.combine(day, time()) if day else None
 
 
 def html_to_text(html: str | None) -> str:
@@ -123,6 +154,64 @@ def parse_salary(text: str | None) -> Salary | None:
     return Salary(amounts[0], None, unit, currency)
 
 
+# A line of ad text that states the pay: an amount in Kč and a pay word. Bonuses, meal
+# vouchers or allowances name amounts that are not the wage, often on the wage's line
+# ("Nástupní bonus 10 000 Kč, mzda 30 000 Kč"), so the line is read clause by clause.
+_PAY_LINE = re.compile(r"\d[\d . ]*(?:,-)?\s*(?:kc|czk)\b|\d\s*(?:tis|k)\b.*kc")
+_PAY_WORD = re.compile(r"mzd|plat|vydel|odmen|prijem|hrub|cist|/\s*(?:hod|h|mes)|za hodinu|mesicne")
+_WAGE_WORD = re.compile(r"(?<![a-z])(?:mzd|plat|odmen|hodinov)")  # not "příplatky"
+_NOT_PAY = re.compile(
+    r"naborov|bonus|premi|priplat|prispev|stravenk|odstupn|provize|zaloh|benefit|kurz|cena|poplat"
+    r"|doporuc|stabilizac|vernost|jednoraz"
+)
+# Not before "do"/"až"/",-": "od 25 000, do 30 000 Kč" and "30 000,- Kč" are one amount.
+_CLAUSE = re.compile(r";|\(|\)|\s\+\s|\s(?:a|plus)\s|,(?!\s*(?:-|do\b|az\b))\s")
+_MONTH_RANGE, _HOUR_RANGE = (8_000, 500_000), (80, 3_000)
+_THOUSANDS = re.compile(r"(\d+(?:[,.]\d)?)\s*(?:tis\w*\.?|k\b)", re.IGNORECASE)  # "35 tis."
+
+
+# "32-38k", "30 – 35 tis.": the word applies to both numbers.
+_THOUSANDS_RANGE = re.compile(
+    r"(\d+(?:[,.]\d)?)\s*[-–]\s*(\d+(?:[,.]\d)?)\s*(?:tis\w*\.?|k\b)", re.IGNORECASE
+)
+
+
+def _range(m: re.Match) -> str:
+    low, high = (round(float(g.replace(",", ".")) * 1000) for g in m.groups())
+    return f"{low} - {high} "
+
+
+def _thousands(m: re.Match) -> str:
+    return str(round(float(m.group(1).replace(",", ".")) * 1000)) + " "
+
+
+def salary_in_text(text: str | None) -> Salary | None:
+    """The pay an ad states in its text ("Mzda 32 000 – 38 000 Kč měsíčně", "180 Kč/hod."),
+    for ads without a structured salary. Only the first clear pay line counts."""
+    for line in (text or "").splitlines():
+        folded = fold(clean_spaces(line))
+        if not _PAY_WORD.search(folded):
+            continue
+        clauses = [
+            c
+            for c in _CLAUSE.split(folded)
+            if _PAY_LINE.search(c)
+            and (not _NOT_PAY.search(c) or re.search(r"(?<![a-z])(?:mzd|plat)", c))
+        ]
+        # The wage clauses together ("plat 35 000 Kč, při plném výkonu až 45 000 Kč"), else
+        # each alone, those naming the wage first ("hodinová mzda 180 Kč, měsíčně 30 000 Kč").
+        tries = [" ".join(clauses)] if len(clauses) > 1 else []
+        tries += sorted(clauses, key=lambda c: not _WAGE_WORD.search(c))
+        for clause in tries:
+            salary = parse_salary(_THOUSANDS.sub(_thousands, _THOUSANDS_RANGE.sub(_range, clause)))
+            if salary is None or salary.currency != "CZK" or salary.unit == "piece":
+                continue
+            low, high = _HOUR_RANGE if salary.unit == "hour" else _MONTH_RANGE
+            if all(v is None or low <= v <= high for v in (salary.min, salary.max)):
+                return salary
+    return None
+
+
 # Regular expressions on folded text, each anchored at a word start.
 _CONTRACT_WORDS = (
     (
@@ -165,8 +254,53 @@ def contract_types(*texts: str | None) -> list[str]:
     return found
 
 
+# Lowest level first: "SŠ s maturitou nebo VŠ" asks for at least maturita (the lowest
+# alternative is taken when several levels are listed, see `education_code`).
+_EDUCATION_WORDS = (
+    ("basic", r"zakladn|\bzs\b"),
+    ("vocational", r"vyucen|vyucni|vyuc\b|bez maturity|stredni odborne|professional certificate"),
+    # Not in "Středoškolské bez maturity".
+    ("maturita", r"^(?!.*bez maturit).*(?:maturit|stredoskol|uplne stredni|\bss\b|high school)"),
+    ("higher_vocational", r"vyssi odborn|\bvos\b|associate"),
+    ("bachelor", r"bakal|bachelor|vysokoskol|\bvs\b|univerzit"),
+    ("master", r"magist|master|inzenyr|postgraduate"),
+    ("doctoral", r"doktor|ph\.?d|doctor"),
+)
+_EDUCATION_OR = re.compile(r"[,;]|/(?!-?a\b)|\b(?:nebo|ci|or)\b")
+
+
+def education_code(text: str | None) -> str | None:
+    """The education a portal label asks for: the lowest of the alternatives it lists, each
+    alternative at the highest level it names. "Základní, Vyučení, SŠ s maturitou" -> basic,
+    "Střední odborné vzdělání s maturitou" -> maturita, "Vyučení bez maturity" -> vocational."""
+    found = []
+    for part in _EDUCATION_OR.split(fold(text or "")):
+        named = [i for i, (_, pattern) in enumerate(_EDUCATION_WORDS) if re.search(pattern, part)]
+        if named:
+            found.append(max(named))
+    return _EDUCATION_WORDS[min(found)][0] if found else None
+
+
+_SUITABLE_WORDS = (
+    ("absol", ("absolvent",)),
+    ("OZP2", ("ozp", "ztp", "zdravotnim postizenim", "invalid")),
+    ("mladi", ("mladistv", "od 14 let", "od 15 let")),
+)
+
+
+def suitable_for(text: str | None) -> list[str]:
+    """Groups a portal's "Vhodné pro" label names: "Absolventy, OZP" -> ["absol", "OZP2"]."""
+    folded = fold(text or "")
+    return [code for code, words in _SUITABLE_WORDS if any(w in folded for w in words)]
+
+
 def split_places(text: str | None) -> list[str]:
     """ "Praha-Libeň, Středočeský" -> ["Praha-Libeň", "Středočeský"]."""
     if not text:
         return []
     return [p.strip() for p in re.split(r"[,;]| \+ ", text) if p.strip()]
+
+
+def slugify(text: str) -> str:
+    """ "Kutná Hora" -> "kutna-hora", as portals write places in URLs."""
+    return re.sub(r"[^a-z0-9]+", "-", fold(text)).strip("-")

@@ -6,25 +6,33 @@ detail page. `crawl` does the rest the same way for every portal:
 - jobs it already knows are only marked as still offered;
 - reads detail pages of new jobs (at most `max_details` per run, the rest stay card-only
   and are completed on later runs);
+- reads detail pages again when they are older than `refresh_after_days` (after new ones);
 - expires jobs the source no longer lists: after a complete pass over a region's listing
-  (only in that region), or, for searches that show only the newest ads, when unseen for
-  some days.
+  (only in that region; everywhere for a nationwide list such as a sitemap), or, for
+  searches that show only the newest ads, when unseen for some days.
+
+Sitemap sources (`SitemapSource`) list every ad of the portal with its last change: leads
+outside the user's regions are skipped when the URL tells the place, changed ads are read
+again, and ads whose URL mentions a place near home are read first.
 """
 
 import logging
 import re
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass, fields
+from datetime import UTC, datetime, timedelta
 from functools import partial
+from operator import attrgetter
 from urllib.parse import urlsplit, urlunsplit
 
 import httpx
 from selectolax.lexbor import LexborHTMLParser, LexborNode
 
-from adawork.core import ParsedJob, ScrapeQuery, SourceKind
+from adawork.core import ParsedJob, ScrapeQuery, SourceKind, utcnow
 from adawork.geo.places import PlaceResolver
 from adawork.net.polite import PoliteFetcher, SourceBlocked
-from adawork.normalize.text import clean_spaces, parse_salary
+from adawork.normalize.text import clean_spaces, parse_salary, slugify
 from adawork.scraper.store import JobStore
 
 log = logging.getLogger(__name__)
@@ -48,6 +56,7 @@ KRAJ_SLUGS = {
 }
 MAX_DETAILS = 300  # detail pages per source and run (~8 min at the polite pace)
 MAX_FAILED_DETAILS = 10  # in a row: the page layout probably changed
+REFRESH_DAYS = 30  # a listed ad's detail page is read again after this many days
 
 
 # (region, page number -> URL); region None: the listing is not one region's.
@@ -60,6 +69,8 @@ class Lead:
     url: str  # the page shown to the user
     fetch_url: str | None = None  # detail page to read; None = the card is all we get
     card: ParsedJob | None = None
+    modified: datetime | None = None  # sitemap lastmod: read again when newer than our copy
+    priority: int = 0  # lower first when detail pages are read
 
 
 @dataclass
@@ -72,22 +83,28 @@ class CrawlSource:
     id: str
     label: str
     max_pages: int = 300  # per listing; prace.cz Praha has ~150
+    region_slugs: dict[str, str] = KRAJ_SLUGS  # region -> its name in the listing URLs
     default_enabled: bool = True  # False: only after the user opts in
     obey_robots: bool = True  # False only for a source the user enabled despite robots.txt
     delay: float | None = None  # seconds between requests, when slower than the default
     max_leads: int | None = None  # cards per run
     max_details: int | None = None  # detail pages per run, when lower than the run's limit
     newest_first: bool = False  # stop a listing at the first page with nothing new
+    empty_last_page: bool = False  # a "load more" listing ends with an empty page
     expire_after_days: int | None = None  # None: expire after a complete pass instead
+    nationwide: bool = False  # the listings cover the whole country, not regions
     kind: SourceKind = "portal"
     needs_consent = False
+    # Listed ads whose detail page is older are read again (text and pay change), after the
+    # new ones. Not for leads with a lastmod: that tells when they changed.
+    refresh_after_days: int | None = REFRESH_DAYS
 
     def detail_limit(self, max_details: int) -> int:
         return min(max_details, self.max_details or max_details)
 
     def listings(self, query: ScrapeQuery) -> list[Listing]:
         """The listings to walk. Default: one per region in scope."""
-        return [(kraj, partial(self.listing_url, KRAJ_SLUGS[kraj])) for kraj in query.kraje]
+        return [(kraj, partial(self.listing_url, self.region_slugs[kraj])) for kraj in query.kraje]
 
     def listing_url(self, region_slug: str, page: int) -> str:
         raise NotImplementedError
@@ -97,6 +114,104 @@ class CrawlSource:
 
     def parse_detail(self, html: str, lead: Lead, places: PlaceResolver) -> ParsedJob | None:
         raise NotImplementedError
+
+    def wanted(self, lead: Lead, query: ScrapeQuery, places: PlaceResolver) -> bool:
+        """False for a lead outside the user's regions (when its URL or card tells)."""
+        return True
+
+    def prepare(self, query: ScrapeQuery, places: PlaceResolver) -> None:
+        """Called once before a run, e.g. to learn which towns are near home."""
+
+
+SITEMAP_ENTRY = re.compile(
+    r"<url>\s*<loc>\s*([^<\s]+)\s*</loc>(?:\s*<lastmod>\s*([^<\s]+)\s*</lastmod>)?", re.S
+)
+
+
+def sitemap_entries(xml: str) -> list[tuple[str, datetime | None]]:
+    """(url, lastmod) pairs of a sitemap; lastmod "2026-08-07" or with time and zone."""
+    entries = []
+    for url, lastmod in SITEMAP_ENTRY.findall(xml):
+        when = None
+        if lastmod:
+            with suppress(ValueError):
+                when = datetime.fromisoformat(lastmod.replace("Z", "+00:00"))
+            if when is not None:
+                when = when.astimezone(UTC).replace(tzinfo=None) if when.tzinfo else when
+        entries.append((url.replace("&amp;", "&"), when))
+    return entries
+
+
+def _url_words(url: str) -> list[str]:
+    return re.findall(r"[a-z0-9]+", urlsplit(url).path.lower())
+
+
+# Names of villages that end job titles as plain words ("…-dokoncovaci-prace",
+# "…-pracovni-misto", "…-sluzby-cechy", "…-pracovnik-ostrahy-strazny").
+TITLE_WORDS = frozenset(
+    {"prace", "dobra", "misto", "cechy", "strazny", "strazna", "kridla", "ceska", "cista", "patek"}
+)
+
+
+class SitemapSource(CrawlSource):
+    """A portal whose sitemap lists every ad. Subclasses give the sitemap URL and turn an ad
+    URL into a lead.
+
+    Ads whose URL names a municipality in the user's regions are read first; ads whose URL
+    ends with the name of a town elsewhere are skipped."""
+
+    nationwide = True
+    _near: frozenset[str] = frozenset()
+    _near_words = 0
+    _elsewhere: frozenset[str] = frozenset()
+
+    def prepare(self, query: ScrapeQuery, places: PlaceResolver) -> None:
+        kraje = set(query.kraje)
+        kraje_of: dict[str, set[str]] = {}
+        for m in places.municipalities:
+            if m.kraj and len(m.name) > 3:
+                kraje_of.setdefault(slugify(m.name), set()).add(m.kraj)
+        near = {slug for slug, of in kraje_of.items() if of & kraje}
+        # The region's own name: "…-kraj-vysocina", "…-vysocina".
+        for slug in map(slugify, kraje):
+            near |= {slug, "-".join(w for w in slug.split("-") if w != "kraj")}
+        self._near = frozenset(near - TITLE_WORDS)  # "Práce v Brně" names no village
+        self._near_words = max((slug.count("-") + 1 for slug in self._near), default=0)
+        self._elsewhere = frozenset(kraje_of.keys() - near - TITLE_WORDS)
+
+    def near_home(self, url: str) -> bool:
+        words = _url_words(url)
+        # Names of several words: "brandys-nad-labem-stara-boleslav" is matched as a whole.
+        return any(
+            "-".join(words[i : i + n]) in self._near
+            for i in range(len(words))
+            for n in range(1, self._near_words + 1)
+        )
+
+    def wanted(self, lead: Lead, query: ScrapeQuery, places: PlaceResolver) -> bool:
+        """Only the end of the URL counts as the place ("…-delnik-do-vyroby-plzen.html"):
+        titles are full of words that are also names of villages."""
+        words = [w for w in _url_words(lead.url) if not w.isdigit() and w != "html"]
+        far = any("-".join(words[-n:]) in self._elsewhere for n in range(1, len(words) + 1))
+        return not far or self.near_home(lead.url)
+
+    def listings(self, query: ScrapeQuery) -> list[tuple[str | None, Callable[[int], str]]]:
+        return [(None, self.sitemap_url)]
+
+    def sitemap_url(self, page: int) -> str:
+        raise NotImplementedError
+
+    def lead(self, url: str, modified: datetime | None) -> Lead | None:
+        raise NotImplementedError
+
+    def parse_listing(self, html: str, page: int, places: PlaceResolver) -> ListingPage:
+        leads = []
+        for url, modified in sitemap_entries(html):
+            lead = self.lead(url, modified)
+            if lead is not None:
+                lead.priority = 0 if self.near_home(url) else 1
+                leads.append(lead)
+        return ListingPage(leads, has_next=False)
 
 
 @dataclass
@@ -162,6 +277,9 @@ def set_salary(job: ParsedJob, text: str | None) -> None:
         job.salary_unit, job.salary_currency = salary.unit, salary.currency
 
 
+_PRIORITY = attrgetter("priority")
+
+
 def _full(source: CrawlSource, seen: set[str]) -> bool:
     return source.max_leads is not None and len(seen) >= source.max_leads
 
@@ -179,8 +297,16 @@ def crawl(
     seen: set[str] = set()
     new: list[Lead] = []
     incomplete: list[Lead] = []  # known, but only from a card so far
+    changed: list[Lead] = []
+    stale: list[Lead] = []  # known, with a detail page read long ago
+    refresh_before = (
+        utcnow() - timedelta(days=source.refresh_after_days)
+        if source.refresh_after_days is not None
+        else None
+    )
     done_kraje: list[str] = []  # regions whose listing was read to the end
     get = partial(fetcher.get, obey_robots=source.obey_robots, min_delay=source.delay)
+    source.prepare(query, places)
     try:
         whole = True  # every listing was read to the end
         for kraj, listing_url in source.listings(query):
@@ -208,11 +334,30 @@ def crawl(
                         store.touch(lead.external_id)
                         if lead.fetch_url and not store.has_detail(lead.external_id):
                             incomplete.append(lead)
+                        elif (
+                            lead.fetch_url
+                            and lead.modified
+                            and store.detail_older_than(lead.external_id, lead.modified)
+                        ):
+                            changed.append(lead)
+                        elif (
+                            lead.fetch_url
+                            and not lead.modified
+                            and refresh_before
+                            and store.detail_older_than(lead.external_id, refresh_before)
+                        ):
+                            stale.append(lead)
+                    elif not source.wanted(lead, query, places):
+                        continue
                     else:
                         new.append(lead)
                         fresh += 1
                 progress("listing", len(seen))
-                if not listing.leads and source.expire_after_days is None:
+                if (
+                    not listing.leads
+                    and source.expire_after_days is None
+                    and not (source.empty_last_page and page > 1)
+                ):
                     complete = False  # an error page or a new layout, not an empty region
                 if not listing.has_next or not listing.leads:
                     break
@@ -226,7 +371,9 @@ def crawl(
         store.commit()
 
         limit = min(max_details, source.max_details or max_details)
-        queue = [lead for lead in new + incomplete if lead.fetch_url][:limit]
+        unread = sorted((lead for lead in new + incomplete if lead.fetch_url), key=_PRIORITY)
+        stale.sort(key=lambda lead: store.detail_read_at(lead.external_id))
+        queue = (unread + sorted(changed, key=_PRIORITY) + stale)[:limit]
         failed_in_row = 0
         for lead in queue:
             url = lead.fetch_url
@@ -263,7 +410,8 @@ def crawl(
         store.commit()
     if source.expire_after_days is not None:
         store.expire_unseen(source.expire_after_days)
-    elif result.complete or done_kraje:
-        # A region read to the end counts even when another one's listing broke off.
-        store.expire_missing(query.kraje if result.complete else done_kraje)
+    elif result.complete:
+        store.expire_missing(None if source.nationwide else query.kraje)
+    elif done_kraje:  # a region read to the end counts even when another one's broke off
+        store.expire_missing(done_kraje)
     return result

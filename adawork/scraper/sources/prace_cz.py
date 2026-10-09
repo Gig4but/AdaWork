@@ -1,8 +1,8 @@
 """prace.cz (Alma Career): ~19.5k ads. Region listings, JSON-LD on detail pages.
 
 About a third of the listing cards link to company career pages on jobs.cz
-(`<company>.jobs.cz/pd/<id>`), which have free-form layouts: those jobs are stored from the
-card (title, place, company, contract, salary) with a link to the career page.
+(`<company>.jobs.cz/pd/<id>`), which load the ad with JavaScript: those jobs are stored from
+the card (title, place, company, contract, salary) with a link to the career page.
 """
 
 from urllib.parse import urljoin, urlsplit

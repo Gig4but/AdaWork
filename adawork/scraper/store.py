@@ -81,7 +81,11 @@ class _Known:
     job_id: int  # -1: added in this run (its row id is not read back)
     digest: str | None
     is_primary: bool
-    has_detail: bool
+    detail_at: datetime | None
+
+    @property
+    def has_detail(self) -> bool:
+        return self.detail_at is not None
 
 
 class JobStore:
@@ -108,7 +112,7 @@ class JobStore:
                 JobSource.detail_at,
             ).where(JobSource.source_id == source_id)
         )
-        self._known = {r[0]: _Known(r[1], r[2], r[3], r[4] is not None) for r in rows}
+        self._known = {r[0]: _Known(r[1], r[2], r[3], r[4]) for r in rows}
         shared = select(JobSource.job_id).group_by(JobSource.job_id).having(func.count() > 1)
         self._shared_jobs = set(session.scalars(shared))  # jobs offered by several sources
         self.dedup = dedup if dedup is not None else DedupIndex.load(session)
@@ -120,6 +124,7 @@ class JobStore:
             self._precision[loc_id] = precision
         self._pending = 0
         self._seen_external_ids: list[str] = []
+        self._unchanged_ids: set[str] = set()
         self._new_entries: list[Entry] = []  # dedup entries whose job has no id yet
 
     # --- reading ----------------------------------------------------------------------------
@@ -131,6 +136,16 @@ class JobStore:
         known = self._known.get(external_id)
         return bool(known and known.has_detail)
 
+    def detail_older_than(self, external_id: str, when: datetime) -> bool:
+        """The detail page was read before `when` (e.g. a sitemap's lastmod): read it again."""
+        known = self._known.get(external_id)
+        return bool(known and known.detail_at and known.detail_at < when)
+
+    def detail_read_at(self, external_id: str) -> datetime:
+        """When the detail page was last read (datetime.min: never)."""
+        known = self._known.get(external_id)
+        return (known.detail_at if known else None) or datetime.min
+
     # --- writing ----------------------------------------------------------------------------
 
     def add_all(self, jobs: Iterable[ParsedJob]) -> StoreStats:
@@ -141,7 +156,9 @@ class JobStore:
 
     def touch(self, external_id: str) -> None:
         """The source still offers this job, unchanged as far as we know."""
-        self.stats.unchanged += 1
+        if external_id not in self._unchanged_ids:
+            self._unchanged_ids.add(external_id)
+            self.stats.unchanged += 1
         self._seen_external_ids.append(external_id)
         self._count()
 
@@ -159,18 +176,33 @@ class JobStore:
             else:
                 self._create(parsed, digest, detail, now)
                 self.stats.new += 1
-            self._known[parsed.external_id] = _Known(-1, digest, match is None, detail)
+            self._known[parsed.external_id] = _Known(
+                -1, digest, match is None, now if detail else None
+            )
         elif digest == known.digest:
             self.touch(parsed.external_id)
+            if detail:  # read again (e.g. a newer sitemap lastmod) but unchanged
+                known.detail_at = now
+                self.session.execute(
+                    update(JobSource)
+                    .where(
+                        JobSource.source_id == self.source_id,
+                        JobSource.external_id == parsed.external_id,
+                    )
+                    .values(detail_at=now)
+                )
             return
         elif known.job_id < 0:
             return  # a second, different copy in the same run (an API repeating an ad)
         else:
             self.stats.updated += 1
-            if known.job_id > 0:
-                self._update(known, parsed, digest, detail, now)
+            if parsed.external_id in self._unchanged_ids:
+                self._unchanged_ids.discard(parsed.external_id)
+                self.stats.unchanged -= 1
+            self._update(known, parsed, digest, detail, now)
             known.digest = digest
-            known.has_detail = known.has_detail or detail
+            if detail:
+                known.detail_at = now
         self._count()
 
     def _count(self) -> None:

@@ -15,7 +15,7 @@ Three main modules:
 Shared services: a small **local AI model** (reads messy ads and posters, summarizes
 reviews) and a **local routing engine** (travel times and routes, offline maps).
 
-Status: **M0–M5 done** (2026-10-07); next is M6. Spike results: `docs/spikes.md`.
+Status: **M0–M6 done** (2026-10-07); next is M6b. Spike results: `docs/spikes.md`.
 
 ---
 
@@ -567,9 +567,12 @@ The vision part is loaded only for image work. Catalog chosen by the M5 eval
 | **Dobrý / Good** | `Dobrý (Gemma 4 E2B, 3.4 GB)` | 3.4 GB | 3.6 GB |
 | **Výborný / Excellent** | `Výborný (Qwen3-VL 4B, 3.0 GB)` | 3.0 GB | 3.6 GB |
 
-Qwen3.5 2B/4B, Gemma 4 E4B and the 8–14B models tested on 2026-10-07 (Qwen3-VL 8B,
-Qwen3.5 9B, Ministral 3 8B/14B, Gemma 4 12B, Qwen3 14B) stay selectable under "Pokročilé";
-none of them was meaningfully more accurate, and they are 3–6× slower (`docs/spikes.md`).
+Qwen3.5 2B/4B and Gemma 4 E4B stay selectable under "Pokročilé". The 8–14B models tested
+on 2026-10-07 (Qwen3-VL 8B, Qwen3.5 9B, Ministral 3 8B/14B, Gemma 4 12B, Qwen3 14B) were not
+meaningfully more accurate and 3–6× slower; models below 2B (Qwen3.5 0.8B, Qwen3 0.6B/1.7B,
+Gemma 3 1B, LFM2.5 1.2B and VL 1.6B, tested 2026-10-08) only repeat what the rules give and
+miss most salaries (`docs/spikes.md`). Both groups were **removed from the catalog**
+(2026-10-09); the pay stated in ad text is read by a rule instead.
 
 **The best model is decided dynamically for each computer.**
 
@@ -866,13 +869,19 @@ AdaWork/
   - Deferred: semantic search over all jobs (embeddings of every ad), the image pipeline
     itself (images arrive with the social and bazos sources, M6b).
 
-### M6 — Rest of the top 10 portals (5–6 days)
+### M6 — Rest of the top 10 portals (5–6 days) — done
 - jobs.cz (custom HTML; also the career pages prace.cz links to), startupjobs.cz, hitprace.cz,
   dobraprace.cz, fajn-brigady.cz, prace.bazos.cz.
 - **Confirmed (2026-10-07): every site that can legally be added is added** (robots.txt and
   terms allow it, honest User-Agent, no login): pracezarohem.cz (+0.5 day), inwork.cz (+1),
   easy-prace.cz own ads (+0.5–1), personalka.cz (re-listed Úřad práce ads merge into the
   existing jobs by dedup). New sites found later follow the same rule.
+- **Result (2026-10-07):** 10 new portals, 15 sources in total (`docs/spikes.md`, "M6 live
+  smoke run"). Sitemap discovery added to the crawl framework (lastmod re-reads, region
+  pre-filter from the URL, ads near home first, nationwide expiry). jobsik.cz is not read
+  separately (same ads as dobraprace.cz). Career pages of big employers on jobs.cz load the ad
+  with JavaScript and stay card-only. Still to do: time a complete first run, and read
+  different portals in parallel to shorten it.
 
 ### M6b — Social media, forums, images (7–9 days)
 

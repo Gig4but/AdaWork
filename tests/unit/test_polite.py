@@ -7,7 +7,14 @@ import pytest
 
 from adawork.net.polite import PoliteFetcher, SourceBlocked, Stopped
 from adawork.net.robots import RobotsRules
-from adawork.normalize.text import contract_types, html_to_text, parse_salary, split_places
+from adawork.normalize.text import (
+    contract_types,
+    education_code,
+    html_to_text,
+    parse_salary,
+    split_places,
+    suitable_for,
+)
 
 SOURCES = Path(__file__).parents[1] / "fixtures" / "sources"
 
@@ -233,6 +240,43 @@ def test_contract_types_and_places():
     assert split_places("Praha-Libeň, Středočeský") == ["Praha-Libeň", "Středočeský"]
 
 
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Základní, Vyučení, SŠ s maturitou, Vyšší odborné", "basic"),
+        ("SŠ s maturitou nebo VŠ", "maturita"),
+        ("SŠ/VŠ", "maturita"),
+        ("Střední odborné vzdělání s maturitou", "maturita"),
+        ("Vyučen/a s maturitou", "maturita"),
+        ("Středoškolské nebo odborné vyučení s maturitou", "maturita"),
+        ("Odborné vyučení bez maturity", "vocational"),
+        ("Střední odborné s výučním listem", "vocational"),
+        ("ZŠ", "basic"),
+        ("Základní", "basic"),
+        ("Vyučen", "vocational"),
+        ("Středoškolské bez maturity", "vocational"),
+        ("SŠ bez maturity", "vocational"),
+        ("SŠ s maturitou", "maturita"),
+        ("VŠ", "bachelor"),
+        ("Vyšší odborné, Bakalářské, Vysokoškolské", "higher_vocational"),
+        ("Vysokoškolské", "bachelor"),
+        ("Bez požadavků", None),
+        (None, None),
+    ],
+)
+def test_education_code(text, expected):
+    assert education_code(text) == expected
+
+
+def test_suitable_for():
+    assert suitable_for("Absolventy, OZP") == ["absol", "OZP2"]
+    assert suitable_for("Brigádníky od 15 let, osoby se zdravotním postižením") == [
+        "OZP2",
+        "mladi",
+    ]
+    assert suitable_for(None) == []
+
+
 def test_html_to_text():
     html = "<h2>O nás</h2><p>Jsme <strong>malý</strong> tým.</p><ul><li>A</li><li>B</li></ul>"
     assert html_to_text(html) == "O nás\nJsme malý tým.\n• A\n• B"
@@ -252,3 +296,41 @@ def test_opt_in_source_skips_robots_and_goes_slower():
     assert f.get("https://li.cz/jobs", obey_robots=False, min_delay=5).text == "ok"
     assert f.get("https://li.cz/jobs", obey_robots=False, min_delay=5).text == "ok"
     assert 5 <= clock.slept[-1] <= 6.5
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Nabízíme:\nMzda 32 000 – 38 000 Kč měsíčně\nStravenky 120 Kč", (32000, 38000, "month")),
+        ("Plat od 35 tis. Kč hrubého", (35000, None, "month")),
+        ("mzda 150 Kč/hod.", (150, None, "hour")),
+        ("Mzda 32-38k Kč měsíčně", (32000, 38000, "month")),
+        ("Náborový příspěvek 40 000 Kč!", None),
+        ("Stravenky v hodnotě 120 Kč", None),
+        ("Cena kurzu 5 000 Kč", None),
+        ("Úkolová mzda až 40 000 Kč", None),
+        # Bonuses and allowances on the wage's line are not the wage.
+        ("Nástupní bonus 10 000 Kč, mzda 30 000 Kč", (30000, None, "month")),
+        ("Mzda 25 000 Kč, příplatky 5 000 Kč", (25000, None, "month")),
+        ("Náborový příspěvek 20 000 Kč + mzda až 45 000 Kč", (None, 45000, "month")),
+        ("Až 40 000 Kč měsíčně (náborový bonus 20 000 Kč)", (None, 40000, "month")),
+        ("Stravenky 120 Kč/den, mzda 32 000 Kč", (32000, None, "month")),
+        ("Příplatky za směny až 12 000 Kč", None),
+        ("Odměna za doporučení 5 000 Kč", None),
+        ("Mzda 30 000 Kč včetně prémií", (30000, None, "month")),
+        ("Mzda 28 000 Kč + 13. plat", (28000, None, "month")),
+        # Ranges, "od", hourly pay.
+        ("Mzda: 25 000 – 30 000 Kč", (25000, 30000, "month")),
+        ("Mzda od 25 000, do 30 000 Kč", (25000, 30000, "month")),
+        ("Mzda od 30 000 Kč hrubého", (30000, None, "month")),
+        ("Plat 35 000 Kč, při plném výkonu až 45 000 Kč", (35000, 45000, "month")),
+        ("Odměna 180 Kč/hod.", (180, None, "hour")),
+        ("Hodinová mzda 180 Kč, měsíčně cca 30 000 Kč", (180, None, "hour")),
+        ("Mzda 150 Kč/hod. (cca 28 000 Kč měsíčně)", (150, None, "hour")),
+    ],
+)
+def test_salary_in_ad_text(text, expected):
+    from adawork.normalize.text import salary_in_text
+
+    salary = salary_in_text(text)
+    assert (salary and (salary.min, salary.max, salary.unit)) == expected

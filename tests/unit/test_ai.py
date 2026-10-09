@@ -468,7 +468,8 @@ def add_portal_job(sessions, external_id, title, description, **fields):
 def test_rules_give_portal_jobs_an_occupation(ai_setup):
     sessions, _, ai = ai_setup
     job_id = add_portal_job(sessions, "1", "Skladník", "")
-    vague = add_portal_job(sessions, "2", "Kouzelník", "Nabízíme práci na plný i zkrácený úvazek.")
+    text = "Nabízíme práci na plný i zkrácený úvazek.\nMzda 30 000 Kč měsíčně."
+    vague = add_portal_job(sessions, "2", "Kouzelník", text)
     assert ai.enricher.run_rules() == 1
     with sessions() as s:
         job = s.get(Job, job_id)
@@ -478,6 +479,8 @@ def test_rules_give_portal_jobs_an_occupation(ai_setup):
         assert s.get(Job, vague).categories == ["0"]  # "Nezařazeno" until the AI finds one
         assert s.get(Job, vague).contract_types == ["full_time", "part_time"]  # from the text
         assert s.get(Job, vague).extra["origin"]["contract_types"] == "rules"
+        assert s.get(Job, vague).salary_month_min == 30000  # pay stated in the text
+        assert s.get(Job, vague).extra["origin"]["salary"] == "rules"
     assert ai.enricher.run_rules() == 0  # nothing is processed twice
 
 
@@ -644,6 +647,9 @@ def test_auto_upgrades_after_a_ram_upgrade_and_keeps_the_old_model_until_then(tm
     assert manager.delete_model(simple) and not (tmp_path / "models" / simple).exists()
     assert manager.take_notice() == ("ai.notice.upgraded", {"model": MODELS[good].name})
     assert manager.take_notice() is None
+    settings.ai.choice = "qwen3-14b"  # picked before the model left the catalog
+    assert manager.target().id == good
+    settings.ai.choice = "auto"
 
     # Real work turns out too slow on this PC: Auto moves down a tier.
     for _ in range(40):
@@ -833,6 +839,80 @@ def test_listing_cards_only_ask_for_the_occupation(ai_setup):
         assert missing_fields(s.get(Job, card)) == ("profese",)
         assert "smeny" in missing_fields(s.get(Job, full))
         assert ai.enricher.queue(s) == [full, card]  # full ads first
+
+
+def test_two_step_choice_picks_the_group_then_the_occupation(tmp_path):
+    from adawork.ai.catalog import PromptStyle
+    from adawork.ai.client import Reply
+    from adawork.ai.extract import extract
+
+    index = isco_index(tmp_path)
+    found = index.lookup("Skladník / skladnice")
+    groups = [c.code for c in found.groups()]
+    assert groups[0] == "43" and "93" in groups  # 2-digit groups from the same vote
+
+    class TwoCalls:
+        def __init__(self):
+            self.prompts = []
+
+        def chat(self, messages, schema=None, max_tokens=0, temperature=0):
+            self.prompts.append(messages[1]["content"])
+            props = schema["properties"]
+            if "skupina" in props:
+                return Reply({"skupina": "93", "smeny": [], "obec": None}, Timing(9, 1, 5, 1, 2))
+            return Reply({"profese": props["profese"]["enum"][0]}, Timing(2, 0.1, 3, 0.5, 0.6))
+
+    client = TwoCalls()
+    style = PromptStyle(two_step=True)
+    result = extract(client, AD, found.candidates, ("profese", "smeny", "obec"), style=style,
+                     found=found)  # fmt: skip
+    assert result.isco_group == "9333"  # the only voted occupation in group 93: no 2nd call
+    assert len(client.prompts) == 1 and client.prompts[0].startswith("Inzerát:\n")
+    assert "Možné skupiny profesí:" in client.prompts[0]
+
+
+def test_two_step_asks_again_when_the_group_has_several_occupations(tmp_path):
+    from adawork.ai.catalog import PromptStyle
+    from adawork.ai.client import Reply
+    from adawork.ai.extract import extract
+
+    found = isco_index(tmp_path).lookup("Řidič nákladního automobilu a autobusu")
+    calls = []
+
+    def chat(messages, schema=None, max_tokens=0, temperature=0):
+        calls.append(messages[1]["content"])
+        if "skupina" in schema["properties"]:
+            return Reply({"skupina": "83"}, Timing(9, 1, 5, 1, 2))
+        assert set(schema["properties"]["profese"]["enum"]) >= {"8332", "8331"}
+        return Reply({"profese": "8331"}, Timing(2, 0.1, 3, 0.5, 0.6))
+
+    client = type("C", (), {"chat": staticmethod(chat)})()
+    result = extract(client, AD, found.candidates, ("profese",), style=PromptStyle(two_step=True),
+                     found=found)  # fmt: skip
+    assert result.isco_group == "8331" and len(calls) == 2
+    assert calls[1].split("\n\n")[0] == calls[0].split("\n\n")[0]  # same ad prefix: cached
+    assert result.timing.wall_seconds == 2.6
+
+
+@pytest.mark.parametrize(
+    ("style", "error"), [("two+en", "Czech only"), ("code+shrs", "unknown --style parts: shrs")]
+)
+def test_eval_rejects_styles_it_cannot_run(style, error, capsys):
+    from adawork.ai import evaluate
+
+    with pytest.raises(SystemExit):
+        evaluate.main(["--style", style])
+    assert error in capsys.readouterr().err
+
+
+def test_portal_occupation_name_is_preferred_for_the_lookup(ai_setup):
+    sessions, _, ai = ai_setup
+    job_id = add_portal_job(
+        sessions, "1", "🛠️ Hledáme posilu do týmu!", "", extra={"occupations": ["Skladník"]}
+    )
+    assert ai.enricher.run_rules() == 1
+    with sessions() as s:
+        assert s.get(Job, job_id).isco_code == "43210"
 
 
 def fake_ai_session(ai, monkeypatch, client):
