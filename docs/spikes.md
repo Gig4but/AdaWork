@@ -1,37 +1,23 @@
-# M0 spike results (2026-10-06)
+# Spike and live-run results
 
-Three spikes checked the plan against the live sources before building on them. Full reports:
+Measurements behind the decisions in PLAN.md. Full M0 reports:
 [sources.md](spikes/sources.md), [employers.md](spikes/employers.md),
-[routing.md](spikes/routing.md). Decisions that came out of them are recorded in PLAN.md §14.
+[routing.md](spikes/routing.md).
 
-## Job sources: works, with four changes
+## M0 spikes (2026-10-06)
 
-- **Every planned portal is readable with plain HTTP**; no source needs a browser.
-- **MPSV** open data: 39,487 jobs, daily, ETag. Use the 17.5 MB `.json.gz` (served with
-  `Content-Encoding: gzip`; keep the bytes compressed). Implemented in M1.
-- Changes to the plan:
-  - jobs.cz is server-rendered HTML, not JavaScript-only: custom HTML adapter, no browser.
-  - volnamista.cz is **dropped**: its robots.txt disallows all generic crawlers.
-  - profesia.cz uses microdata, not JSON-LD; startupjobs.cz lists jobs only in its sitemap.
-  - jenprace.cz redirects by Geo-IP; dobraprace.cz and jobsik.cz are one operator.
-- **Decided:** LinkedIn (robots.txt disallows the guest endpoints) is **off by default** with a
-  warning, like Facebook. Indeed uses an **own adapter on the public search page** (allowed by
-  robots.txt) instead of python-jobspy's internal API.
-- 11 public forum sections verified (`resources/forums.yaml`).
-- Fixtures: `tests/fixtures/sources/`. They contain contact data from real ads; anonymize
-  before sharing the repository.
+**Job sources: work, with changes.** Every portal is readable with plain HTTP. MPSV open
+data: 39,487 jobs, daily 17.5 MB `.json.gz` with ETag. jobs.cz is server-rendered HTML;
+volnamista.cz is dropped (robots.txt); profesia.cz uses microdata; startupjobs.cz lists jobs
+only in its sitemap; jenprace.cz redirects by Geo-IP; dobraprace.cz and jobsik.cz are one
+operator. LinkedIn is off by default (robots.txt). Fixtures: `tests/fixtures/sources/`.
 
-## Employer data: works, Indeed reviews blocked
+**Employer data: works, Indeed reviews blocked.** ARES, RES, ISIR, the VAT list, the MPSV
+agency register and Atmoskop work without keys; Indeed reviews are behind Cloudflare (link
+only); ddgs needs retries. ARES name search is weak, so the resolver uses aliases, name
+variants, RES ranking and the AI (PLAN §4.5).
 
-- ARES (detail, RES employee band, insolvency flag), ISIR, unreliable VAT payers (daily bulk
-  list), MPSV agency register (JSON) and Atmoskop (`__NEXT_DATA__`, % satisfaction instead of
-  stars) all work without keys. Indeed company reviews are behind a Cloudflare challenge:
-  link only. ddgs works but needs retries.
-- ARES name search is weak (exact words, sorted by IČO), so name → IČO resolution uses a brand
-  alias table, name variants, RES-based ranking and the AI for close calls.
-- PLAN.md §2.4, §4.5, §5 and M9 are updated.
-
-## Routing: GO for MOTIS, with conditions
+**Routing: GO for MOTIS, with conditions.**
 
 | Measure | Whole Czechia | 150 km profile (8 GB machines) |
 |---|---|---|
@@ -42,31 +28,18 @@ Three spikes checked the plan against the live sources before building on them. 
 | 5,000 destinations by car | 2.5 s | 1.25 s |
 | Transit plan, one-to-all, geocoding, tiles | 20–100 ms | similar |
 
-Conditions:
-1. **Timetables must be GTFS with stop coordinates.** CIS JŘ NeTEx loads but is unusable (no
-   rail stop coordinates; bus/urban stop IDs collide). The only nationwide feed that worked
-   is **Spojenka GTFS, licensed for non-commercial use only**. JDF → GTFS conversion is easy;
-   stop coordinates and stop deduplication are the hard part.
-2. **8 GB machines** need OSM renumbering with osmium-tool (bundled, GPL-3.0, separate exe);
-   clipping alone does not lower import RAM. Geocoding stays off in that profile.
-3. Sanitize GTFS before import (in-seat transfers make MOTIS loop); call `127.0.0.1`, send
-   `Accept-Encoding: gzip` for tiles, raise `onetomany_max_many`.
-4. No isochrone polygon endpoint: the app builds the reachable area from one-to-all results.
+1. Timetables must be GTFS with stop coordinates: only **Spojenka GTFS** (non-commercial
+   license) works nationwide; CIS JŘ NeTEx has no rail stop coordinates.
+2. 8 GB machines need osmium renumbering (clipping alone does not lower import RAM).
+3. Sanitize GTFS (in-seat transfers loop MOTIS); call `127.0.0.1`; gzip for tiles.
+4. No isochrone endpoint: the reachable area is built from one-to-all results.
 
-Plan B (Mapy.com API + IDOS links) is kept as a fallback; it gives no public-transport times.
-
-## Built during M0/M1 that changes the plan
-
-- **Job coordinates come from RÚIAN** (ČÚZK address points, monthly 63 MB ZIP): exact
-  positions for MPSV jobs with an address code, municipality or district centres otherwise.
-  96.7 % of MPSV jobs get coordinates. MOTIS geocoding is only needed for free-text addresses.
-- Categories are the 16 official Úřad práce fields, derived from CZ-ISCO.
+Built during M0/M1: job coordinates from RÚIAN (96.7 % of MPSV jobs); categories are the 16
+official Úřad práce fields.
 
 ## M3 live run (2026-10-06)
 
-Home Kolín, 30 min by car → crawl scope Středočeský, Pardubický and Královéhradecký kraj.
-At most 15 detail pages per portal (the default is 300), on a copy of the real database
-(39,487 MPSV jobs).
+Home Kolín, 30 min by car, ≤ 15 detail pages per portal, on a copy of the real database.
 
 | Source | Listing pages + details | Time | New jobs | Merged into existing |
 |---|---|---|---|---|
@@ -74,47 +47,21 @@ At most 15 detail pages per portal (the default is 300), on a copy of the real d
 | jenprace.cz | ~40 + 15 | 1 min 26 s | 1,123 | 2,174 (1,872 into MPSV, 302 into prace.cz) |
 | profesia.cz | ~15 + 15 | 57 s | 206 | 70 (into prace.cz and jenprace.cz) |
 
-- No source refused us. The polite pace averaged 1.8 s per request.
-- **jenprace.cz re-lists Úřad práce ads** (IDs starting with `u`): 1,830 of 1,867 merged into
-  their MPSV job (98 %). The first run found 87 %; the misses were jenprace's
-  "<village>, <district>" place format and MPSV jobs placed only by district, both fixed.
-- 2,370 jobs now have more than one source, 54 have three.
-- Portal places: 66 % municipality, 21 % city part, 4 % region, 8 % none. The 8 % are
-  "Celá ČR", remote work or abroad; "Kolín IV"-style town parts and "Okres X" were fixed
-  after the run.
-- Salary is known for 66 % of jenprace, 49 % of prace.cz and 62 % of profesia jobs (from
-  listing cards; detail pages add some).
+No refusals, 1.8 s per request on average. jenprace.cz re-lists Úřad práce ads: 98 % merged
+into their MPSV job. Salary known for 49–66 % of portal jobs.
 
 ## M4 checks (2026-10-06)
 
-- **Indeed** `cz.indeed.com/jobs` answers the app's honest User-Agent with HTTP 403 "Security
-  Check" (Cloudflare). The M0 spike got through only with a browser-like User-Agent.
-  Decision: link-out only ("Hledat také na Indeed" opens the search in the user's browser).
-- **LinkedIn** guest search and job pages answer the honest User-Agent normally. A live run
-  for Kolín (25 miles, newest first, opted in) read 3 search pages and 29 detail pages in
-  3 min, without refusals: 14 new jobs, 15 merged into Úřad práce jobs (LinkedIn re-lists
-  them too). Fixtures: `tests/fixtures/sources/linkedin/guest_{search,detail}.html`.
+- **Indeed** answers an honest User-Agent with a Cloudflare 403: link-out only.
+- **LinkedIn** guest pages answer normally: Kolín, 3 min, 29 ads, 15 merged into Úřad práce jobs.
 
 ## M5 AI eval (2026-10-06/07)
 
-**Test PC:** Intel Core Ultra 7 255U (12 cores), Intel Graphics (4 Xe cores, shared memory),
-32 GB RAM, llama.cpp b11449 (Vulkan build). The 8 GB budget Ryzen and a PC with a dedicated
-GPU were not available; their icons come from the estimate formula, calibrated on this PC,
-and are corrected by the 20-second benchmark after the download.
-
-**Golden set:** 70 text ads (`tests/fixtures/eval/text_ads.jsonl`, `tools/make_golden.py`):
-40 portal ads (prace.cz, jenprace.cz) merged with an Úřad práce ad, plus 30 long Úřad práce
-ads, spread over the 9 ISCO major groups (harder than the real mix, where warehouse and
-production jobs dominate). Labels come from Úřad práce's structured data, the salary label
-from the salary shown in the text. E-mails and phone numbers are removed.
-
-**Pipeline:** occupation candidates from similar Úřad práce titles (multilingual-e5-small
-embeddings + shared words, 39k labelled titles); when the vote is clear the code is taken
-directly, otherwise the model picks one of ≤ 8 candidates. One call per ad, the answer is
-compact JSON forced by a grammar, every value is checked against the ad text (salary
-numbers, town, shift and education words must appear).
-
-### Results (final prompt, `adawork eval`)
+Test PC: Intel Core Ultra 7 255U, Intel iGPU (shared memory), 32 GB RAM, llama.cpp Vulkan.
+Golden set: 70 text ads (`tests/fixtures/eval/text_ads.jsonl`) labelled from Úřad práce data,
+spread over the 9 ISCO major groups. Occupation candidates come from similar Úřad práce titles
+(e5-small); the model picks one only when the vote is unclear. Answers are grammar-forced JSON,
+checked against the ad text.
 
 | Model | Download | RAM (text / +images) | ISCO major / 2-digit / 4-digit | Category | Kraj | Salary | s per ad |
 |---|---|---|---|---|---|---|---|
@@ -126,103 +73,62 @@ numbers, town, shift and education words must appear).
 | Qwen3.5 4B | 3.4 GB | ~3.4 GB | 73 / 67 / 60 % | 91 % | 96 % | **94 %** | 17.6 |
 | Similar titles only, no model | – | – | 70 / 67 / 60 % | – | 99 % (rules) | – | – |
 
-Re-run on 2026-10-09 with the reviewed code and each model's best prompt style; seconds per ad
-are from the first run (the re-run was 10–40 % slower on a busier PC, the code adds no work).
+- 100 % valid JSON for every model.
+- Occupation: no model reaches 85 % at 2 digits; most misses are defensible alternatives to
+  Úřad práce's label. The model only decides the unclear cases.
+- Contract type is read by rules, not the model (models guessed it): found in 24 % of ads,
+  88 % agreeing with Úřad práce.
+- Models copy numbers from prompt examples, so prompts have none.
+- Speed is set by output tokens (~70 per answer, 15–20 t/s on the iGPU); missing fields only:
+  6.8 s per ad, listing cards 2.5 s. The iGPU reads prompts 4× faster than the CPU.
+- A poster image: ~30 s per ad (23 s transcription + 7 s extraction).
+- On real data: 1,354 of 5,423 portal jobs got an occupation from the rules alone.
 
-- **100 % valid JSON** for every model (the grammar allows nothing else).
-- **Occupation:** no model reaches the planned ≥ 85 % at the 2-digit level. A manual review
-  of the 23 misses of the title vote found ~6 clearly wrong ("Fakturant/ka – vyhrazeno pro
-  OZP" → cleaners); the rest are defensible alternatives to Úřad práce's label ("Kalkulant/ka"
-  → "Pracovníci kalkulací" instead of "Odborní pracovníci v účetnictví"). The categories the
-  filter uses overlap with the label for 89–94 % of ads. The model adds only a few points over
-  the title vote: it decides only the unclear cases.
-- **Contract type is no longer asked from the model.** The Qwen3.5 models named a contract
-  type in 32–43 of 70 ads that state none ("praxe" → internship); Qwen3-VL and Gemma were
-  cautious but found only ~22 % of the stated ones. Ads that state it use fixed phrases, so
-  improved rules read them ("HPP", "hlavní pracovní poměr", "plný i zkrácený úvazek", "DPP"):
-  found in 24 % of the golden ads, agreeing with Úřad práce in 88 %. The other 76 % of the
-  ads do not state it; their Úřad práce label cannot be read from the text at all.
-- **The model copies prompt examples:** with `"35 tis." = 35000` in the instructions, Qwen3.5
-  2B answered 35000 in a third of the ads. No concrete numbers in prompts now.
-- **Bigger is not better here:** the 4B models were not clearly more accurate than the 2B
-  ones (differences of at most 3 points = 2 ads), at twice the time.
-- **Speed:** output tokens dominate (~15–20 tokens/s on the iGPU, ~70 per answer). Compact
-  JSON (no whitespace, own grammar) saved ~20 % of them; asking only for missing fields
-  brings real portal ads to 6.8 s (Qwen3-VL 2B), listing cards (occupation only) to 2.5 s.
-- **llama-bench, Qwen3-VL 2B Q4_K_M:** Vulkan iGPU prompt 345 tokens/s, output 21 tokens/s;
-  CPU only (8 threads) 89 / 20 tokens/s. The iGPU makes prompt reading 4× faster.
-- **Images:** a generated poster ("HLEDÁME ŘIDIČE SK. C+E … Mzda 42 000 – 48 000 Kč")
-  was transcribed almost exactly by Qwen3-VL 2B in 23 s (the image is ~970 tokens), then
-  extracted in 7 s; ~30 s per image ad. Without the text checks the model added "vyučení"
-  (apprenticeship), which the poster does not mention: education and shifts are now kept only
-  when the ad names them.
-- **Memory (measured, llama-server private bytes):** Qwen3-VL 2B 2.1 GB, with the image part
-  3.0 GB; Gemma 4 E2B 3.6 GB; Qwen3-VL 4B 3.6 GB. The estimates are within 0.2 GB.
+**Decision:** Simple = Qwen3-VL 2B, Good = Gemma 4 E2B, Excellent = Qwen3-VL 4B.
 
-### Real data (copy of the M3 live database, Qwen3-VL 2B)
+### Bigger models and prompt styles (2026-10-07)
 
-- Rules: 1,354 of 5,423 portal jobs without an occupation got one from a clear title vote
-  in 42 s (the live database holds mostly listing cards).
-- Model: 40 full ads in 271 s (6.8 s each) filled occupation 28×, education 11×, shifts 4×,
-  salary 2×; 30 listing cards got an occupation in 76 s (2.5 s each), mostly sensible
-  ("Řidič sk. C/skladník" → 83321 truck drivers), some not ("pracuj z pohodlí domova" for a
-  call line → cleaners).
+On the 46 unclear ads the right group is among the candidates 43×, but every model reaches
+only 61–63 %: the 2B models mostly take the first candidate, the 4B models decide more often
+and make as many corrections as mistakes. Prompt styles (shares, names, English) and a
+two-step choice (group first) did not help; two-step was worse for every model and stays off
+(`PromptStyle(two_step=True)`).
 
-### Decision
+| Model | ISCO major / 2-digit / 4-digit | Kraj | Salary | Shifts / education agree | s per ad | RAM (est.) |
+|---|---|---|---|---|---|---|
+| Qwen3-VL 2B (Simple) | 76 / 73 / 66 % | 99 % | 91 % | 67 / 86 % | 7.9 | 2.1 GB |
+| Qwen3-VL 8B | 77 / 73 / 64 % | 97 % | 84 % | 89 / 78 % | 24.0 | ~6.3 GB |
+| Ministral 3 8B | 73 / 67 / 63 % | 97 % | 87 % | 72 / 80 % | 22.4 | ~6.3 GB |
+| Qwen3.5 9B | 79 / 73 / 66 % | 97 % | 91 % | 60 / 71 % | 26.5 | ~6.6 GB |
+| Gemma 4 12B | 74 / 70 / 60 % | 97 % | 91 % | 67 / 80 % | 45.1 | ~7.8 GB |
+| Ministral 3 14B | 77 / 70 / 61 % | 97 % | 93 % | 65 / 74 % | 36.7 | ~9.2 GB |
+| Qwen3 14B (text only) | 76 / 73 / 66 % | 97 % | 96 % | 83 / 78 % | 41.6 | ~9.3 GB |
 
-Tiers: **Simple = Qwen3-VL 2B**, **Good = Gemma 4 E2B**, **Excellent = Qwen3-VL 4B** (all
-multimodal, Apache 2.0). Contract types come from the rules. On an Intel iGPU laptop Auto
-picks Good with ≥ 16 GB RAM and Simple with 8 GB; the 4B tier is yellow (slower than 15 s)
-without a dedicated GPU.
+The task is limited by the inputs (inconsistent reference labels), not by model size; 8–14B
+models are 3–6× slower for a few points. Removed from the catalog on 2026-10-09.
 
-## M5 follow-up (2026-10-07): why bigger models did not win, estimates from published data
+### Models below 2B (2026-10-08)
 
-### Why the bigger models scored lower
+| Model | Occupation group | Kraj | Salary | s per ad (iGPU) | s per ad (CPU, 4 threads) |
+|---|---|---|---|---|---|
+| **Qwen3-VL 2B** (Simple) | 73 % | 99 % | 91 % | 7.9 | 41.1 |
+| Qwen3 1.7B (text) | 69 % | 97 % | 37 % | 10.7 | – |
+| Qwen3.5 0.8B (text) | 66 % | 99 % | 27–30 % | 6.0 | **14.5** |
+| Gemma 3 1B (text) | 57 % | 99 % | 26 % | 8.9 | – |
+| Qwen3 0.6B (text) | 67 % | 99 % | 19 % | 5.4 | 27.4 |
+| LFM2.5 1.2B (text) | 67 % | 99 % | 16 % | 10.1 | – |
+| LFM2.5-VL 1.6B | 67 % | 99 % | 16 % | 5.4 | 22.3 |
 
-The model decides the occupation only when the title vote is unclear (46 of the 70 golden
-ads). On those 46: the title vote's first candidate is right (2-digit group) 24×; the right
-group is among the ≤ 8 candidates 43×, so a perfect chooser could reach 93 %.
-
-| Model (code answers) | Right group | Picked the first candidate |
-|---|---|---|
-| Qwen3.5 2B | 23/46 | 35× |
-| Qwen3-VL 2B | 27/46 | 30× |
-| Gemma 4 E2B | 28/46 | 21× |
-| Qwen3-VL 4B | 28/46 | 26× |
-| Qwen3.5 4B | 21/46 | 11× |
-| Gemma 4 E4B | 21/46 | 13× |
-
-The 2B models mostly take the first candidate (the one similar Úřad práce ads used most),
-so they inherit the title vote's agreement with Úřad práce's labelling habits. The 4B models
-decide for themselves: some picks are real corrections ("Fakturant/ka – vyhrazeno pro OZP"
-→ Fakturanti instead of cleaners, "Vedoucí expediční dílny" → logistics managers instead of
-forklift drivers), others are real mistakes ("Zahradník" → street cleaners, "Kalkulant/ka" →
-construction technicians), and many swap between "Specialisté" (2xxx) and "Odborní
-pracovníci" (3xxx), which Úřad práce itself uses inconsistently. Bare 4-digit codes give a
-model nothing to hold on to, which is why the prompt styles below were tried.
-
-### Prompt styles (occupation only, the 46 unclear ads)
-
-`adawork eval --fields profese --only-unclear --style …`; *code* = answer with the code,
-*shares* = each candidate shows how often similar Úřad práce ads used it ("když si nejsi
-jistý, vyber tu nejčastější"), *name* = answer with the occupation's name, *en* = English
-instructions (ad and answer values stay Czech).
-
-| Model | code | code+shares | name+shares |
-|---|---|---|---|
-| Qwen3-VL 2B | 59 % | 50 % | **61 %** |
-| Gemma 4 E2B | **61 %** | **61 %** | 59 % |
-| Qwen3-VL 4B | 61 % | **63 %** | 61 % |
-| Gemma 4 E4B | 46 % | **52 %** | **52 %** |
-
-Differences of 1–2 ads are within noise; Gemma 4 E4B gains most from extra guidance.
+They only repeat what the rules give and fail at salary; no tier below Simple. Removed from
+the catalog on 2026-10-09. Instead, a rule reads the pay stated in the ad text ("Mzda 32 000 –
+38 000 Kč měsíčně", "180 Kč/hod.", "35 tis.", "32-38k").
 
 ### Speed estimates from published measurements
 
-For PCs the project cannot test, the advisor now uses constants per graphics class derived
-from published llama.cpp numbers for 7B Q4 models (Vulkan scoreboard
-github.com/ggml-org/llama.cpp/discussions/10879, CUDA scoreboard /discussions/15013,
-localscore.ai), scaled down for small models (fixed costs per token: ~0.6 at 2B, 1.0 from 7B):
+For PCs not tested here, `ai/advisor.py` uses constants per graphics class from published
+llama.cpp numbers for 7B Q4 models (Vulkan scoreboard github.com/ggml-org/llama.cpp/discussions/10879,
+CUDA /discussions/15013, localscore.ai), scaled for small models. On the test PC the estimate is
+within 10 % of the measurement.
 
 | Class (adapter name) | Prompt K (t/s × B) | Bandwidth (GB/s) | Source |
 |---|---|---|---|
@@ -237,220 +143,75 @@ localscore.ai), scaled down for small models (fixed costs per token: ~0.6 at 2B,
 | Dedicated GPU < 12 GB / ≥ 12 GB | 8000 / 12000 | 170 / 250 | RTX 3050 / RX 6600, RTX 3060 / 4060 Ti |
 | CPU only | 45 per core | 35 | Ryzen 5 5600, i5-12400 (localscore), measured here |
 
-Resulting estimates (seconds per ad, icon, RAM): see the table in PLAN §6.6. On this PC the
-estimate is within 10 % of the measurement (7.7 / 8.7 / 13.9 s vs 7.9 / 8.0 / 14.5 s).
-Not found anywhere: Vulkan numbers for the Radeon 610M and for the exact 5500U.
-
-### 8–14B models (full eval, best prompt style per model)
-
-Occupation-only test (46 unclear ads): every model reached 61–63 % at best with
-"code+shares"; English instructions made every 8–14B model worse (48–61 %). Full eval:
-
-| Model | ISCO major / 2-digit / 4-digit | Kraj | Salary | Shifts / education agree | s per ad | RAM (est.) |
-|---|---|---|---|---|---|---|
-| Qwen3-VL 2B (Simple) | 76 / 73 / 66 % | 99 % | 91 % | 67 / 86 % | 7.9 | 2.1 GB |
-| Gemma 4 E2B (Good) | 80 / 73 / 64 % | 99 % | 84 % | 59 / 76 % | 8.0 | 3.6 GB |
-| Qwen3-VL 4B (Excellent) | 79 / 74 / 69 % | 97 % | 93 % | 79 / 84 % | 14.5 | 3.6 GB |
-| Qwen3-VL 8B | 77 / 73 / 64 % | 97 % | 84 % | 89 / 78 % | 24.0 | ~6.3 GB |
-| Ministral 3 8B | 73 / 67 / 63 % | 97 % | 87 % | 72 / 80 % | 22.4 | ~6.3 GB |
-| Qwen3.5 9B | 79 / 73 / 66 % | 97 % | 91 % | 60 / 71 % | 26.5 | ~6.6 GB |
-| Gemma 4 12B | 74 / 70 / 60 % | 97 % | 91 % | 67 / 80 % | 45.1 | ~7.8 GB |
-| Ministral 3 14B | 77 / 70 / 61 % | 97 % | 93 % | 65 / 74 % | 36.7 | ~9.2 GB |
-| Qwen3 14B (text only) | 76 / 73 / 66 % | 97 % | 96 % | 83 / 78 % | 41.6 | ~9.3 GB |
-
-All: 100 % valid JSON, categories 89–94 %. Re-run on 2026-10-09 with the reviewed code: the
-8–14B rows came out identical, the tier rows now use their best style too; seconds per ad are
-from the first run.
-
-**Conclusion:** the task is limited by the inputs, not by model size. The occupation
-plateaus at ~73 % (2-digit) for every model from 2B to 14B because the reference labels are
-inconsistent between "Specialisté" and "Odborní pracovníci" and the candidates come from the
-same title vote; place and salary are near their ceiling already at 2B. Bigger models are
-3–6× slower for at most a few points on salary and shifts. Tiers stay Qwen3-VL 2B / Gemma 4
-E2B / Qwen3-VL 4B; the 8–14B models were later removed from the catalog (2026-10-09). To gain more,
-the next step is better candidates and labels (e.g. a 2-level choice: major group first),
-not a bigger model.
-
-### Two-step occupation choice (tried 2026-10-07, not adopted)
-
-First the 2-digit group (with a short guide to the ISCO main classes by qualification), then
-the occupation within the group (a second, short call reusing the cached ad prompt). On the
-46 unclear ads, 2-digit group right:
-
-| Model | one-step (best style) | two-step | two-step + shares | two-step + names |
-|---|---|---|---|---|
-| Qwen3-VL 2B | 61 % | 50 % | 50 % | 46 % |
-| Gemma 4 E2B | 61 % | 48 % | 50 % | 52 % |
-| Qwen3-VL 4B | 63 % | 52 % | 48 % | 48 % |
-| Qwen3.5 9B | 61 % | 46 % | – | – |
-
-Every model got worse. The 2-digit group names are broad ("Úředníci pro zpracování
-číselných údajů a v logistice"), so the model loses the concrete anchor that a specific
-occupation name and example titles give in the one-step choice, and a wrong group cannot be
-repaired in step 2. The option stays in the code (`PromptStyle(two_step=True)`), off for all
-models.
-
 ## M6 live smoke run (2026-10-07)
 
-Home Kolín, 30 min by car (Středočeský, Pardubický, Královéhradecký kraj), on a copy of the
-live database; at most 2 listing pages per region and 5 detail pages per portal.
+Home Kolín, 30 min by car, ≤ 2 listing pages per region and 5 detail pages per portal.
 
 | Portal | How it is read | Result |
 |---|---|---|
-| jobs.cz | region listings (30/page), `data-test` hooks | 162 cards, details OK; big employers' career sites (`<firma>.jobs.cz/detail-pozice`) load the ad with JavaScript → card only |
-| Práce za rohem | region listings with `__NEXT_DATA__` JSON (50/page, GPS, IČO, occupations) | 298 cards (178 merged), own ads' details OK; re-listed `PROF…`/`G2…` ads card only |
-| dobraprace.cz | sitemap + JSON-LD; full text from the page (JSON-LD has a one-line summary) | details OK, towns from "X okres Y" |
-| Easy-práce.cz | own-ads sitemap with lastmod (no region in URLs) | details OK |
-| Personálka.cz | region listings (newest first, 150–400 pages each) | 180 cards (31 merged), details OK |
-| inwork.cz | region listings (`?start=N`, 40/page); the sitemap lags weeks and keeps expired ads | 240 cards placed from the URL, details OK |
-| Fajn brigády | sitemap with lastmod (current, regenerated daily) | details OK, two label layouts |
-| StartupJobs.cz | offers sitemap + JSON-LD | details OK ("Česko" as country) |
-| HitPráce.cz | search around home (radius from the travel time) + JSON-LD | details OK |
-| Bazoš – práce | 24 category pages, region filter by PSČ before reading details | 151 ads in the region |
+| jobs.cz | region listings (30/page), `data-test` hooks | 162 cards, details OK; career sites (`<firma>.jobs.cz`) → card only |
+| Práce za rohem | region listings with `__NEXT_DATA__` (50/page, GPS, IČO) | 298 cards (178 merged); re-listed `PROF…`/`G2…` ads card only |
+| dobraprace.cz | sitemap + JSON-LD, full text from the page | details OK |
+| Easy-práce.cz | own-ads sitemap with lastmod | details OK |
+| Personálka.cz | region listings, newest first | 180 cards (31 merged), details OK |
+| inwork.cz | region listings (the sitemap lags weeks) | 240 cards placed from the URL |
+| Fajn brigády | sitemap with lastmod | details OK, two label layouts |
+| StartupJobs.cz | offers sitemap + JSON-LD | details OK |
+| HitPráce.cz | search around home + JSON-LD | details OK |
+| Bazoš – práce | 24 category pages, PSČ filter before details | 151 ads in the region |
 
-No portal refused us. Fixes found by the live run: JSON-LD country codes "CS"/"Česko",
-"X okres Y" localities, inwork sitemap replaced by listings, a second fajn-brigady label
-layout, branded jobs.cz pages kept as cards. Personal data (contact names, phones) were
-removed from all new fixtures and from the older bazos and jobs.cz fixtures.
+No refusals. Personal data removed from all fixtures.
 
-Not measured yet: the duration of a complete first run with all 15 sources. Estimate at the
-polite pace: 1.5–2 h (listings plus ≤ 300 detail pages per portal), later runs much shorter.
-Reading different portals in parallel (politeness is per host) would cut it substantially.
-
-### Models below 2B (2026-10-08)
-
-Full eval on the 70 golden ads, current prompt; "rules" = what the title vote and the rules
-give without any model (occupation 67 %, kraj 99 %).
-
-| Model | Occupation group | Kraj | Salary | Shifts / education given | s per ad (iGPU) | s per ad (CPU, 4 threads) |
-|---|---|---|---|---|---|---|
-| **Qwen3-VL 2B** (Simple) | 73 % | 99 % | 91 % | 4 / 30 % | 7.9 | 41.1 |
-| Qwen3 1.7B (text) | 69 % | 97 % | 37 % | 9 / 27 % | 10.7 | – |
-| Qwen3.5 0.8B (text) | 66 % | 99 % | 27–30 % | 13 / 6–9 % | 6.0 | **14.5** |
-| Gemma 3 1B (text) | 57 % | 99 % | 26 % | 19 / 0 % | 8.9 | – |
-| Qwen3 0.6B (text) | 67 % | 99 % | 19 % | 11 / 14 % | 5.4 | 27.4 |
-| LFM2.5 1.2B (text) | 67 % | 99 % | 16 % | 7 / 21 % | 10.1 | – |
-| LFM2.5-VL 1.6B | 67 % | 99 % | 16 % | 0 / 0 % | 5.4 | 22.3 |
-
-All 100 % valid JSON. Re-run on 2026-10-09 with the reviewed code: the same within one ad (iGPU
-seconds from the first run). **Conclusion:** below 2B the models only repeat what the rules already
-give (occupation, place) and mostly fail at the one field where the model matters, salary
-(16–37 % vs 91 %). On a GPU they save 2–3 s per ad; on a CPU only Qwen3.5 0.8B is markedly
-faster (14.5 vs 41 s) and still adds almost nothing. No tier below Simple is added: on a
-CPU-only PC Auto keeps Simple and works only through the ads matching the profile, or the
-user chooses rules only. Output length, not model size, sets the speed on the iGPU: every
-answer needs ~60–80 tokens, and small models in 8-bit read about as many bytes per token as
-a 2B model in 4-bit. These models were removed from the catalog on 2026-10-09.
-
-**Rule added instead:** the pay stated in the ad text ("Mzda 32 000 – 38 000 Kč měsíčně",
-"180 Kč/hod.", "35 tis.", "32-38k"; bonuses, meal vouchers and course prices ignored) is
-now read by the rules for every job without a structured salary, with or without a model.
-On the golden ads' text bodies it found 10 pay lines, 8 matching the label (the other 2 ads
-state hourly and monthly pay).
-
-## M6b live checks (2026-10-09)
+## M6b live checks (2026-10-09/10)
 
 ### Classified boards
 
-All 7 sections read live into a copy of the M6 database (honest User-Agent, robots.txt,
-≤ 60 ads per board and run). 71 minutes in all, mostly Annonce: its robots.txt asks for
-20 s between requests (both Annonce sections share the host, so they cannot overlap).
+All 7 sections, ≤ 60 ads per board:
 
 | Board | Ads read | Not offers | Red flags | Placed | Pictures |
 |---|---|---|---|---|---|
-| HyperInzerce – práce | 60 | 5 (loans, one ad 5×) | 3 | 43 | most |
+| HyperInzerce – práce | 60 | 5 (loans) | 3 | 43 | most |
 | HyperInzerce – brigády | 60 | 5 (people looking) | 3 | 43 | most |
 | Annonce – nabídky práce | 60 (11 joined portal jobs) | 0 | 0 | 60 | few |
-| Annonce – brigády | 60 | **46** (the section is mostly "Poptávka") | 0 | 60 | few |
+| Annonce – brigády | 60 | **46** (mostly "Poptávka") | 0 | 60 | few |
 | Bazar.cz | 22 (one page) | 2 | 2 | 16 | all |
 | cBazar | 60 | 0 | 2 | 30 | none |
-| Mimibazar | 60 | 1 | 11 (MLM "second salary from home") | 60 | all |
+| Mimibazar | 60 | 1 | 11 (MLM) | 60 | all |
 
-- Not checked by hand in full, but every flagged and every non-offer ad was read: all
-  non-offers are people looking for work, services or loans; Annonce marks them itself
-  ("Typ inzerátu: Poptávka"). Two "fee" flags were wrong ("žádné vstupní poplatky") and the
-  rule now ignores denied fees. The red-flag rules fire on none of the 45k portal jobs.
-- Not added: avizo.cz (bot challenge for an honest User-Agent since 2026-10-09);
-  eMimino "Zaměstnání" and Okoun "Práce" (discussions, 0 offers in 68 threads).
-- A board now stops walking its listing once it has more unread ads than a run reads (a
-  board's listing has no cards to keep); Annonce then needs ~3 pages instead of 15.
+Every flag and non-offer was read by hand; denied fees ("žádné vstupní poplatky") no longer
+flag. 0 red flags on 45k portal jobs. Not added: avizo.cz (bot challenge), eMimino and Okoun
+(0 offers in 68 threads).
 
-### Pictures (vision model reads the text)
+### Pictures
 
-40 real board pictures (HyperInzerce, Mimibazar), the prompt of `ai/vision.py`:
+40 real board pictures: 8 posters read correctly, 18 logos (now read once per hash), 12 photos
+without text (empty), 1 looping banner and 2 prompt echoes (both now cleaned).
 
-| What the picture is | Count | Result |
-|---|---|---|
-| Job poster | 8 | text read correctly (minor diacritic slips) |
-| Employer logo (one agency logo on 17 ads) | 18 | logo text; now read once per picture hash |
-| Photo without text / product photo | 12 | empty or a few product words |
-| Banner with a repeated price list | 1 | the model looped ("500" × 400 lines); loops are cut |
-| Echo of the prompt ("Přepis:") | 2 | removed |
-
-| Model (vision) | s per poster, iGPU (first read) | s per poster, CPU 4 threads |
+| Model (vision) | s per poster, iGPU | s per poster, CPU 4 threads |
 |---|---|---|
 | Qwen3-VL 2B (Simple) | 14–56, typical ~25 | 35–63, median 42 |
 | Gemma 4 E2B (Good) | 9–24, median 16 | – |
 | Qwen3-VL 4B (Excellent) | 19–45, median 32 | – |
 
-llama.cpp's DRY sampler did not stop the loop with greedy decoding and changed nothing else,
-so it is not used. **Decision:** no RapidOCR. Pictures are read only for ads with < 600
-characters of own text (≤ 100 per run), and even the CPU-only budget PC reads a poster in
-under a minute in the background.
+**Decision:** no RapidOCR; pictures are read only for ads with < 600 characters of own text.
 
-### Complete first run (all default sources, 4 in parallel)
+### Complete first run
 
-Copy of the M6 database with its jobs removed (municipalities kept), home Kolín, every source
-that is on by default (Úřad práce, 15 portals, 7 boards; LinkedIn and social off), pictures and
-geocoding included, ≤ 300 detail pages per portal and 60 per board:
+Copy of the M6 database without jobs, home Kolín, every default source (Úřad práce, 15
+portals, 7 boards), pictures and geocoding included, ≤ 300 detail pages per portal.
 
-| | |
-|---|---|
-| **Total** | **90 min** (sum of the sources one after another: ~265 min) |
-| Úřad práce | 0.6 min, 40,050 jobs |
-| Portals (4 at a time) | done after ~35 min; 8.7–18.7 min each (Personálka, Bazoš slowest) |
-| Annonce (2 sections, one host, 20 s crawl delay) | 46 min each, side by side: the last ~45 min of the run |
-| Pictures + geocoding | ~10 min (248 pictures stored) |
-| Result | 61,535 active jobs |
-
-The first two attempts failed: a source kept its database transaction open while it downloaded
-pages ("database is locked" for 18 of 22 sources), and two sources inserted the same new place.
-Writes now go one at a time in short transactions, and a place another source added meanwhile
-is reused. easy-prace.cz failed once on a dropped connection; dropped connections are now
-retried like timeouts. Later runs are much shorter: portals re-read only new and changed ads,
-and Annonce lists only the newest page or two.
-
-### Complete first run after the fixes (2026-10-10)
-
-The 90-minute run showed five problems: Annonce (two sections, one host, 20 s crawl delay)
-started last and held two of the four slots while its sections waited for each other;
-easy-prace.cz failed on one dropped connection (the whole source, not one page); jobs.cz never
-read Vysočina (its listing is `/prace/vysocina-kraj/`, ours was 404); 46 of 60 Annonce brigády
-ads were people looking for work; pictures came one at a time after everything else, and the
-"300 newest" limit left all HyperInzerce pictures out (that board is read first, so its ads
-are the oldest).
-
-Fixed: sources on one host run one after another in one group, longest first (last run's
-duration, else detail pages × pace); every robots.txt is read at the start, all at once, and a
-site asking for ≥ 5 s between requests runs in a thread of its own beside the 4 slots; a page
-that still fails after the retries is skipped (3 dropped connections in a row: the site is
-down, the run is partial, the error shown, nothing expired); Annonce is read with its "offers
-only" filter (`?nabidkovy=1`: all 14 offers of the old run kept, 43 of 46 seekers gone, the
-other 3 caught by the offer rules); pictures are fetched per host in parallel, at most 150 per
-host and run and no more than ~5 minutes of the host's pace.
-
-Same setup as before (copy of the M6 database without jobs, home Kolín):
-
-| | before | after |
+| | first timed run (10-09) | after the fixes (10-10) |
 |---|---|---|
 | **Total** | 90 min | **54.5 min** |
-| Annonce | 46 min per section, side by side, at the end | 24 + 17.6 min in its own thread from the start |
-| Portals | done after ~35 min | 4 slots for portals the whole time; done after ~48 min |
-| Failed sources | easy-prace.cz | none (easy-prace 266 new jobs) |
-| jobs.cz | partial, 2,291 new (no Vysočina) | complete, 2,734 new |
-| Pictures | 248 stored, none from HyperInzerce, ~10 min | 304 stored (all 86 HyperInzerce offers), ~6 min |
+| Annonce (20 s crawl delay) | 46 min per section, at the end | 24 + 17.6 min in its own thread from the start |
+| Portals | done after ~35 min | done after ~48 min, 4 slots the whole time |
+| Failed sources | easy-prace.cz | none |
+| jobs.cz | 2,291 new (no Vysočina) | 2,734 new |
+| Pictures | 248, none from HyperInzerce, ~10 min | 304, ~6 min |
 | Result | 61,535 active jobs | 61,653 active jobs |
 
-The rest is the slowest portals themselves (Personálka, Bazoš ~18 min at 1.5 s per page with
-300 detail pages). Every region listing of every region-based portal was checked live: only
-the jobs.cz Vysočina slug was wrong.
+Fixes: database writes one at a time in short transactions; sources on one host run in one
+group, longest first; sites asking ≥ 5 s between requests run beside the 4 slots; a failed page
+is skipped (3 dropped connections in a row: partial run, nothing expired); jobs.cz Vysočina
+slug; Annonce read "offers only"; pictures per host in parallel. The slowest portals left are
+Personálka and Bazoš (~18 min each).

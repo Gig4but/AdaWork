@@ -59,21 +59,21 @@ only the opt-in Facebook/Instagram reader drives Edge (§4.3.1).
 | Source | Access method | Verified facts |
 |---|---|---|
 | **MPSV / Úřad práce ČR open data** | Free JSON, no key | **`volna-mista.json.gz` (17.5 MB**, the plain JSON is 187 MB), updated **daily**, ETag → 304. 39,487 records. CZ-ISCO, salary range, hours, employer **with IČO**, workplace (72 % with a RÚIAN address code), flags, 21 codebooks. Structured → **no AI needed**. Detail link: `up.gov.cz/volna-mista-v-cr#/volna-mista-detail/<portalId>`. **Implemented in M1.** |
-| **python-jobspy** (MIT, v1.2.0, 2026-10-02) | Python library | Indeed and LinkedIn both returned results without errors. **Not used** (§14): jobspy reads Indeed through `apis.indeed.com/graphql` (robots `Disallow: /`) and pulls in pandas; LinkedIn is read by an own small adapter on the same guest pages (robots.txt disallows `/jobs-guest/`, so off by default). |
-| **Indeed CZ (HTML)** | Public search page `cz.indeed.com/jobs` | Allowed by robots.txt; 15 job cards per page as embedded JSON. **But** the page answers an honest User-Agent with a Cloudflare "Security Check" (403, checked 2026-10-06); the spike got through only with a browser-like User-Agent. **Link-out only** (§14). |
+| **python-jobspy** | Python library | **Not used**: reads Indeed through a robots-disallowed API and pulls in pandas; LinkedIn has an own adapter (§14). |
+| **Indeed CZ (HTML)** | Public search page `cz.indeed.com/jobs` | Allowed by robots.txt, but Cloudflare answers an honest User-Agent with 403. **Link-out only** (§14). |
 | **prace.cz** (19.6k ads), **jenprace.cz** (24.1k) | JSON-LD `JobPosting` on detail pages | prace.cz robots disallows `/search/`, `/hledat/` (not needed). jenprace.cz redirects `/nabidky` by Geo-IP → discover via explicit town slugs. prace.cz shares ads with jobs.cz. |
 | **profesia.cz** (1.4k) | **Microdata** `JobPosting` (not JSON-LD) | Branded employer templates have no structured data → meta tags + AI fallback. |
 | **jobs.cz** (16.5k) | **Server-rendered HTML** (not JS-only) | 30 cards per listing page, stable `data-test="jd-*"` attributes on detail, no JSON-LD → custom HTML adapter, no browser. robots disallows `/api/`, `/iapi/`. |
 | **startupjobs.cz** (0.4k) | Offers sitemap → JSON-LD on detail pages | Listing pages are client-rendered and carry no ads. Only portal with GPS. |
 | **prace.bazos.cz** (6k) | Plain HTML | Very messy ads; crawl the 24 category pages (robots disallows search params), filter by PSČ locally. |
 | **hitprace.cz** | JSON-LD on detail pages | Aggregator that re-lists other portals → heavy duplicates. |
-| **dobraprace.cz** (7.7k) (= jobsik.cz, same operator) | Ads sitemap → JSON-LD | jobsik.cz skipped at first (same inventory). |
+| **dobraprace.cz** (7.7k) (= jobsik.cz, same operator) | Region listings → JSON-LD | jobsik.cz skipped at first (same inventory). |
 | **fajn-brigady.cz** (2.1k) | Detail sitemap with `lastmod` → rule-based HTML parser | |
 | ~~volnamista.cz~~ | — | **Dropped**: robots.txt allows only named search engines (`User-agent: * Disallow: /`). |
 | **pracezarohem.cz** (21.5k) | Listing pages carry `__NEXT_DATA__` JSON (50 ads/page) | Checked 2026-10-06, robots.txt allows listings. GPS, salary text, IČO inside `ga.itemBrand`. Part of the inventory is re-listed from profesia.cz (`PROF…` IDs). M6, confirmed. |
 | **inwork.cz** (31.9k) | Detail sitemap → HTML (no structured data) | Checked 2026-10-06, robots.txt allows details. Custom HTML parser. M6, confirmed. |
-| **easy-prace.cz** (10.4k own + 24k re-listed) | Sitemaps → HTML (no structured data) | Checked 2026-10-06, `Allow: /`. Only the own ads (`/nabidka/…`) are worth reading; `/volne-misto/…` re-lists Úřad práce. M6, confirmed. |
-| **personalka.cz** (40.6k) | Sitemaps → HTML | Checked 2026-10-06, robots.txt allows details. Titles are CZ-ISCO names: probably re-listed Úřad práce ads. Check the share of new ads before building. |
+| **easy-prace.cz** (10.4k own + 24k re-listed) | Region listings → HTML (no structured data) | Checked 2026-10-06, `Allow: /`. Only the own ads (`/nabidka/…`) are worth reading, and only they are in the region listings; `/volne-misto/…` re-lists Úřad práce. M6, confirmed. |
+| **personalka.cz** (40.6k) | Sitemaps → HTML | Checked 2026-10-06, robots.txt allows details. Mostly re-listed Úřad práce ads, merged by dedup. M6. |
 | **Jooble** / **Careerjet** | Free APIs with key | Careerjet API v4: key as HTTP Basic user, `user_ip` + `user_agent` required. Jooble: request limit unconfirmed (sign-up page behind Cloudflare). |
 | `outpost2026/MCP-Jobs` | GitHub, no license | Reference only. |
 
@@ -101,8 +101,6 @@ startupjobs.cz; plus fajn-brigady.cz, MPSV, Facebook, Instagram, classified boar
 
 ### 2.4 Employer reviews and checks
 
-| Source | What it gives | Access | Verified facts / notes |
-|---|---|---|---|
 Verified live in the M0 spike (`docs/spikes/employers.md`).
 
 | Source | What it gives | Access | Verified facts / notes |
@@ -350,57 +348,30 @@ ETag, raw cache.
 
 ### 4.3.1 Facebook/Instagram limits and risks (researched 2026-10-06)
 
-**Is 200 posts a day safe? Nobody can confirm a safe number.**
-- Meta does not publish its limits. Facebook's help pages only say that limits depend on
-  "speed and quantity" and cannot be shared.
-- The numbers found online come from automation-tool vendors and concern **actions**
-  (posting, liking, following), not reading. Examples: posting to 25–50 groups/day on aged
-  accounts; on Instagram, ~60–80 likes and 20–30 follows per hour; ~100 profiles/hour for
-  Instagram scraping. None of them is backed by Meta.
-- Detection is **behavioural**, not just a counter: account age, device and IP trust, timing
-  regularity, session patterns, and signs of browser automation all matter. A low count
-  reduces risk but does not remove it.
-- Reading 100–200 posts a day is similar to normal human browsing volume. The app also runs
-  on the user's own computer, IP address and long-lived session, which avoids the
-  "new device / new location" signals.
-- Hence the conservative defaults above (100 Facebook / 50 Instagram per day, read-only,
-  irregular timing) and stopping at the first warning.
-
-**What can happen to the account** (from mild to severe):
+**No safe number exists.** Meta publishes no limits; numbers found online come from
+automation-tool vendors and concern actions (posting, liking), not reading. Detection is
+behavioural (account age, device and IP trust, timing, automation signs). Reading 100–200
+posts a day is close to normal browsing, on the user's own PC, IP and session; hence the
+conservative defaults and stopping at the first warning.
 
 | Level | What happens | Duration |
 |---|---|---|
-| "Going too fast" temporary block | A feature (e.g. viewing groups) is blocked | Typically 24–48 h; Facebook cannot lift it early |
-| Checkpoint / verification | Must confirm identity (code, sometimes a photo or ID) before using the account | Until resolved by the user |
-| Instagram action block | Actions blocked; first blocks usually clear in 24–72 h, repeats last longer | Days |
+| "Going too fast" temporary block | A feature (e.g. viewing groups) is blocked | Typically 24–48 h |
+| Checkpoint / verification | Identity check before using the account | Until resolved |
+| Instagram action block | Actions blocked | 24–72 h, repeats longer |
 | Temporary restriction | Limited features (groups, Marketplace) | Days to weeks |
-| Permanent disable | Account lost, including Messenger, groups, Marketplace and photos | Permanent (appeal possible) |
+| Permanent disable | Account lost, incl. Messenger, groups, photos | Permanent (appeal possible) |
 
-**Other risks:**
-- **Terms of use:** Meta's Automated Data Collection Terms prohibit automated collection
-  without written permission. Since **1 Jan 2025** they apply both logged-in and logged-out.
-  Earlier, in *Meta v. Bright Data* (Jan 2024), a US court had allowed logged-out scraping of
-  public data. Meta's enforcement against individuals is normally account action; lawsuits
-  and cease-and-desist letters have targeted commercial scrapers. The risk for a personal
-  user is mainly the account.
-- **GDPR:** posts contain personal data (names, phone numbers). Purely personal use on the
-  user's own computer generally falls under the GDPR "household" exemption (Art. 2(2)(c)).
-  Sharing or commercial use of the collected data would bring full GDPR duties. Therefore the
-  data stays local, social posts expire after 14 days, and there is no export of contact
-  details from social posts.
-- **Scam ads:** Facebook job groups contain many fraudulent offers. The `red_flags` check and
-  the employer module (§4.5) mark them.
-- **Breakage:** Meta changes its page structure often; the reader can stop working until it
-  is updated. The rest of the app is unaffected.
-
-**Ways to lower the risk:**
-- **Instagram:** Instagram officially allows several accounts per person, so the wizard
-  suggests logging in with a separate Instagram account instead of the main one.
-- **Facebook:** a second personal account breaks Facebook's "one account per person" rule,
-  so the app does not suggest one. The user decides whether to use their main account at all.
-- Facebook and Instagram are **off by default**. The wizard shows this risk table as a
-  visible warning before the user can switch them on. They can be switched off any time, and
-  the rest of the app works without them.
+- **Terms:** Meta's Automated Data Collection Terms forbid automated collection without
+  permission, logged in or out (since 1 Jan 2025). Before that, *Meta v. Bright Data* (Jan 2024)
+  had allowed logged-out scraping of public data in a US court. Against individuals Meta acts
+  on the account; lawsuits and letters have targeted commercial scrapers.
+- **GDPR:** personal use on the user's own PC falls under the household exemption
+  (Art. 2(2)(c)); data stays local, social posts expire after 14 days, no contact export.
+- **Scam ads** are marked by the red-flag rules and the employer module (§4.5).
+- **Breakage:** Meta changes its pages often; only the reader stops.
+- A separate Instagram account is suggested (Instagram allows several); a second Facebook
+  account is not (against Facebook's rules).
 
 ### 4.4 Pipeline stages
 1. Discover → 2. Fetch → 3. Parse (source JSON → JSON-LD → microdata → `__NEXT_DATA__` →
@@ -493,8 +464,8 @@ The prompt forbids claims not found in the texts; the summary is labelled as AI-
   fallback if it disappears.
 
 **Starting point and defaults:**
-- Set in the wizard: home address (autocomplete), usual mode, max travel time, usual
-  departure time (default weekdays 7:00).
+- Set in the wizard: home address (autocomplete), usual mode, max travel time. Departure time
+  defaults to weekdays 7:00.
 - Can be changed any time in Search and in the commute window (type an address, use the home
   address, or click the map).
 
@@ -583,12 +554,9 @@ The vision part is loaded only for image work. Catalog chosen by the M5 eval
 | **Dobrý / Good** | `Dobrý (Gemma 4 E2B, 3.4 GB)` | 3.4 GB | 3.6 GB |
 | **Výborný / Excellent** | `Výborný (Qwen3-VL 4B, 3.0 GB)` | 3.0 GB | 3.6 GB |
 
-Qwen3.5 2B/4B and Gemma 4 E4B stay selectable under "Pokročilé". The 8–14B models tested
-on 2026-10-07 (Qwen3-VL 8B, Qwen3.5 9B, Ministral 3 8B/14B, Gemma 4 12B, Qwen3 14B) were not
-meaningfully more accurate and 3–6× slower; models below 2B (Qwen3.5 0.8B, Qwen3 0.6B/1.7B,
-Gemma 3 1B, LFM2.5 1.2B and VL 1.6B, tested 2026-10-08) only repeat what the rules give and
-miss most salaries (`docs/spikes.md`). Both groups were **removed from the catalog**
-(2026-10-09); the pay stated in ad text is read by a rule instead.
+Qwen3.5 2B/4B and Gemma 4 E4B stay selectable under "Pokročilé". 8–14B models (3–6× slower,
+no more accurate) and models below 2B (miss most salaries) were tested and removed from the
+catalog (`docs/spikes.md`).
 
 **The best model is decided dynamically for each computer.**
 
@@ -658,7 +626,7 @@ cache), shown on the result card, and for ads with less than 600 characters of o
 vision model writes out the picture's text, which is added to the ad and goes through the
 rules and the AI (same checks). A picture without text gives nothing; a picture already read
 (same hash, e.g. an employer's logo on many ads) is not read again. Measured on real board
-pictures (`docs/spikes.md`, "M6b pictures"): 15–30 s per poster on the iGPU, ~40 s on 4 CPU
+pictures (`docs/spikes.md`): 15–30 s per poster on the iGPU, ~40 s on 4 CPU
 threads, so RapidOCR is not needed for the expected volume (tens of picture ads a day).
 
 ---
@@ -670,12 +638,12 @@ The app window is served from `127.0.0.1` on a free port. UI in Czech, English s
 ### 7.1 First-run setup wizard ("Průvodce nastavením")
 Every step has defaults; optional steps have "Skip"; downloads run in the background.
 
-1. **Vítejte** — language.
+1. **Vítejte** — language and colour scheme (follow Windows, light, dark or one of five
+   colour schemes).
 2. **Odkud dojíždíte a co hledáte** (where you commute from, what you look for):
    - home address (autocomplete; precise address or just a town);
    - usual travel mode (Auto / MHD / Pěšky / Kolo / "nevím, ukaž vše");
    - max travel time slider (default 45 min);
-   - usual departure time (default weekdays 7:00);
    - optional kinds of work (empty = everything; asked only here, prefills the search).
      Free words ("ucitelka ve skolce, druzinarka") are mapped to CZ-ISCO occupations: the
      title index finds candidates, the model picks from them (`adawork/ai/wanted.py`). A job
@@ -800,146 +768,68 @@ AdaWork/
 
 ## 9. Implementation milestones
 
-### M0 — Environment, skeleton, spikes (2 days)
-- Dev tools (`winget`: Python 3.12, uv, Git), scaffold, app window + tray "hello".
-- Source spike: fixtures for every portal; list of public forums.
-- **Routing spike:** MOTIS on Windows with the CZ OSM extract + CIS JŘ NeTEx + one GTFS;
-  measure import time, RAM, disk; find a JDF→GTFS converter.
-- **Employer spike:** ARES search by name, ISIR and VAT web services, Atmoskop page parse,
-  ddgs query.
-- **Done when:** the window opens; spike results recorded in `docs/spikes.md`, including a
-  go/no-go for MOTIS (plan B: Mapy.com API for car/walk/bike + IDOS links for public
-  transport).
+### M0 — Environment, skeleton, spikes — done
+- App window + tray; source, employer and routing spikes (`docs/spikes.md`). MOTIS: go (§2.5).
+- **Done when:** the window opens; spike results in `docs/spikes.md` with a go/no-go for MOTIS.
 
-### M1 — Data core, MPSV, basic search, wizard v1 (3 days)
+### M1 — Data core, MPSV, basic search, wizard v1 — done
 - Job list: a job's title opens its whole text; a button leads back to the top.
 - **Done when:** fresh start → wizard steps 1, 2, 7 → MPSV import → full-text search in
   < 300 ms.
 
-### M2 — Codebooks and normalization (2–3 days) — done
+### M2 — Codebooks and normalization — done
+- Shared vocabulary (`normalize/vocab.py`), RÚIAN coordinates, filters with facet counts
+  (≤ 150 ms on 40k jobs), map with clustered pins. Tiles from OpenFreeMap until M8.
 - **Done when:** the full filter set works with facets; the map shows jobs.
-- Built: shared vocabulary (`normalize/vocab.py`), RÚIAN coordinates, filters + facet counts
-  (≤ 150 ms on 40k jobs), list/map toggle with clustered pins and popups.
-- Map tiles come **online from OpenFreeMap** (free, no key, apps allowed, attribution shown)
-  until M8 switches to offline MOTIS tiles.
 
-### M3 — Generic JSON-LD + prace.cz, jenprace.cz, profesia.cz + dedup (3 days) — done
-- Built:
-  - Polite HTTP (`net/polite.py`, `robots.py`): robots.txt with `*`/`$` wildcards
-    (urllib.robotparser has neither), ≥ 1.5 s between requests per host, retries on 5xx,
-    a source that answers 403/429 or a bot challenge is paused for 12 h.
-  - Generic `JobPosting` reader (`scraper/structured.py`): JSON-LD and microdata, lenient
-    dates, `baseSalary` units, address → location.
-  - Crawl framework (`scraper/crawl.py`): region listings → cards → detail pages, ≤ 300 detail
-    pages per source and run (the rest stay card-only and are completed on later runs),
-    expiry only after a complete pass. Adapters: prace.cz (jobs.cz career pages: card only),
-    jenprace.cz, profesia.cz (branded pages: card + page text).
-  - Crawl scope: the regions reachable from home within the travel-time limit
-    (`geo/scope.py`); every region when home is unknown.
-  - Places (`geo/places.py`): "Praha-Krč", "Brno - Líšeň", "Králíky, Ústí nad Orlicí",
-    regions; same-name villages told apart by PSČ, district or region. Street addresses and
-    city parts get RÚIAN coordinates in the geocode step.
-  - Dedup (`scraper/dedup.py`): same place + same employer + matching title from another
-    source → one job with several sources. Partial title matches also need similar
-    descriptions; district-level MPSV jobs match on the full title. The primary source owns
-    the fields, others fill gaps; a job expires when no source offers it.
+### M3 — JSON-LD portals + dedup — done
+- Polite HTTP (`net/polite.py`, `robots.py`): robots.txt with `*`/`$`, ≥ 1.5 s per host,
+  retries, 12 h pause on 403/429 or a bot challenge.
+- `JobPosting` reader (JSON-LD, microdata); crawl framework: region listings → cards → ≤ 300
+  detail pages per run (a month-old one is read again), expiry in a region only after its
+  listing was read to the end; scope = regions reachable from home.
+- Places (`geo/places.py`), dedup (`scraper/dedup.py`, §4.4); prace.cz, jenprace.cz,
+  profesia.cz.
 - **Done when:** a run for one home (Kolín, 30 min by car) reads all three portals without
-  errors, and re-listed ads appear once with several source links. Measured 2026-10-06:
-  see `docs/spikes.md` § M3.
+  errors, and re-listed ads appear once with several source links (`docs/spikes.md` § M3).
 
-### M4 — Indeed CZ + LinkedIn (2 days) — done
-- Indeed: link-out only (the search page blocks an honest User-Agent; §14 item 7).
-- LinkedIn: own guest-page adapter, off by default; switched on in the wizard's new
-  "Zdroje nabídek" step or on the Sources page, only after ticking "Rozumím riziku…".
-- Sources page (`/sources`): every source can be switched off; choices live in settings.
-- Crawl framework generalized: a source lists region listings or searches near home
-  (`ScrapeQuery`), with its own pace, lead/detail limits and expiry rule.
-- **Done when:** LinkedIn stays silent until opted in; with opt-in a live run for Kolín read
-  29 ads in 3 min without refusals (15 were Úřad práce ads already known, merged).
+### M4 — Indeed CZ + LinkedIn — done
+- Indeed link-out only (§14.7). LinkedIn guest-page adapter, off by default, opt-in in the
+  wizard or on `/sources`, where every source can be switched off.
+- **Done when:** LinkedIn stays silent until opted in; an opted-in live run for Kolín read 29
+  ads in 3 min without refusals.
 
-### M5 — AI layer + model picker + dynamic hardware adaptation (6–7 days) — done
-- llama-server management, `HardwareProfile` probe, **`ModelAdvisor` (Auto mode)**, model
-  list with fit icons, real speed benchmark, resumable download, automatic upgrade/downgrade
-  with fallback, free-RAM check before each model start.
-- `ResourceManager` limits derived from the hardware profile (§3.2.1).
-- Extraction, ISCO, embeddings, NL query, eval.
-- **Done when:**
-  - On the **minimum test machine (8 GB, budget Ryzen)** with the **Simple** tier: ≥ 85 % ISCO
-    group, ≥ 90 % kraj, ≥ 80 % contract type, 100 % valid JSON, ≤ 15 s per text ad, and no
-    memory pressure (no swapping) with the app window open.
-  - Icons match the measured speed on at least 3 different machines (8 GB iGPU, 16 GB iGPU,
-    one with a dedicated GPU), and Auto picks the expected tier on each (§6.6 table).
-  - Simulated changes work: Auto switches tiers after a simulated RAM change, and AI work
-    waits instead of starting when free RAM is too low.
-  - If the 2B model misses the accuracy targets, try another 2–3B multimodal model or a
-    text-only 1.7–3B model for text plus the 2B vision model loaded only for images. The
-    decision is recorded in `docs/spikes.md`.
-- **Result (2026-10-07, details in `docs/spikes.md`):** six models evaluated on 70 golden
-  ads; tiers Qwen3-VL 2B / Gemma 4 E2B / Qwen3-VL 4B.
-  - Met: 100 % valid JSON; kraj 99 % (Simple); 7.9 s per ad on the test laptop's iGPU;
-    Auto upgrade after a RAM change and "AI waits when RAM is low" (unit tests); the model
-    process ends with the app even after a crash (job object).
-  - **Not met as written:** ISCO 73 % at the 2-digit level with Simple (best model 74 %);
-    a manual review counts about 90 % sensible codes, the filter categories overlap 89 %.
-    Contract type is read by rules (88 % right where an ad states it; 76 % of ads do not);
-    no model did better.
-  - **Not measured:** the 8 GB budget Ryzen and a dedicated-GPU PC; only one test machine
-    was available. The icons there come from the calibrated estimate, and the benchmark
-    after the download corrects them on each PC.
-  - Also built: wizard step "Umělá inteligence", page `/ai` (choice, download progress,
-    Pokročilé: model, own server such as Ollama, metered downloads), "Zeptejte se větou"
-    on the search page, `adawork eval`. Search for "řidič" no longer finds "řídící".
-  - Deferred: semantic search over all jobs (embeddings of every ad), the image pipeline
-    itself (images arrive with the social and bazos sources, M6b).
+### M5 — AI layer, model picker, hardware adaptation — done
+- llama-server management, `HardwareProfile`, `ModelAdvisor` (Auto), fit icons, benchmark,
+  resumable download, `ResourceManager`; extraction, ISCO, "Zeptejte se větou", `adawork eval`.
+- Tiers Qwen3-VL 2B / Gemma 4 E2B / Qwen3-VL 4B (§6.6).
+- **Done when:** on the 8 GB budget Ryzen with the Simple tier: ≥ 85 % ISCO group, ≥ 90 % kraj,
+  ≥ 80 % contract type, 100 % valid JSON, ≤ 15 s per text ad, no swapping; fit icons match
+  the measured speed on 3 machines and Auto picks the expected tier; AI work waits when free
+  RAM is too low.
+- Targets not met as written: ISCO 73 % at 2 digits (target 85 %; filter categories 89 %);
+  contract type comes from rules. Not measured on the 8 GB Ryzen or a dedicated GPU.
+- Deferred: semantic search over all jobs.
 
-### M6 — Rest of the top 10 portals (5–6 days) — done
-- jobs.cz (custom HTML; also the career pages prace.cz links to), startupjobs.cz, hitprace.cz,
-  dobraprace.cz, fajn-brigady.cz, prace.bazos.cz.
-- **Confirmed (2026-10-07): every site that can legally be added is added** (robots.txt and
-  terms allow it, honest User-Agent, no login): pracezarohem.cz (+0.5 day), inwork.cz (+1),
-  easy-prace.cz own ads (+0.5–1), personalka.cz (re-listed Úřad práce ads merge into the
-  existing jobs by dedup). New sites found later follow the same rule.
-- **Result (2026-10-07):** 10 new portals, 15 sources in total (`docs/spikes.md`, "M6 live
-  smoke run"). Sitemap discovery added to the crawl framework (lastmod re-reads, region
-  pre-filter from the URL, ads near home first, nationwide expiry). jobsik.cz is not read
-  separately (same ads as dobraprace.cz). Career pages of big employers on jobs.cz load the ad
-  with JavaScript and stay card-only. Parallel reading and the timed first run followed in
-  M6b.
+### M6 — Rest of the top 10 portals — done
+- jobs.cz, Práce za rohem, dobraprace.cz, Easy-práce.cz, Personálka.cz, inwork.cz, Fajn
+  brigády, StartupJobs.cz, HitPráce.cz, Bazoš (15 sources); sitemap discovery.
+- Every site that can legally be added is added; new sites follow the same rule.
 
-### M6b — Social media, forums, images (7–9 days) — done
-- Classified boards (7 sections, §4.3), offer and red-flag rules for free-text sources.
-- Pictures: download, show, repost merge by picture hash, poster text by the vision model
-  (§6.8); text reposts merged across boards and groups.
-- Facebook/Instagram reader in the user's own Edge (§4.3, §4.3.1): consent with the risk
-  table, login window, daily budget in two daytime sessions, stop and pause on any warning,
-  posts deleted 14 days after last seen.
-- Manual import ("Vložit inzerát"): text and/or photo.
-- Rest of M6: portals read in parallel (4 at a time; per-host pace kept), complete first run
-  timed.
+### M6b — Social media, forums, images — done
+- Classified boards, offer and red-flag rules (§4.3); pictures (§6.8); reposts; manual import;
+  Facebook/Instagram reader (§4.3.1, tested on hand-made pages only).
+- **Done when:** every board parses on live pages; non-offers and scams stay out of the default
+  results with no false alarms on portal ads; a poster's text reaches the filters; the social
+  reader stops on a block page and clicks nothing but "See more"; the first run is timed.
+- Sources in parallel: 4 slots, one host per group (longest first), slow sites (≥ 5 s crawl
+  delay) in their own thread; a failed page is skipped.
 - "Obnovit nabídky" (refresh): the portals' ads the list shows are checked on their own pages
   first, in list order; then the new finds go above the jobs found before (also when ranked
   by words); then every other ad not seen is checked. Ads not checked yet are dimmed, gone
   ones drop out, and the filters keep working throughout. "Obnovit od začátku" empties the
   list at once (a running search stops for it) and finds everything again.
-- **Done when:** every board parses on live pages; non-offers and scams are kept out of the
-  default results with no false alarms on portal ads; a poster's text reaches the filters
-  (place, pay) through the normal checks; the social reader stops on a block page and never
-  clicks anything but "See more"; the first run's duration is known.
-- **Result (2026-10-09, details in `docs/spikes.md`, "M6b live checks"):** 7 board sections
-  live (371 ads, every non-offer and flag checked by reading; 0 red flags on 45k portal jobs);
-  posters read on 40 real pictures (Simple ~25 s, Good 16 s, Excellent 32 s per poster on the
-  iGPU, ~40 s on 4 CPU threads; no RapidOCR needed); Facebook/Instagram built and tested on
-  hand-made pages only (the first real login is the check); the complete first run took
-  90 min with 4 sources at a time (~265 min one after another), 45 of them waiting for
-  Annonce's 20 s crawl delay, and gave 61.5k jobs.
-- **Fixes after the timed run (2026-10-10):** sources on one host run one after another in
-  one slot, longest first (last run's duration, else detail pages × pace); a site whose
-  robots.txt asks for ≥ 5 s between requests runs in a thread of its own beside the 4 slots
-  (every robots.txt is read at the start, all at once); a dropped connection loses one page,
-  not the source (3 in a row: the site is down, the run is partial and nothing expires);
-  jobs.cz Vysočina slug; Annonce read with its "offers only" filter; pictures fetched per
-  host in parallel with a share per host. **The complete first run now takes 54.5 min**
-  (61.7k jobs, no source failed).
+- Complete first run: 54.5 min, 61.7k jobs.
 
 ### M7 — Automation (2–3 days)
 - Scheduler: automatic checks **off by default**, **6/12/24/48 h** intervals, pause/resume, manual "Hledat nové nabídky" button, start with Windows,
@@ -1100,26 +990,14 @@ next to the model icons.
 
 ---
 
-## 14. Decisions to confirm before implementation
-1. ~~UI language~~ — **confirmed:** Czech by default, English selectable.
-2. ~~Facebook/Instagram~~ — **confirmed:** risk accepted. **Off by default**, with a visible
-   warning and explicit opt-in in the wizard (§7.1 step 4); limits 100 Facebook / 50 Instagram
-   posts a day.
-3. ~~Defaults~~ — **confirmed:**
-   - automatic checks **off** (when switched on: 6/12/24/48 h, 12 h preselected);
-   - start with Windows on, notifications on;
-   - all sources on except Facebook/Instagram and key-based sources.
-4. ~~Google ratings~~ — **confirmed:** optional wizard step (step 5), with a note that Google
-   requires a billing account; the app stays within the free 1 000 requests/month.
-5. ~~Target notebook~~ — **confirmed:** hardware varies, so the model and resource settings
-   are decided dynamically per computer (§3.2.1, §6.6). The minimum test machine is 8 GB RAM
-   with a budget Ryzen and integrated Radeon.
-6. ~~LinkedIn~~ — **confirmed:** same as Facebook: off by default, visible warning, opt-in
-   (§7.1 step 4). Built in M4 as an own small adapter on the guest pages python-jobspy
-   uses (no pandas/tls-client dependency, same polite fetcher). No robots-compliant LinkedIn
-   tool exists; the logged-in alternatives risk the user's account.
-7. ~~Indeed~~ — **confirmed, then changed in M4 (2026-10-06):** the public search page
-   blocks the app's honest User-Agent with a Cloudflare check, so Indeed is **link-out only**
-   (user's choice over a browser-like User-Agent, a later Edge reader or dropping it).
-8. ~~Public-transport timetables~~ — **confirmed:** Spojenka GTFS (nationwide, non-commercial
-   license). The app stays personal/free; replacing the feed is needed only if that changes.
+## 14. Decisions
+1. UI in Czech, English selectable.
+2. Facebook/Instagram: off by default, visible warning, opt-in (§7.1 step 4); 100 / 50 posts a day.
+3. Defaults: automatic checks off (6/12/24/48 h, 12 h preselected); start with Windows and
+   notifications on; all sources on except Facebook/Instagram, LinkedIn and key-based ones.
+4. Google ratings: optional (step 5), within the free 1 000 requests/month.
+5. Hardware varies: model and resources are decided per computer (§3.2.1, §6.6); the minimum
+   test machine is 8 GB RAM, budget Ryzen, integrated Radeon.
+6. LinkedIn: own guest-page adapter, off by default, opt-in (§7.1 step 4).
+7. Indeed: link-out only; Cloudflare blocks the honest User-Agent (M4).
+8. Timetables: Spojenka GTFS (non-commercial license); the app stays personal/free.
