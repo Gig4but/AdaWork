@@ -18,7 +18,9 @@
   {% endif %}
   {% if job.description %}<p class="desc">{{ job.description | truncate(260) }}
     {%- if job.description | length > 260 %} <a href="/jobs/{{ job.id }}" class="job-open" data-job="{{ job.id }}">{{ t("job.full_text") }}</a>{% endif %}</p>{% endif %}
+  {% set origin = (job.extra or {}).get("origin") or {} %}
   <footer>
+    {% if "ai" in origin.values() %}<span class="ai-mark">✦ {{ t("job.ai_badge") }}</span>{% endif %}
     {% include "_job_links.html" %}
   </footer>
 </article>

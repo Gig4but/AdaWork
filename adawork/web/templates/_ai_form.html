@@ -1,0 +1,42 @@
+{# Model choice; shared by the wizard and the AI page (PLAN §6.6). #}
+{% macro fit_icon(icon) -%}
+  <svg class="fit-icon fit-{{ icon }}" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
+    {% if icon == "green" %}<circle cx="10" cy="10" r="9"/><path d="M5.5 10.5l3 3 6-7" fill="none" stroke="#fff" stroke-width="2.2"/>
+    {% elif icon == "yellow" %}<circle cx="10" cy="10" r="9"/><path d="M5 13a5 5 0 0 1 10 0M10 13l3-4" fill="none" stroke="#222" stroke-width="2"/>
+    {% else %}<circle cx="10" cy="10" r="9"/><path d="M6.5 6.5l7 7M13.5 6.5l-7 7" stroke="#fff" stroke-width="2.2"/>{% endif %}
+  </svg>
+{%- endmacro %}
+
+<p class="muted">{{ ai.hardware_line }}</p>
+<fieldset class="ai-choice">
+  <label>
+    <input type="radio" name="choice" value="auto" {% if ai.choice == "auto" %}checked{% endif %}>
+    <strong>⚙ {{ t("ai.auto") }}</strong>
+    <small class="muted">({% if ai.pick %}{{ t("ai.auto.now", tier=t("ai.tier." ~ ai.pick.tier)) }}{% else %}{{ t("ai.auto.none") }}{% endif %})</small>
+  </label>
+  {% for o in ai.options %}
+    <label title="{{ t('ai.fit.' ~ o.icon) }}{% for r in o.reasons %} · {{ t(r) }}{% endfor %}">
+      <input type="radio" name="choice" value="{{ o.tier }}" {% if ai.choice == o.tier %}checked{% endif %}
+             {% if o.icon == "red" %}data-confirm="{{ t('ai.red_confirm') }}"{% endif %}>
+      {{ fit_icon(o.icon) }}
+      <span>{{ t("ai.tier." ~ o.tier) }} ({{ o.model }}, {{ o.size }} GB)
+        <small class="muted">— {{ t("ai.fit." ~ o.icon) }}, {{ t("ai.seconds", s=o.seconds) }}{% if o.measured %} ({{ t("ai.measured") }}){% endif %}{% for r in o.reasons %}, {{ t(r) }}{% endfor %}{% if o.downloaded %}, {{ t("ai.downloaded") }}{% endif %}</small>
+        {% if o.recommended %}<span class="badge">{{ t("ai.recommended") }}</span>{% endif %}
+      </span>
+    </label>
+  {% endfor %}
+  <label>
+    <input type="radio" name="choice" value="off" {% if ai.choice == "off" %}checked{% endif %}>
+    {{ t("ai.off") }}
+  </label>
+</fieldset>
+<p class="muted small">{{ ai.reason }}</p>
+<script>
+  document.querySelectorAll(".ai-choice input[data-confirm]").forEach(function (input) {
+    input.addEventListener("change", function () {
+      if (input.checked && !window.confirm(input.dataset.confirm)) {
+        document.querySelector('.ai-choice input[value="auto"]').checked = true;
+      }
+    });
+  });
+</script>

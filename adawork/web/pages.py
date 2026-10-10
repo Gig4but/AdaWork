@@ -127,6 +127,17 @@ def filters_from_query(request: Request) -> Filters:
     )
 
 
+def filters_to_query(f: Filters) -> str:
+    pairs: list[tuple[str, object]] = [("q", f.q)]  # even empty: none = the profile's kinds
+    for name in (*LIST_FIELDS, "kraj"):
+        pairs += [(name, v) for v in getattr(f, name)]
+    pairs += [("source_off", v) for v in f.sources_off]
+    for name in ("education", "salary_min", "posted_days"):
+        if getattr(f, name):
+            pairs.append((name, getattr(f, name)))
+    return urlencode(pairs)
+
+
 def query_string(request: Request) -> str:
     """The current filters as a query string, without paging."""
     paging = ("offset", "since", "cleared")

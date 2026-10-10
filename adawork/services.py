@@ -4,16 +4,20 @@
 (cli.py) use what is here; nothing here knows about them.
 """
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
 from sqlalchemy.orm import Session, sessionmaker
 
 from adawork import paths
+from adawork.ai.services import AiServices, make_ai_services
 from adawork.config import Settings
 from adawork.db.session import db_file, make_engine, make_sessionmaker, migrate
 from adawork.geo.places import SharedPlaces
-from adawork.scraper.runner import ScrapeRunner
+from adawork.scraper.runner import RunHooks, ScrapeRunner
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -22,10 +26,21 @@ class Services:
     sessions: sessionmaker[Session]
     cache_dir: Path
     places: SharedPlaces
+    ai: AiServices
     runner: ScrapeRunner
+
+    def start(self) -> None:
+        if self.settings.wizard_completed:
+            try:  # resume an interrupted download, follow hardware changes (Auto)
+                self.ai.manager.start_download()
+                if self.ai.manager.ready:
+                    self.ai.enricher.start()  # finish what the last session left
+            except Exception:
+                log.exception("AI start-up failed")
 
     def stop(self) -> None:
         self.runner.stop()
+        self.ai.shutdown()
 
 
 def build(
@@ -33,22 +48,26 @@ def build(
     db_path: Path | None = None,
     cache_dir: Path | None = None,
     runner_factory=None,
+    ai_factory=None,
 ) -> Services:
     settings = settings or Settings.load()
     engine = make_engine(db_path or db_file())
     migrate(engine)
     sessions = make_sessionmaker(engine)
     cache_dir = cache_dir or paths.data_dir() / "cache"
+    ai: AiServices = (ai_factory or make_ai_services)(settings, sessions, cache_dir)
     runner = (runner_factory or ScrapeRunner)(
         sessions,
         cache_dir,
         profile=lambda: settings.profile,
         source_choices=lambda: settings.sources,
+        hooks=RunHooks(before_clear=ai.enricher.stop, after_run=ai.enricher.start),
     )
     return Services(
         settings=settings,
         sessions=sessions,
         cache_dir=cache_dir,
         places=SharedPlaces(sessions),
+        ai=ai,
         runner=runner,
     )

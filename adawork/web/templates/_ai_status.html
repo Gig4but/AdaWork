@@ -1,0 +1,29 @@
+{# Download and enrichment progress; polls only while something is happening. #}
+{% set d = ai.download %}
+{% set e = ai.enrich %}
+{# hx-target and hx-select are set: they would otherwise be inherited from the search form
+   (#results) or the Settings panel beside the search (#other). #}
+<div id="ai-status" {% if ai.busy %}hx-get="/ai/status" hx-trigger="every 2s" hx-target="this" hx-select="unset" hx-swap="outerHTML"{% endif %}>
+  {% if ai.notice %}<p class="ok small" role="status">{{ t(ai.notice[0], **ai.notice[1]) }}</p>{% endif %}
+  {% if d.state == "downloading" %}
+    <small aria-busy="true">{{ t("ai.download.downloading", model=ai.download_model, percent=d.percent,
+      done="%.1f" % (d.done / 1e9), total="%.1f" % (d.total / 1e9)) }}</small>
+    <progress value="{{ d.done }}" max="{{ d.total or 1 }}"></progress>
+  {% elif d.state == "benchmark" %}
+    <small aria-busy="true">{{ t("ai.download.benchmark") }}</small>
+  {% elif d.state == "waiting_metered" %}
+    <small>{{ t("ai.download.waiting_metered") }}</small>
+    <button type="button" class="outline small" hx-post="/ai/download?metered=1" hx-target="closest #ai-status" hx-select="unset" hx-swap="outerHTML">{{ t("ai.download.metered_ok") }}</button>
+  {% elif d.state == "failed" %}
+    <small class="error">{{ t("ai.download.failed", msg=d.error) }}</small>
+  {% endif %}
+  {% if e.running and e.phase == "rules" and e.total %}
+    <small aria-busy="true">{{ t("ai.enrich.rules", done=e.done, total=e.total) }}</small>
+  {% elif e.running and e.phase == "ai" %}
+    <small aria-busy="true">{{ t("ai.enrich.ai", done=e.done, total=e.total) }}</small>
+  {% elif e.running and e.phase == "waiting" %}
+    <small>{{ t("ai.enrich.waiting", reason=t(e.wait_reason)) }}</small>
+  {% elif e.phase == "done" and (e.done or e.classified) %}
+    <small class="muted">{{ t("ai.enrich.done", done=e.done if e.total else 0, classified=e.classified) }}</small>
+  {% endif %}
+</div>

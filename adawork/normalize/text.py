@@ -3,6 +3,7 @@
 import re
 import unicodedata
 from dataclasses import dataclass
+from functools import lru_cache
 from html import unescape
 
 from selectolax.lexbor import LexborHTMLParser, LexborNode
@@ -20,6 +21,25 @@ def fold(text: str) -> str:
     """Lowercase without diacritics, for matching ("Plný úvazek" -> "plny uvazek")."""
     decomposed = unicodedata.normalize("NFKD", text.casefold())
     return "".join(c for c in decomposed if not unicodedata.combining(c))
+
+
+def accented_words(user_text: str) -> list[str]:
+    """Search words typed with diacritics ("řidič"), lowercased."""
+    return [w for w in re.findall(r"\w+", user_text.casefold()) if fold(w) != w]
+
+
+@lru_cache(maxsize=256)
+def _word_starts(words: str) -> list[re.Pattern]:
+    return [re.compile(rf"(?<!\w){re.escape(w)}", re.IGNORECASE) for w in words.split()]
+
+
+def has_word_starts(text: str | None, words: str) -> int:
+    """1 if every word in `words` (space-separated) starts a word in `text`, diacritics
+    included: "řidič" matches "řidiči", not "řídící". Registered as an SQLite function."""
+    if not words:
+        return 1
+    text = text or ""
+    return int(all(p.search(text) for p in _word_starts(words)))
 
 
 def clean_spaces(text: str) -> str:
@@ -103,13 +123,35 @@ def parse_salary(text: str | None) -> Salary | None:
     return Salary(amounts[0], None, unit, currency)
 
 
+# Regular expressions on folded text, each anchored at a word start.
 _CONTRACT_WORDS = (
-    ("full_time", ("plny uvazek", "hpp", "full_time", "full-time", "full time")),
-    ("part_time", ("zkracen", "castecn", "part_time", "part-time", "part time")),
-    ("dpp", ("dohoda o provedeni", "dpp")),
-    ("dpc", ("dohoda o pracovni cinnosti", "dpc")),
-    ("contractor", ("zivnost", "ico", "contractor", "osvc")),
-    ("internship", ("staz", "intern")),  # not "praxe": "bez praxe" means "no experience"
+    (
+        "full_time",
+        (
+            r"plne?m?\w* (i |nebo )?(zkracen\w* )?uvaz",
+            r"hpp(?![a-z])",
+            r"hlavni\w* pracovni\w* pomer",
+            "full_time",
+            "full-time",
+            "full time",
+        ),
+    ),
+    (
+        "part_time",
+        (
+            r"zkracen\w* (pracovn\w* )?(uvaz|dob)",
+            r"castecn\w* uvaz",
+            r"polovicni\w* uvaz",
+            "part_time",
+            "part-time",
+            "part time",
+        ),
+    ),
+    ("dpp", (r"dohod\w* o provedeni", r"dpp(?![a-z])")),
+    ("dpc", (r"dohod\w* o pracovni cinnosti", r"dpc(?![a-z])")),
+    ("contractor", ("zivnost", r"ico(?![a-z])", "contractor", "osvc")),
+    # Not "praxe" ("bez praxe" = no experience needed), not "interní" (internal).
+    ("internship", ("staz", "internship", r"intern(?![a-z])")),
 )
 
 
@@ -118,7 +160,7 @@ def contract_types(*texts: str | None) -> list[str]:
     folded = " ".join(fold(t) for t in texts if t)
     found = []
     for code, words in _CONTRACT_WORDS:
-        if any(re.search(rf"(?<![a-z]){re.escape(w)}", folded) for w in words):
+        if any(re.search(rf"(?<![a-z]){w}", folded) for w in words):
             found.append(code)
     return found
 

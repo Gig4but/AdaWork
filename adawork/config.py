@@ -39,12 +39,26 @@ class Profile(BaseModel):
     kinds_of_work: list[str] = Field(default_factory=list)  # empty = everything
 
 
+class AiSettings(BaseModel):
+    """Wizard step "Umělá inteligence" and Settings → AI (PLAN §6.6)."""
+
+    # "auto" (best for this PC, follows hardware changes), a tier ("simple", "good",
+    # "excellent"), a catalog model id (advanced), or "off" (rules only).
+    choice: str = "auto"
+    allow_metered: bool = False  # download models over a metered connection
+    # Advanced: an OpenAI-compatible server instead of the bundled one, e.g. Ollama
+    # ("http://127.0.0.1:11434") with its model name.
+    server_url: str = ""
+    server_model: str = ""
+
+
 class Settings(BaseModel):
     language: Language = "cs"
     theme: Theme = "system"
     wizard_completed: bool = False
     profile: Profile = Field(default_factory=Profile)
     automation: AutomationSettings = Field(default_factory=AutomationSettings)
+    ai: AiSettings = Field(default_factory=AiSettings)
     # Source id -> on/off as the user chose; sources not listed use their default.
     sources: dict[str, bool] = Field(default_factory=dict)
 

@@ -111,6 +111,172 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "Saved. It applies from the next check.",
     },
     "search.indeed": {"cs": "Hledat také na Indeed", "en": "Also search on Indeed"},
+    "nav.ai": {"cs": "Umělá inteligence", "en": "AI"},
+    "wizard.ai": {"cs": "Umělá inteligence", "en": "Artificial intelligence"},
+    "ai.title": {"cs": "Umělá inteligence", "en": "Artificial intelligence"},
+    "ai.text": {
+        "cs": "Model umělé inteligence běží jen na vašem počítači, nic se nikam neposílá. "
+        "U nabídek z portálů doplní obor, místo, směny, vzdělání a mzdu, když je inzerát "
+        "uvádí jen v textu.",
+        "en": "The AI model runs only on your computer; nothing is sent anywhere. For portal "
+        "ads it fills in the field of work, place, shifts, education and salary when the "
+        "ad mentions them only in its text.",
+    },
+    "ai.hardware": {
+        "cs": "Tento počítač: {ram} GB RAM · {gpu} · {disk} GB volného místa",
+        "en": "This computer: {ram} GB RAM · {gpu} · {disk} GB free disk space",
+    },
+    "ai.no_gpu": {"cs": "bez grafické karty", "en": "no graphics card"},
+    "ai.auto": {
+        "cs": "Automaticky – nejlepší pro tento počítač",
+        "en": "Automatic – best for this computer",
+    },
+    "ai.auto.now": {"cs": "teď vybráno: {tier}", "en": "currently: {tier}"},
+    "ai.auto.none": {"cs": "teď: jen pravidla", "en": "currently: rules only"},
+    "ai.tier.simple": {"cs": "Jednoduchý", "en": "Simple"},
+    "ai.tier.good": {"cs": "Dobrý", "en": "Good"},
+    "ai.tier.excellent": {"cs": "Výborný", "en": "Excellent"},
+    "ai.recommended": {"cs": "Doporučeno", "en": "Recommended"},
+    "ai.fit.green": {"cs": "Poběží plynule", "en": "Runs smoothly"},
+    "ai.fit.yellow": {"cs": "Poběží, ale pomaleji", "en": "Works, but slower"},
+    "ai.fit.red": {"cs": "Nedoporučeno", "en": "Not recommended"},
+    "ai.seconds": {"cs": "~{s} s na inzerát", "en": "~{s} s per ad"},
+    "ai.measured": {"cs": "změřeno", "en": "measured"},
+    "ai.downloaded": {"cs": "staženo", "en": "downloaded"},
+    "ai.why.ram": {"cs": "málo paměti", "en": "not enough memory"},
+    "ai.why.ram_tight": {"cs": "paměti je těsně", "en": "memory is tight"},
+    "ai.why.slow": {"cs": "příliš pomalé", "en": "too slow"},
+    "ai.why.slower": {"cs": "pomalejší", "en": "slower"},
+    "ai.why.disk": {"cs": "málo místa na disku", "en": "not enough disk space"},
+    "ai.off": {
+        "cs": "Bez umělé inteligence (jen pravidla)",
+        "en": "No AI (rules only)",
+    },
+    "ai.red_confirm": {
+        "cs": "Tento model je pro váš počítač příliš náročný. Opravdu ho chcete?",
+        "en": "This model is too demanding for your computer. Do you really want it?",
+    },
+    "ai.reason.igpu": {
+        "cs": "{ram} GB RAM, integrovaná grafika → {tier}",
+        "en": "{ram} GB RAM, integrated graphics → {tier}",
+    },
+    "ai.reason.dgpu": {
+        "cs": "{ram} GB RAM, grafická karta s {vram} GB → {tier}",
+        "en": "{ram} GB RAM, graphics card with {vram} GB → {tier}",
+    },
+    "ai.reason.cpu": {
+        "cs": "{ram} GB RAM bez grafické karty → {tier}",
+        "en": "{ram} GB RAM, no graphics card → {tier}",
+    },
+    "ai.reason.none": {
+        "cs": "Model se do paměti tohoto počítače nevejde; aplikace použije jen pravidla.",
+        "en": "No model fits this computer's memory; the app uses rules only.",
+    },
+    "ai.download.downloading": {
+        "cs": "Stahuji model {model}: {percent} % ({done} z {total} GB)",
+        "en": "Downloading {model}: {percent} % ({done} of {total} GB)",
+    },
+    "ai.download.benchmark": {
+        "cs": "Měřím rychlost modelu na tomto počítači…",
+        "en": "Measuring the model's speed on this computer…",
+    },
+    "ai.download.waiting_metered": {
+        "cs": "Připojení je účtované po datech, model se proto zatím nestahuje.",
+        "en": "The connection is metered, so the model is not downloaded yet.",
+    },
+    "ai.download.metered_ok": {"cs": "Přesto stáhnout", "en": "Download anyway"},
+    "ai.download.failed": {
+        "cs": "Stažení se nepovedlo: {msg}. Zkusím to znovu při příštím spuštění.",
+        "en": "The download failed: {msg}. It will be retried at the next start.",
+    },
+    "ai.ready": {"cs": "Model {model} je připraven.", "en": "Model {model} is ready."},
+    "ai.not_ready": {
+        "cs": "Model zatím není stažený; aplikace používá jen pravidla.",
+        "en": "No model is downloaded yet; the app uses rules only.",
+    },
+    "ai.notice.upgraded": {
+        "cs": "Model byl vylepšen na {model}.",
+        "en": "The model was upgraded to {model}.",
+    },
+    "ai.busy.no_model": {"cs": "model není stažený", "en": "no model downloaded"},
+    "ai.busy.pc_busy": {
+        "cs": "počítač je právě vytížený",
+        "en": "the computer is busy right now",
+    },
+    "ai.busy.memory": {"cs": "málo volné paměti", "en": "not enough free memory"},
+    "ai.enrich.rules": {
+        "cs": "Třídím nabídky podle oboru: {done} z {total}",
+        "en": "Sorting jobs by field: {done} of {total}",
+    },
+    "ai.enrich.ai": {
+        "cs": "AI doplňuje údaje: {done} z {total} nabídek",
+        "en": "AI is filling in details: {done} of {total} jobs",
+    },
+    "ai.enrich.waiting": {
+        "cs": "AI počká ({reason}), pak bude pokračovat",
+        "en": "AI is waiting ({reason}) and will continue",
+    },
+    "ai.enrich.done": {
+        "cs": "Doplněné nabídky: {done} · obor podle názvu: {classified}",
+        "en": "Jobs filled in: {done} · field from the title: {classified}",
+    },
+    "ai.advanced": {"cs": "Pokročilé", "en": "Advanced"},
+    "ai.model_choice": {"cs": "Konkrétní model", "en": "Specific model"},
+    "ai.server_url": {
+        "cs": "Vlastní server (např. Ollama: http://127.0.0.1:11434)",
+        "en": "Own server (e.g. Ollama: http://127.0.0.1:11434)",
+    },
+    "ai.server_model": {"cs": "Název modelu na serveru", "en": "Model name on the server"},
+    "ai.allow_metered": {
+        "cs": "Stahovat i přes připojení účtované po datech",
+        "en": "Download over metered connections too",
+    },
+    "ai.models": {"cs": "Stažené modely", "en": "Downloaded models"},
+    "ai.models.text": {
+        "cs": "Modely zůstávají na disku i po změně volby, takže se k nim můžete vrátit. "
+        "Smazat je můžete jen vy.",
+        "en": "Models stay on disk when the choice changes, so you can go back to them. "
+        "Only you can delete them.",
+    },
+    "ai.in_use": {"cs": "používá se", "en": "in use"},
+    "ai.delete": {"cs": "Smazat", "en": "Delete"},
+    "ai.delete_confirm": {
+        "cs": "Smazat tento model z disku? Kdykoli ho můžete stáhnout znovu.",
+        "en": "Delete this model from disk? You can download it again any time.",
+    },
+    "ai.save": {"cs": "Uložit", "en": "Save"},
+    "ai.saved": {"cs": "Uloženo.", "en": "Saved."},
+    "ask.placeholder": {
+        "cs": "Zeptejte se větou, např. „sklad u Kolína, jen ranní, aspoň 30 tisíc“",
+        "en": "Ask in a sentence, e.g. “warehouse near Kolín, mornings only, at least 30k”",
+    },
+    "ask.button": {"cs": "Zeptat se AI", "en": "Ask AI"},
+    "ask.wait.downloading": {
+        "cs": "Stahuji AI ({percent} %), pak se tu můžete zeptat větou…",
+        "en": "Downloading the AI ({percent} %), then you can ask in a sentence here…",
+    },
+    "ask.wait.benchmark": {
+        "cs": "Zkouším AI na tomto počítači, za chvíli se tu můžete zeptat větou…",
+        "en": "Trying the AI on this computer, you can ask here in a moment…",
+    },
+    "ask.wait.metered": {
+        "cs": "AI se nestahuje přes účtované připojení (Nastavení → AI)",
+        "en": "The AI is not downloaded over a metered connection (Settings → AI)",
+    },
+    "ask.wait.failed": {
+        "cs": "Stažení AI se nepovedlo (Nastavení → AI)",
+        "en": "The AI download failed (Settings → AI)",
+    },
+    "ask.wait.off": {"cs": "AI je vypnutá (Nastavení → AI)", "en": "AI is off (Settings → AI)"},
+    "ask.wait.none": {
+        "cs": "AI zatím není připravená (Nastavení → AI)",
+        "en": "The AI is not ready yet (Settings → AI)",
+    },
+    "ask.failed": {
+        "cs": "Dotaz se nepodařilo zpracovat ({msg}). Zkuste běžné hledání.",
+        "en": "The question could not be processed ({msg}). Try the normal search.",
+    },
+    "job.ai_badge": {"cs": "doplnila AI", "en": "added by AI"},
     "wizard.auto_off": {
         "cs": "Automatické hledání je vypnuté. Zapnout ho můžete později v Nastavení.",
         "en": "Automatic checks are off. You can switch them on later in Settings.",

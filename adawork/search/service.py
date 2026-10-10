@@ -25,7 +25,9 @@ from sqlalchemy.orm import Session, selectinload
 
 from adawork.core import utcnow
 from adawork.db.models import Job, JobSource, Location
+from adawork.normalize.text import accented_words, fold
 from adawork.normalize.vocab import EDUCATION_LEVEL
+from adawork.search import kinds
 
 # Column weights for bm25: title, employer_name, place_text, description.
 _BM25 = "bm25(jobs_fts, 10.0, 3.0, 2.0, 1.0)"
@@ -52,6 +54,32 @@ def fts_query(user_text: str) -> str | None:
 def _phrase_query(phrase: str) -> str | None:
     tokens = [t.lower() for t in _TOKEN.findall(phrase)]
     return " AND ".join(f'"{t}"*' for t in tokens) if tokens else None
+
+
+@dataclass(frozen=True)
+class TextMatch:
+    """What the search text matches: `fts` in the full-text index (also the rank), each
+    phrase's own query with its words typed with diacritics, and the occupations the
+    profile's kinds of work were mapped to (their ads match without sharing a word)."""
+
+    fts: str | None = None
+    phrases: tuple[tuple[str, str], ...] = ()
+    codes: tuple[str, ...] = ()
+
+    @property
+    def params(self) -> dict[str, str]:
+        return {"match": self.fts} if self.fts else {}
+
+
+def text_match(session: Session, q: str) -> TextMatch:
+    fts = fts_query(q)
+    if fts is None:
+        return TextMatch()
+    parts = [(p, query) for p in q.split(",") if (query := _phrase_query(p))]
+    mapped = {fold(k): v.get("codes", ()) for k, v in kinds.load(session).items()}
+    codes = (c for p, _ in parts for c in mapped.get(fold(p.strip()), ()))
+    phrases = tuple((query, " ".join(accented_words(p))) for p, query in parts)
+    return TextMatch(fts, phrases, tuple(dict.fromkeys(codes)))
 
 
 @dataclass
@@ -126,18 +154,46 @@ def _conditions(f: Filters, skip: frozenset[str] = frozenset()) -> list[ColumnEl
     return conds
 
 
-def _base(f: Filters, match: str | None, columns, skip: frozenset[str] = frozenset()):
+def _base(f: Filters, match: TextMatch, columns, skip: frozenset[str] = frozenset()):
     stmt: Select = select(*columns).select_from(Job).outerjoin(Location)
     hits = None
-    if match:
+    if match.fts:
         hits = (
             select(literal_column("rowid").label("job_id"), literal_column(_BM25).label("rank"))
             .select_from(table("jobs_fts"))
             .where(text("jobs_fts MATCH :match"))
             .subquery()
         )
-        stmt = stmt.join(hits, hits.c.job_id == Job.id)
+        if match.codes:
+            stmt = stmt.outerjoin(hits, hits.c.job_id == Job.id)
+            occupation = or_(*(Job.isco_code.startswith(c, autoescape=True) for c in match.codes))
+            stmt = stmt.where(or_(and_(hits.c.job_id.is_not(None), *_accents(match)), occupation))
+        else:
+            stmt = stmt.join(hits, hits.c.job_id == Job.id).where(*_accents(match))
     return stmt.where(and_(*_conditions(f, skip))), hits
+
+
+def _accents(match: TextMatch) -> list[ColumnElement[bool]]:
+    """The index ignores diacritics, so "řidič"* also finds "řídící"; a word typed with
+    diacritics must also match with them, in the phrase that found the job."""
+    if not any(accented for _, accented in match.phrases):
+        return []
+    haystack = Job.title + " " + func.coalesce(Job.description, "")
+
+    def check(accented: str) -> ColumnElement[bool]:
+        return func.has_word_starts(haystack, accented) == 1
+
+    if len(match.phrases) == 1:
+        return [check(match.phrases[0][1])]
+    either = []
+    for n, (query, accented) in enumerate(match.phrases):
+        ids = (
+            select(literal_column("rowid"))
+            .select_from(table("jobs_fts"))
+            .where(text(f"jobs_fts MATCH :phrase{n}").bindparams(**{f"phrase{n}": query}))
+        )
+        either.append(and_(Job.id.in_(ids), check(accented)) if accented else Job.id.in_(ids))
+    return [or_(*either)]
 
 
 _FACET_COLUMNS = (*LIST_FIELDS, "kraj", "education", "sources")
@@ -222,13 +278,13 @@ def _facet_index(session: Session) -> dict[int, tuple]:
     return index
 
 
-def _facet_counts(session: Session, f: Filters, match: str | None, params) -> dict:
+def _facet_counts(session: Session, f: Filters, match: TextMatch) -> dict:
     """Counts per facet value. Each facet ignores its own selection, so choosing one
     category still shows how many jobs the other categories have.
     """
     index = _facet_index(session)
     stmt, _ = _base(f, match, [Job.id], skip=frozenset(FACETS))
-    ids = session.scalars(stmt, params)
+    ids = session.scalars(stmt, match.params)
 
     level = EDUCATION_LEVEL.get(f.education or "")
     selected = {n: frozenset(getattr(f, n)) for n in (*LIST_FIELDS, "kraj")}
@@ -283,8 +339,8 @@ def search_jobs(
     """`up_to_id`: only jobs stored up to this one (the rest is shown by `jobs_found_since`)."""
     started = time.perf_counter()
     f = q if isinstance(q, Filters) else Filters(q=q)
-    match = fts_query(f.q)
-    params = {"match": match} if match else {}
+    match = text_match(session, f.q)
+    params = match.params
     known = [Job.id <= up_to_id] if up_to_id is not None else []
 
     count_stmt, _ = _base(f, match, [func.count()])
@@ -297,7 +353,7 @@ def search_jobs(
         salary = func.coalesce(Job.salary_month_max, Job.salary_month_min)
         stmt = stmt.order_by(salary.desc().nulls_last(), *newest)
     elif f.sort == "relevance" and hits is not None:
-        stmt = stmt.order_by(hits.c.rank, Job.id.desc())
+        stmt = stmt.order_by(hits.c.rank.nulls_last(), Job.id.desc())
     elif f.newest_found_first():
         stmt = stmt.order_by(Job.id.desc())
     else:
@@ -307,7 +363,7 @@ def search_jobs(
     jobs = list(session.scalars(stmt.limit(limit).offset(offset), params))
     result = SearchResult(total, jobs, 0.0)
     if facets:
-        result.facets = _facet_counts(session, f, match, params)
+        result.facets = _facet_counts(session, f, match)
     result.took_ms = (time.perf_counter() - started) * 1000
     return result
 
@@ -317,8 +373,8 @@ def jobs_found_since(
 ) -> tuple[list[Job], int]:
     """(Matching jobs stored after `since` up to `up_to_id`, the last found first; how many
     jobs match in all.) Lets the list put a running search's finds on top of it."""
-    match = fts_query(f.q)
-    params = {"match": match} if match else {}
+    match = text_match(session, f.q)
+    params = match.params
     count_stmt, _ = _base(f, match, [func.count()])
     total = session.scalar(count_stmt.where(Job.id <= up_to_id), params) or 0
     stmt, _ = _base(f, match, [Job])
@@ -333,8 +389,8 @@ def jobs_found_since(
 
 def job_points(session: Session, f: Filters) -> list[tuple]:
     """(location id, lat, lon, precision, job count) for every location with matching jobs."""
-    match = fts_query(f.q)
-    params = {"match": match} if match else {}
+    match = text_match(session, f.q)
+    params = match.params
     columns = [
         Location.id,
         Location.lat,
@@ -350,8 +406,8 @@ def job_points(session: Session, f: Filters) -> list[tuple]:
 def jobs_at_location(
     session: Session, f: Filters, location_id: int, limit: int = 50
 ) -> tuple[list[Job], int]:
-    match = fts_query(f.q)
-    params = {"match": match} if match else {}
+    match = text_match(session, f.q)
+    params = match.params
     count_stmt, _ = _base(f, match, [func.count()])
     total = session.scalar(count_stmt.where(Job.location_id == location_id), params) or 0
     stmt, _ = _base(f, match, [Job])

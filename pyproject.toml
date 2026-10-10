@@ -20,6 +20,10 @@ dependencies = [
     "python-multipart>=0.0.32",
     "pyproj>=3.8.0",
     "selectolax>=1.0.0",
+    "psutil>=7.2.2",
+    "onnxruntime>=1.30.0",
+    "tokenizers>=0.23.2",
+    "numpy>=2.5.3",
 ]
 
 [project.scripts]
@@ -76,6 +80,7 @@ layers = [
     "services",
     "desktop",
     "scraper",
+    "ai",
     "search",
     "geo",
     "db",

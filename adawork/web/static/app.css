@@ -112,6 +112,22 @@ body[data-view="map"] #results { display: none; }
 .ok { color: var(--pico-ins-color); }
 .elsewhere { text-align: right; margin-bottom: .25rem; }
 
+.ai-choice label { display: flex; gap: .5rem; align-items: flex-start; margin-bottom: .6rem; }
+.ai-choice input { flex: none; margin-top: .2rem; }
+.fit-icon { flex: none; margin-top: .15rem; }
+.fit-green circle { fill: #2e9e5b; }
+.fit-yellow circle { fill: #f2c230; }
+.fit-red circle { fill: #d64545; }
+#ai-status small { display: block; }
+.layout #ai-status:has(small) { margin-bottom: .5rem; }
+#ai-status progress { margin: .25rem 0 0; }
+.ask-row { display: grid; grid-template-columns: 1fr auto; gap: .75rem; margin-bottom: .5rem; }
+.ask-row input, .ask-row button { margin: 0; }  /* same height: no input margin */
+.ask-row small { grid-column: 1 / -1; }
+.models form, .models button { margin: 0; }
+.models button { padding: .2rem .6rem; }
+.ai-mark { font-size: .7rem; color: var(--pico-muted-color); }
+
 /* Colour schemes (Settings.theme): each refines Pico's light or dark base. */
 [data-scheme="ocean"][data-theme] {
   --pico-background-color: #d9ebf5; --pico-color: #0d2b3e; --pico-muted-color: #3f6178;

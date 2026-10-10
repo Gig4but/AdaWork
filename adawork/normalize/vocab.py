@@ -5,6 +5,7 @@ occupation to one or more of them, so any job with an ISCO code gets categories 
 """
 
 Labels = dict[str, dict[str, str]]  # code -> {"cs": ..., "en": ...}
+UNCATEGORIZED = "0"
 
 CATEGORIES: Labels = {
     "1": {"cs": "Administrativa", "en": "Administration"},
@@ -23,6 +24,8 @@ CATEGORIES: Labels = {
     "14": {"cs": "Služby", "en": "Services"},
     "15": {"cs": "Zdravotnictví", "en": "Healthcare"},
     "16": {"cs": "Zemědělství a lesnictví", "en": "Agriculture and forestry"},
+    # Not an Úřad práce field: jobs the rules and the AI could not place in any field.
+    UNCATEGORIZED: {"cs": "Nezařazeno", "en": "Not categorized"},
 }
 
 CONTRACT_TYPES: Labels = {

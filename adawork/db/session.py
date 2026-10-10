@@ -12,6 +12,7 @@ from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 from adawork import paths
+from adawork.normalize.text import has_word_starts
 
 MIGRATIONS_DIR = Path(__file__).parent / "migrations"
 
@@ -30,6 +31,7 @@ def make_engine(path: Path | None = None) -> Engine:
         cur.execute("PRAGMA synchronous=NORMAL")
         cur.execute("PRAGMA foreign_keys=ON")
         cur.close()
+        dbapi_conn.create_function("has_word_starts", 2, has_word_starts, deterministic=True)
 
     return engine
 

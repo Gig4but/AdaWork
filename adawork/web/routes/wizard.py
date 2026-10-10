@@ -8,16 +8,19 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from adawork.config import Language, Theme, TravelMode
 from adawork.services import Services
 from adawork.web.pages import THEMES, Svc, render
+from adawork.web.routes.ai import ai_context, apply_ai_choice
 from adawork.web.routes.sources import apply_source_choices, source_rows
 
 router = APIRouter()
 
-STEPS = ("welcome", "profile", "sources", "done")  # plan §7.1 steps 1, 2, 4, 7 so far
+STEPS = ("welcome", "profile", "ai", "sources", "done")  # plan §7.1 steps 1–4, 7
 TRAVEL_MODES = ("any", "car", "transit", "walk", "bike")
 
 
 def render_step(request: Request, svc: Services, step: str, **context) -> HTMLResponse:
     context.setdefault("sources", source_rows(svc))
+    if step == "ai":
+        context.setdefault("ai", ai_context(svc))
     return render(
         request,
         "wizard.html",
@@ -61,6 +64,13 @@ def wizard_profile(
     profile.max_minutes = max_minutes
     profile.kinds_of_work = [k.strip() for k in kinds_of_work.split(",") if k.strip()]
     svc.settings.save()
+    return RedirectResponse("/wizard/ai", status_code=303)
+
+
+@router.post("/wizard/ai")
+async def wizard_ai(request: Request, svc: Svc) -> RedirectResponse:
+    apply_ai_choice(svc.settings, await request.form())
+    svc.ai.manager.start_download()  # in the background while the wizard continues
     return RedirectResponse("/wizard/sources", status_code=303)
 
 

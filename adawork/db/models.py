@@ -96,6 +96,10 @@ class Job(Base):
     first_seen_at: Mapped[datetime]
     last_seen_at: Mapped[datetime]
     updated_at: Mapped[datetime]
+    # Enrichment (PLAN §6): the content_hash last processed by the rules (ISCO from similar
+    # titles) and by the AI model. Different from content_hash = not processed yet.
+    rules_hash: Mapped[str | None] = mapped_column(String(64))
+    ai_hash: Mapped[str | None] = mapped_column(String(64))
 
     location: Mapped[Location | None] = relationship()
     sources: Mapped[list["JobSource"]] = relationship(
@@ -163,3 +167,16 @@ class Run(Base):
     updated_count: Mapped[int] = mapped_column(default=0)
     removed_count: Mapped[int] = mapped_column(default=0)
     error: Mapped[str | None]
+
+
+class LlmCache(Base):
+    """Model answers by input, so an unchanged ad (or one seen on several portals) is read by
+    the model only once. The key covers the model, the prompt version and the input."""
+
+    __tablename__ = "llm_cache"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    model: Mapped[str] = mapped_column(String(40))
+    prompt_version: Mapped[int]
+    result: Mapped[dict[str, Any]] = mapped_column(default=dict)
+    created_at: Mapped[datetime]

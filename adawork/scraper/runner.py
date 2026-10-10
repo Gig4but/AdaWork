@@ -26,6 +26,7 @@ from adawork.scraper.crawl import MAX_DETAILS, CrawlSource, crawl
 from adawork.scraper.dedup import DedupIndex
 from adawork.scraper.sources import LABELS, SOURCES, mpsv
 from adawork.scraper.store import JobStore
+from adawork.search import kinds
 
 log = logging.getLogger(__name__)
 
@@ -56,6 +57,14 @@ class Progress:
         return ", ".join(LABELS.get(s, s) for s in self.errors)
 
 
+@dataclass
+class RunHooks:
+    """What other parts of the app do around a search (services.py connects them)."""
+
+    before_clear: Callable[[], object] = lambda: None  # e.g. stop the AI enrichment
+    after_run: Callable[[], object] = lambda: None  # e.g. start the AI enrichment
+
+
 class ScrapeRunner:
     def __init__(
         self,
@@ -68,6 +77,7 @@ class ScrapeRunner:
         fetcher_factory=PoliteFetcher,
         max_details: int = MAX_DETAILS,
         source_choices: Callable[[], dict[str, bool]] | None = None,
+        hooks: RunHooks | None = None,
     ) -> None:
         self.sessions = sessions
         self.cache_dir = cache_dir
@@ -78,6 +88,7 @@ class ScrapeRunner:
         self.sources = sources
         self.fetcher_factory = fetcher_factory
         self.max_details = max_details
+        self.hooks = hooks or RunHooks()
         self.progress = Progress()
         self._lock = threading.Lock()
         self._thread: threading.Thread | None = None
@@ -150,6 +161,11 @@ class ScrapeRunner:
             p.message = str(exc)
         finally:
             p.running = False
+        if p.phase == "done" and not self._stopping.is_set():
+            try:
+                self.hooks.after_run()
+            except Exception:
+                log.exception("after-run step failed")
 
     def _read_sources(self, client: httpx.Client, ran: list[str]) -> None:
         """Imports every source switched on; `ran` collects the ids of those tried."""
@@ -167,7 +183,9 @@ class ScrapeRunner:
             with self.sessions() as session:
                 places = PlaceResolver(session)
                 dedup = DedupIndex.load(session, self.sessions)
-            query = build_query(places, self.profile())
+                profile = self.profile()
+                searches = kinds.searches(session, profile.kinds_of_work if profile else [])
+            query = build_query(places, profile, searches)
             for source in sources:
                 ran.append(source.id)
                 self._guard(
@@ -313,6 +331,7 @@ class ScrapeRunner:
 
     def clear_jobs(self) -> None:
         """Deletes the found jobs, so they are all found again. Cached downloads stay."""
+        self.hooks.before_clear()
         with self.sessions() as session:
             session.execute(delete(Job))
             state = session.get(SourceState, mpsv.SOURCE_ID)

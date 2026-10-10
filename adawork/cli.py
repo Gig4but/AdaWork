@@ -1,8 +1,10 @@
-"""Entry point: `adawork` opens the app window; `adawork --browser` serves the UI only."""
+"""Entry point: `adawork` opens the app window; `adawork --browser` serves the UI only;
+`adawork eval --model <id>` measures an AI model on the golden set."""
 
 import argparse
 import logging
 import os
+import sys
 import webbrowser
 
 from adawork import __version__
@@ -13,6 +15,11 @@ from adawork.web.app import create_app
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["eval"]:  # developer tool: model accuracy and speed (PLAN §6.7)
+        from adawork.ai.evaluate import main as eval_main
+
+        return eval_main(argv[1:])
     parser = argparse.ArgumentParser(prog="adawork")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument(

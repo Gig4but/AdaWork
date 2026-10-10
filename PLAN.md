@@ -15,7 +15,7 @@ Three main modules:
 Shared services: a small **local AI model** (reads messy ads and posters, summarizes
 reviews) and a **local routing engine** (travel times and routes, offline maps).
 
-Status: **M0–M4 done** (2026-10-06); next is M5. Spike results: `docs/spikes.md`.
+Status: **M0–M5 done** (2026-10-07); next is M6. Spike results: `docs/spikes.md`.
 
 ---
 
@@ -69,9 +69,9 @@ Verified live in the M0 spike (`docs/spikes/sources.md`, 2026-10-06). No source 
 | **dobraprace.cz** (7.7k) (= jobsik.cz, same operator) | Ads sitemap → JSON-LD | jobsik.cz skipped at first (same inventory). |
 | **fajn-brigady.cz** (2.1k) | Detail sitemap with `lastmod` → rule-based HTML parser | |
 | ~~volnamista.cz~~ | — | **Dropped**: robots.txt allows only named search engines (`User-agent: * Disallow: /`). |
-| **pracezarohem.cz** (21.5k) | Listing pages carry `__NEXT_DATA__` JSON (50 ads/page) | Checked 2026-10-06, robots.txt allows listings. GPS, salary text, IČO inside `ga.itemBrand`. Part of the inventory is re-listed from profesia.cz (`PROF…` IDs). M6 candidate, easy. |
-| **inwork.cz** (31.9k) | Detail sitemap → HTML (no structured data) | Checked 2026-10-06, robots.txt allows details. Custom HTML parser. M6 candidate. |
-| **easy-prace.cz** (10.4k own + 24k re-listed) | Sitemaps → HTML (no structured data) | Checked 2026-10-06, `Allow: /`. Only the own ads (`/nabidka/…`) are worth reading; `/volne-misto/…` re-lists Úřad práce. M6 candidate. |
+| **pracezarohem.cz** (21.5k) | Listing pages carry `__NEXT_DATA__` JSON (50 ads/page) | Checked 2026-10-06, robots.txt allows listings. GPS, salary text, IČO inside `ga.itemBrand`. Part of the inventory is re-listed from profesia.cz (`PROF…` IDs). M6, confirmed. |
+| **inwork.cz** (31.9k) | Detail sitemap → HTML (no structured data) | Checked 2026-10-06, robots.txt allows details. Custom HTML parser. M6, confirmed. |
+| **easy-prace.cz** (10.4k own + 24k re-listed) | Sitemaps → HTML (no structured data) | Checked 2026-10-06, `Allow: /`. Only the own ads (`/nabidka/…`) are worth reading; `/volne-misto/…` re-lists Úřad práce. M6, confirmed. |
 | **personalka.cz** (40.6k) | Sitemaps → HTML | Checked 2026-10-06, robots.txt allows details. Titles are CZ-ISCO names: probably re-listed Úřad práce ads. Check the share of new ads before building. |
 | **Jooble** / **Careerjet** | Free APIs with key | Careerjet API v4: key as HTTP Basic user, `user_ip` + `user_agent` required. Jooble: request limit unconfirmed (sign-up page behind Cloudflare). |
 | `outpost2026/MCP-Jobs` | GitHub, no license | Reference only. |
@@ -159,8 +159,8 @@ Verified in the M0 spike (`docs/spikes/routing.md`): **GO for MOTIS**, with the 
 | Routing engine | **MOTIS** Windows binary bundled; data (OSM + timetables) downloaded and imported in the background on first run, refreshed automatically. |
 | Map | **MapLibre GL JS** with **vector tiles served locally by MOTIS** → works offline. |
 | Browser automation | **Playwright** with the installed **Microsoft Edge** (`channel="msedge"`). |
-| OCR | **RapidOCR** (ONNX). |
-| Embeddings | **fastembed** + `multilingual-e5-small`. |
+| OCR | The vision model transcribes images (M5: ~30 s per poster with the 2B model); **RapidOCR** (ONNX) only if slow PCs need it. |
+| Embeddings | `multilingual-e5-small` (int8 ONNX, 118 MB) run directly with onnxruntime + tokenizers (no fastembed). |
 | Web search | **ddgs** (metasearch, no key). |
 | Secrets | **keyring** → Windows Credential Manager. |
 
@@ -212,8 +212,8 @@ at the same time**. A `ResourceManager` lets only one heavy job run at a time, i
 |---|---|---|
 | Windows + other apps | ~3–4 GB | always |
 | App (Python, SQLite, UI window) | ~0.4–0.7 GB | always |
-| AI model, **Simple** tier (2B) | ~2.5–3 GB | on demand; stopped after 5 min idle |
-| AI model, **Good** tier (4B) | ~4.5–5 GB | on demand; too tight next to Windows on 8 GB (yellow icon) |
+| AI model, **Simple** tier (Qwen3-VL 2B) | 2.1 GB, 3.0 GB with images (measured) | on demand; stopped after 5 min idle |
+| AI model, **Good** tier (Gemma 4 E2B) | 3.6 GB (measured) | on demand; tight next to Windows on 8 GB (yellow icon) |
 | MOTIS routing server (home area) | ~0.5–1.5 GB (to be measured in M0) | on demand for route/commute calls; stopped when idle; results cached |
 | MOTIS import | to be measured in M0 | only when no other heavy job runs, preferably while the PC is idle |
 | Edge (Playwright: social reader only) | ~0.4–0.8 GB | short sessions, never in parallel with the AI model |
@@ -221,11 +221,13 @@ at the same time**. A `ResourceManager` lets only one heavy job run at a time, i
 
 **Consequences on the minimum machine:**
 - **Recommended model there: Simple (Qwen3-VL 2B).** Expected icons:
-  Simple 🟢, Good 🟡, Excellent 🔴. Good can still be chosen; the app then stops the routing
-  server and browser whenever the model runs.
-- **Throughput:** roughly 8–15 s per text ad and 30–60 s per image with the 2B model on the
-  CPU. The Radeon iGPU through Vulkan speeds up prompt processing but gives no extra memory.
-  That is about 250–400 text ads per hour while the PC is idle. The queue processes **jobs
+  Simple 🟢, Good 🟡, Excellent 🟡 (both ~3.6 GB). Good can still be chosen; the app then
+  stops the routing server and browser whenever the model runs.
+- **Throughput** (measured in M5 on an Intel iGPU laptop, not yet on the budget Ryzen):
+  ~8 s per full ad (6.8 s when only missing fields are asked), 2.5 s per listing card
+  (occupation only) and ~30 s per image with the 2B model. The iGPU through Vulkan reads
+  prompts 4× faster than the CPU but gives no extra memory. That is about 400–500 full ads
+  per hour while the PC is idle. The queue processes **jobs
   matching the user's profile first** (home area, kinds of work); the rest follow later or
   run rules-only.
 - **Routing data is clipped to the home area** (on machines below ~16 GB): the OSM extract is
@@ -536,7 +538,17 @@ The prompt forbids claims not found in the texts; the summary is labelled as AI-
 ## 6. AI module
 
 ### 6.1–6.5 (text ads)
-- Rules first; the AI processes only incomplete ads in a background queue, cached.
+- Rules first; the AI processes only incomplete ads in a background queue, cached
+  (`llm_cache`), once per content version. Implemented in M5 (`adawork/ai/`):
+  - rules: an occupation code from similar Úřad práce titles when the vote is clear, contract
+    types from fixed phrases in the description;
+  - the model asks only for missing fields (occupation from ≤ 8 candidates, town, salary,
+    shifts, education); listing cards without a description only for the occupation;
+  - every answer is checked against the ad text (numbers, town, shift and education words);
+    contract types are not asked from the model (it guessed them, §M5 eval);
+  - filled fields are marked in `job.extra["origin"]` ("doplnila AI" on the result card);
+  - jobs that neither the rules nor the AI can place get the category **"Nezařazeno"** (code
+    `0`), so the category filter shows them instead of hiding them.
 - Extraction JSON schema enforced by llama-server; post-validation of numbers and places.
 - ISCO classification: top-10 candidates by embeddings, then the model picks one.
 - Semantic search and "ask in a sentence" → filter chips.
@@ -546,14 +558,18 @@ The prompt forbids claims not found in the texts; the summary is labelled as AI-
 ### 6.6 Model choice (wizard step and Settings)
 
 All tiers use **one multimodal model** (text + images), so only one model sits in RAM.
-Tentative catalog (final choice and sizes confirmed by the M5 eval; e.g., Gemma 3 4B may
-replace a tier if it scores better):
+The vision part is loaded only for image work. Catalog chosen by the M5 eval
+(`docs/spikes.md`; pinned Hugging Face commits, SHA-256 checked, `adawork/ai/catalog.py`):
 
-| Friendly name | Shown as | Download | RAM needed (approx.) |
+| Friendly name | Shown as | Download | RAM needed (measured) |
 |---|---|---|---|
-| **Jednoduchý / Simple** | `Jednoduchý (Qwen3-VL 2B, 1.9 GB)` | ~1.9 GB | ~3 GB |
-| **Dobrý / Good** | `Dobrý (Qwen3-VL 4B, 3.3 GB)` | ~3.3 GB | ~5 GB |
-| **Výborný / Excellent** | `Výborný (Qwen3-VL 8B, 6.1 GB)` | ~6.1 GB | ~8 GB |
+| **Jednoduchý / Simple** | `Jednoduchý (Qwen3-VL 2B, 1.6 GB)` | 1.6 GB | 2.1 GB, 3.0 GB with images |
+| **Dobrý / Good** | `Dobrý (Gemma 4 E2B, 3.4 GB)` | 3.4 GB | 3.6 GB |
+| **Výborný / Excellent** | `Výborný (Qwen3-VL 4B, 3.0 GB)` | 3.0 GB | 3.6 GB |
+
+Qwen3.5 2B/4B, Gemma 4 E4B and the 8–14B models tested on 2026-10-07 (Qwen3-VL 8B,
+Qwen3.5 9B, Ministral 3 8B/14B, Gemma 4 12B, Qwen3 14B) stay selectable under "Pokročilé";
+none of them was meaningfully more accurate, and they are 3–6× slower (`docs/spikes.md`).
 
 **The best model is decided dynamically for each computer.**
 
@@ -583,7 +599,9 @@ user can pick a tier manually instead; Auto then stops changing it.
    - If a bigger tier becomes 🟢 (e.g. after a RAM upgrade), download it in the background,
      benchmark it, and switch only if it really is faster than the 🟡 threshold. Then notify:
      "Model byl vylepšen na Dobrý".
-   - The old model stays as a fallback until the new one has passed, then it is deleted.
+   - The old model stays as a fallback until the new one has passed. **Models are never
+     deleted automatically** (decided 2026-10-07): the AI page lists the downloaded models
+     with a "Smazat" button for each one not in use.
    - If the current model becomes too slow or memory-starved, switch down to a smaller tier.
    - Downloads over a metered connection (Windows "metered" flag) wait for permission.
 
@@ -594,19 +612,21 @@ user can pick a tier manually instead; Auto then stops changing it.
 | 🔴 (red cross) | "Nedoporučeno" — not enough memory / too slow / not enough disk | otherwise; can still be chosen after a confirmation |
 
 - Icons are SVGs with a text label and a tooltip (not color only), e.g.
-  `🟢 Dobrý (Qwen3-VL 4B, 3.3 GB) — ~10 s na inzerát`.
+  `🟢 Dobrý (Gemma 4 E2B, 3.4 GB) — ~8 s na inzerát`.
 - "Automaticky" is preselected. The tier it currently chooses is marked "Doporučeno"
   (recommended) in the list, so the user can see what Auto means on this PC.
 - Settings → AI shows the same list, the measured speed, and the reason for the current
   choice, e.g. "8 GB RAM, integrovaná grafika → Jednoduchý". The user can switch any time.
   Ollama or a custom GGUF can be chosen under "Pokročilé" (advanced).
 - Rules-only mode when no model is downloaded yet.
-- Expected results by hardware (verified in M5 on real machines):
+- Expected results by hardware (estimate formula calibrated in M5 on one Intel iGPU laptop;
+  the other rows are still to be checked on real machines):
 
 | PC | Simple | Good | Excellent | Auto picks |
 |---|---|---|---|---|
-| 8 GB, budget Ryzen, iGPU (minimum) | 🟢 | 🟡 | 🔴 | Simple |
+| 8 GB, budget Ryzen, iGPU (minimum) | 🟢 | 🟡 | 🟡 | Simple |
 | 16 GB, mid-range CPU, iGPU | 🟢 | 🟢 | 🟡 | Good |
+| 32 GB, Intel Core Ultra 7, iGPU (**measured**) | 🟢 7.9 s | 🟢 8.0 s | 🟡 14.5 s | Good |
 | 16–32 GB + GPU with ≥ 8 GB VRAM | 🟢 | 🟢 | 🟢 | Excellent |
 
 ### 6.7 Evaluation
@@ -633,6 +653,9 @@ Every step has defaults; optional steps have "Skip"; downloads run in the backgr
    - max travel time slider (default 45 min);
    - usual departure time (default weekdays 7:00);
    - optional kinds of work (empty = everything; asked only here, prefills the search).
+     Free words ("ucitelka ve skolce, druzinarka") are mapped to CZ-ISCO occupations: the
+     title index finds candidates, the model picks from them (`adawork/ai/wanted.py`). A job
+     matches by occupation or by the words; keyword portals also get a plain job title.
    This drives generated searches, the default travel-time filter and employer prefetching.
 3. **Umělá inteligence** — shows the detected hardware ("16 GB RAM · AMD Radeon · 120 GB
    volného místa"). Below it: **"Automaticky – nejlepší pro tento počítač"** (preselected),
@@ -733,13 +756,15 @@ AdaWork/
 │  │  ├─ jdf_to_gtfs.py (only if no OSS converter fits), commute.py (filter, cache),
 │  │  └─ deeplinks.py (Mapy.cz, IDOS, Google)
 │  ├─ normalize/  salary, contract, education, location, dedup
-│  ├─ ai/  runtime, models (catalog, hw check, fit icons, speed test), llm_client, prompts/,
-│  │       extract, classify_isco, ocr, vision, embeddings, nl_query, triggers, eval
+│  ├─ ai/  hardware, catalog, download, advisor (fit icons), runtime (llama-server),
+│  │       winjob, manager (Auto mode), benchmark, client, grammar, embeddings, isco,
+│  │       extract, enrich (queue), ask (sentence -> filters), vision, evaluate
+│  ├─ system/resources.py  ResourceManager (heavy-job slots, priorities, "PC is busy")
 │  ├─ search/  service, filters, facets
 │  └─ web/                          # MODULE 2
 │     ├─ app.py, routes/ (wizard, search, job, commute, employer, sources, settings, manual)
 │     └─ templates/, static/ (htmx, alpine, pico, maplibre — vendored)
-├─ resources/  codebooks/, forums.yaml, categories.yaml, model_catalog.yaml
+├─ resources/  codebooks/, forums.yaml, categories.yaml
 ├─ vendor/  llama.cpp/, motis/      # fetched by the build script
 ├─ packaging/  adawork.spec, installer.iss, build.ps1
 └─ tests/  fixtures/, golden/, unit/, contract/, integration/
@@ -806,7 +831,7 @@ AdaWork/
 - **Done when:** LinkedIn stays silent until opted in; with opt-in a live run for Kolín read
   29 ads in 3 min without refusals (15 were Úřad práce ads already known, merged).
 
-### M5 — AI layer + model picker + dynamic hardware adaptation (6–7 days)
+### M5 — AI layer + model picker + dynamic hardware adaptation (6–7 days) — done
 - llama-server management, `HardwareProfile` probe, **`ModelAdvisor` (Auto mode)**, model
   list with fit icons, real speed benchmark, resumable download, automatic upgrade/downgrade
   with fallback, free-RAM check before each model start.
@@ -823,13 +848,31 @@ AdaWork/
   - If the 2B model misses the accuracy targets, try another 2–3B multimodal model or a
     text-only 1.7–3B model for text plus the 2B vision model loaded only for images. The
     decision is recorded in `docs/spikes.md`.
+- **Result (2026-10-07, details in `docs/spikes.md`):** six models evaluated on 70 golden
+  ads; tiers Qwen3-VL 2B / Gemma 4 E2B / Qwen3-VL 4B.
+  - Met: 100 % valid JSON; kraj 99 % (Simple); 7.9 s per ad on the test laptop's iGPU;
+    Auto upgrade after a RAM change and "AI waits when RAM is low" (unit tests); the model
+    process ends with the app even after a crash (job object).
+  - **Not met as written:** ISCO 73 % at the 2-digit level with Simple (best model 74 %);
+    a manual review counts about 90 % sensible codes, the filter categories overlap 89 %.
+    Contract type is read by rules (88 % right where an ad states it; 76 % of ads do not);
+    no model did better.
+  - **Not measured:** the 8 GB budget Ryzen and a dedicated-GPU PC; only one test machine
+    was available. The icons there come from the calibrated estimate, and the benchmark
+    after the download corrects them on each PC.
+  - Also built: wizard step "Umělá inteligence", page `/ai` (choice, download progress,
+    Pokročilé: model, own server such as Ollama, metered downloads), "Zeptejte se větou"
+    on the search page, `adawork eval`. Search for "řidič" no longer finds "řídící".
+  - Deferred: semantic search over all jobs (embeddings of every ad), the image pipeline
+    itself (images arrive with the social and bazos sources, M6b).
 
 ### M6 — Rest of the top 10 portals (5–6 days)
 - jobs.cz (custom HTML; also the career pages prace.cz links to), startupjobs.cz, hitprace.cz,
   dobraprace.cz, fajn-brigady.cz, prace.bazos.cz.
-- Candidates checked 2026-10-06 (§2.1), to confirm: pracezarohem.cz (+0.5 day),
-  inwork.cz (+1), easy-prace.cz own ads (+0.5–1); personalka.cz only if it has enough ads
-  that Úřad práce does not.
+- **Confirmed (2026-10-07): every site that can legally be added is added** (robots.txt and
+  terms allow it, honest User-Agent, no login): pracezarohem.cz (+0.5 day), inwork.cz (+1),
+  easy-prace.cz own ads (+0.5–1), personalka.cz (re-listed Úřad práce ads merge into the
+  existing jobs by dedup). New sites found later follow the same rule.
 
 ### M6b — Social media, forums, images (7–9 days)
 
@@ -930,7 +973,7 @@ each one is usable:
 
 | Item | Size |
 |---|---|
-| AI model | 1.9–6.1 GB (by tier) |
+| AI model | 1.6–3.4 GB (by tier) |
 | OSM Czech extract | ~0.95 GB |
 | MPSV jobs | ~0.02 GB download (gzip) + ~0.1 GB database |
 | Embeddings model | ~0.12 GB |

@@ -21,6 +21,7 @@ from adawork.web.pages import (
     render,
     status_context,
 )
+from adawork.web.routes.ai import ai_context
 
 router = APIRouter()
 
@@ -50,6 +51,7 @@ def index(request: Request, svc: Svc) -> Response:
         salary_steps=SALARY_STEPS,
         posted_days=POSTED_DAYS,
         view="map" if request.query_params.get("view") == "map" else "list",
+        ai=ai_context(svc),
         **status_context(svc),
     )
 

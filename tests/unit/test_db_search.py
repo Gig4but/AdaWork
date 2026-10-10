@@ -73,14 +73,19 @@ def test_title_ranks_above_description(session):
     add_job(session, "Prodavač", description="Hledáme řidiče na rozvoz", ext="a")
     add_job(session, "Řidič sk. C", description="Rozvoz zboží", ext="b")
     assert search_jobs(session, "řidič").jobs[0].title == "Řidič sk. C"
+    add_job(session, "Řídící pracovník výroby", description="Vedení týmu.", ext="manager")
+    titles = {j.title for j in search_jobs(session, "řidič").jobs}
+    assert "Řídící pracovník výroby" not in titles and "Prodavač" in titles  # "řidiče"
+    assert "Řídící pracovník výroby" in {j.title for j in search_jobs(session, "ridic").jobs}
 
 
 def test_phrases_separated_by_commas_are_alternatives(session):
     add_job(session, "Skladník", ext="a")
     add_job(session, "Řidič sk. C", ext="b")
+    add_job(session, "Řídící pracovník", ext="c")
     add_job(session, "Kuchař", ext="d")
     titles = {j.title for j in search_jobs(session, "sklad, řidič").jobs}
-    assert titles == {"Skladník", "Řidič sk. C"}
+    assert titles == {"Skladník", "Řidič sk. C"}  # diacritics count in their own phrase
 
 
 def test_fts_follows_updates_and_deletes(session):

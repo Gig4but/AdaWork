@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 
 import pytest
+from conftest import make_ai
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select, update
 
@@ -41,6 +42,7 @@ def app(tmp_path):
         db_path=tmp_path / "t.db",
         cache_dir=tmp_path / "cache",
         runner_factory=FakeRunner,
+        ai_factory=lambda st, sessions, cache: make_ai(tmp_path, st, sessions),
     )
 
 
@@ -80,7 +82,14 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
         "kinds_of_work": "skladník, řidič ,",
     }
     r = client.post("/wizard/profile", data=form, follow_redirects=False)
+    assert r.headers["location"] == "/wizard/ai"
+    page = client.get("/wizard/ai").text
+    assert "Automaticky – nejlepší pro tento počítač" in page
+    assert "Tento počítač: 16 GB RAM · AMD Radeon(TM) Graphics" in page
+    assert 'value="auto" checked' in page and "Doporučeno" in page
+    r = client.post("/wizard/ai", data={"choice": "auto"}, follow_redirects=False)
     assert r.headers["location"] == "/wizard/sources"
+    assert app.state.services.ai.manager.downloads_started == 1  # the model downloads meanwhile
     page = client.get("/wizard/sources").text
     assert 'name="source_prace_cz" checked' in page
     assert 'name="source_linkedin" >' in page or 'name="source_linkedin">' in page  # off
@@ -408,3 +417,69 @@ def test_map_points_follow_filters(app, client, monkeypatch):
 
     page = client.get("/", params={"view": "map"}).text
     assert 'document.body.dataset.view = "map"' in page and 'id="map"' in page
+
+
+def test_ai_page_saves_the_choice_and_starts_the_download(app, client):
+    app.state.services.settings.wizard_completed = True
+    page = client.get("/ai").text
+    assert "Umělá inteligence" in page and "integrovaná grafika" in page
+    assert "Jednoduchý (Qwen3-VL 2B" in page and "Poběží plynule" in page
+    form = {"choice": "simple", "model": "", "server_url": "javascript:alert(1)"}
+    r = client.post("/ai", data=form, follow_redirects=False)
+    assert r.headers["location"] == "/ai?saved=1"
+    ai = app.state.services.settings.ai
+    assert ai.choice == "simple" and ai.server_url == ""  # only http(s) URLs are kept
+    assert app.state.services.ai.manager.downloads_started == 1
+    client.post("/ai", data={"choice": "simple", "model": "gemma-4-e2b", "server_url": ""})
+    assert app.state.services.settings.ai.choice == "gemma-4-e2b"  # "Pokročilé" wins
+    assert "Stahuji" not in client.get("/ai/status").text
+
+
+def test_ask_in_a_sentence(app, client, monkeypatch):
+    from contextlib import contextmanager
+
+    from adawork.ai.client import Reply, Timing
+
+    app.state.services.settings.wizard_completed = True
+    page = client.get("/").text  # no model yet: the box is disabled and asks again
+    assert 'name="question" disabled' in page and 'hx-get="/ask"' in page
+    assert "AI zatím není připravená" in page
+    r = client.post("/ask", data={"question": "sklad u Kolína"})
+    assert "model není stažený" in r.text
+
+    class Answer:
+        def chat(self, messages, schema=None, max_tokens=0, temperature=0):
+            data = {"slova": "sklad", "obor": [], "kraj": ["Středočeský kraj"], "uvazek": [],
+                    "smeny": ["Jednosměnný provoz"], "mzda_od": 30000, "vzdelani": None,
+                    "dni": None}  # fmt: skip
+            return Reply(data, Timing(100, 0.1, 30, 1.0, 1.1))
+
+    @contextmanager
+    def session(vision=False, priority=None):
+        yield Answer()
+
+    manager = app.state.services.ai.manager
+    monkeypatch.setattr(manager, "session", session)
+    monkeypatch.setattr(type(manager), "ready", property(lambda self: True))
+    row = client.get("/ask").text  # the disabled box turns on without reloading the page
+    assert 'name="question" maxlength' in row and 'hx-get="/ask"' not in row
+    r = client.post("/ask", data={"question": "sklad u Kolína, jen ranní, aspoň 30 tisíc"})
+    assert r.headers["HX-Redirect"] == (
+        "/?q=sklad&shifts=jednoSm&kraj=St%C5%99edo%C4%8Desk%C3%BD+kraj&salary_min=30000"
+    )
+
+
+def test_downloaded_models_are_listed_and_deleted_only_on_request(app, client):
+    from test_ai import fake_download
+
+    app.state.services.settings.wizard_completed = True
+    manager = app.state.services.ai.manager
+    fake_download(manager, "qwen3-vl-2b", "gemma-4-e2b")
+    manager.state.active = "gemma-4-e2b"
+    page = client.get("/ai").text
+    assert "Stažené modely" in page and "používá se" in page
+    assert 'name="model_id" value="qwen3-vl-2b"' in page
+    assert 'name="model_id" value="gemma-4-e2b"' not in page  # in use: no delete button
+    client.post("/ai/delete", data={"model_id": "gemma-4-e2b"})
+    client.post("/ai/delete", data={"model_id": "qwen3-vl-2b"})
+    assert manager.downloaded() == {"gemma-4-e2b"}

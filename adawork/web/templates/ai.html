@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ t("ai.title") }} – AdaWork{% endblock %}
+{% block content %}
+<article class="wizard">
+  <h2>{{ t("ai.title") }}</h2>
+  <p>{{ t("ai.text") }}</p>
+  {% if saved %}<p class="ok" role="status">{{ t("ai.saved") }}</p>{% endif %}
+  <p>{% if ai.active %}{{ t("ai.ready", model=ai.active.name) }}{% else %}{{ t("ai.not_ready") }}{% endif %}</p>
+  {% include "_ai_status.html" %}
+  <form method="post" action="/ai">
+    {% include "_ai_form.html" %}
+    <details>
+      <summary>{{ t("ai.advanced") }}</summary>
+      <label>{{ t("ai.model_choice") }}
+        <select name="model">
+          <option value="">—</option>
+          {% for m in ai.models %}
+            <option value="{{ m.id }}" {% if ai.choice == m.id %}selected{% endif %}>{{ m.name }} ({{ "%.1f" % m.download_gb }} GB)</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>{{ t("ai.server_url") }}
+        <input name="server_url" value="{{ settings.ai.server_url }}" placeholder="http://127.0.0.1:11434">
+      </label>
+      <label>{{ t("ai.server_model") }}
+        <input name="server_model" value="{{ settings.ai.server_model }}">
+      </label>
+      <label><input type="checkbox" role="switch" name="allow_metered" {% if settings.ai.allow_metered %}checked{% endif %}>
+        {{ t("ai.allow_metered") }}</label>
+    </details>
+    <button type="submit">{{ t("ai.save") }}</button>
+  </form>
+  <script>
+    // A choice above replaces a model picked under "Pokročilé", and the other way round.
+    (function () {
+      const radios = document.querySelectorAll('.ai-choice input[name="choice"]');
+      const model = document.querySelector('select[name="model"]');
+      radios.forEach((radio) => radio.addEventListener("change", () => (model.value = "")));
+      model.addEventListener("change", () => {
+        if (model.value) radios.forEach((radio) => (radio.checked = false));
+      });
+    })();
+  </script>
+  {% if ai.downloaded %}
+    <h3>{{ t("ai.models") }}</h3>
+    <p class="muted small">{{ t("ai.models.text") }}</p>
+    <table class="models">
+      {% for d in ai.downloaded %}
+        <tr>
+          <td>{{ d.name }}</td>
+          <td>{{ d.size }} GB</td>
+          <td>
+            {% if d.active %}<small class="muted">{{ t("ai.in_use") }}</small>
+            {% else %}
+              <form method="post" action="/ai/delete" onsubmit='return confirm({{ t("ai.delete_confirm")|tojson }})'>
+                <input type="hidden" name="model_id" value="{{ d.id }}">
+                <button type="submit" class="outline secondary small">{{ t("ai.delete") }}</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+</article>
+{% endblock %}

@@ -23,6 +23,8 @@
   </div>
 </section>
 
+{% with ask = ai.ask %}{% include "_ask.html" %}{% endwith %}
+
 <form id="search-form" onsubmit="return false"
       hx-get="/results" hx-target="#results"
       hx-trigger="change, input delay:300ms from:#q, jobs-updated from:body">
@@ -50,6 +52,7 @@
         <a href="/out/indeed?q={{ f.q | urlencode }}" target="_blank" rel="noopener"
            hx-boost="false" onclick="this.href='/out/indeed?q=' + encodeURIComponent(document.getElementById('q').value)">{{ t("search.indeed") }} ↗</a>
       </p>
+      {% include "_ai_status.html" %}
       <div id="map" aria-label="{{ t('view.map') }}"><p id="map-empty" class="small" hidden>{{ t("map.empty") }}</p></div>
       <div id="results">{% include "_results.html" %}</div>
     </div>
