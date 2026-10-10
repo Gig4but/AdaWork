@@ -3,6 +3,7 @@
 `create_app` builds the app's services (services.py) and serves the pages of web/routes/."""
 
 import io
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import Response
@@ -21,7 +22,15 @@ LOCAL_HOSTS = ["127.0.0.1", "localhost"]
 def create_app(settings: Settings | None = None, **options) -> FastAPI:
     """`options`: those of services.build (other data folders, test doubles)."""
     svc = services.build(settings, **options)
-    app = FastAPI(title="AdaWork", version=__version__, docs_url=None, redoc_url=None)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        yield
+        svc.stop()
+
+    app = FastAPI(
+        title="AdaWork", version=__version__, docs_url=None, redoc_url=None, lifespan=lifespan
+    )
     app.state.services = svc
     app.mount("/static", StaticFiles(directory=WEB_DIR / "static"), name="static")
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=LOCAL_HOSTS)

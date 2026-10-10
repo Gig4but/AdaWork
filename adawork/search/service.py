@@ -24,7 +24,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Session, selectinload
 
 from adawork.core import utcnow
-from adawork.db.models import Job, Location
+from adawork.db.models import Job, JobSource, Location
 from adawork.normalize.vocab import EDUCATION_LEVEL
 
 # Column weights for bm25: title, employer_name, place_text, description.
@@ -33,7 +33,7 @@ _TOKEN = re.compile(r"\w+", re.UNICODE)
 
 Sort = Literal["relevance", "date", "salary"]
 LIST_FIELDS = ("categories", "contract_types", "shifts", "suitable_for", "benefits")
-FACETS = (*LIST_FIELDS, "kraj", "education")
+FACETS = (*LIST_FIELDS, "kraj", "education", "sources")
 
 
 def fts_query(user_text: str) -> str | None:
@@ -63,7 +63,7 @@ class Filters:
     suitable_for: list[str] = field(default_factory=list)
     benefits: list[str] = field(default_factory=list)
     kraj: list[str] = field(default_factory=list)
-    okres: list[str] = field(default_factory=list)
+    sources_off: list[str] = field(default_factory=list)  # sources the user switched off
     education: str | None = None  # the user's education: show jobs that need at most this
     salary_min: int | None = None  # monthly CZK; jobs whose pay can reach this amount
     with_salary: bool = False
@@ -92,6 +92,17 @@ def _any_of(column, values: list[str]) -> ColumnElement[bool]:
     return exists(select(literal(1)).select_from(items).where(items.c.value.in_(values)))
 
 
+def _from_sources_on(off: list[str]) -> ColumnElement[bool]:
+    """The job is offered by at least one source that is not switched off."""
+    return exists(
+        select(literal(1)).where(
+            JobSource.job_id == Job.id,
+            JobSource.status == "active",
+            JobSource.source_id.not_in(off),
+        )
+    )
+
+
 def _conditions(f: Filters, skip: frozenset[str] = frozenset()) -> list[ColumnElement[bool]]:
     """WHERE conditions for the filters; `skip` leaves facet dimensions out."""
     conds: list[ColumnElement[bool]] = [Job.status == "active"]
@@ -101,8 +112,8 @@ def _conditions(f: Filters, skip: frozenset[str] = frozenset()) -> list[ColumnEl
             conds.append(_any_of(getattr(Job, name), values))
     if f.kraj and "kraj" not in skip:
         conds.append(Location.kraj.in_(f.kraj))
-    if f.okres:
-        conds.append(Location.okres.in_(f.okres))
+    if f.sources_off and "sources" not in skip:
+        conds.append(_from_sources_on(f.sources_off))
     if f.education and "education" not in skip and f.education in EDUCATION_LEVEL:
         level = EDUCATION_LEVEL[f.education]
         conds.append(or_(Job.education_level.is_(None), Job.education_level <= level))
@@ -129,7 +140,7 @@ def _base(f: Filters, match: str | None, columns, skip: frozenset[str] = frozens
     return stmt.where(and_(*_conditions(f, skip))), hits
 
 
-_FACET_COLUMNS = (*LIST_FIELDS, "kraj", "education")
+_FACET_COLUMNS = (*LIST_FIELDS, "kraj", "education", "sources")
 # Per-database cache of every active job's facet values, already decoded from JSON.
 # Rebuilt only when the jobs table changes (after an import), so a facet request needs
 # just the matching ids from SQL plus one Python pass (~10x faster than decoding each time).
@@ -142,14 +153,16 @@ _last_job_commit = 0
 
 @event.listens_for(Session, "after_flush")
 def _jobs_flushed(session: Session, _context) -> None:
-    if any(isinstance(o, Job) for o in (*session.new, *session.dirty, *session.deleted)):
+    changed = (*session.new, *session.dirty, *session.deleted)
+    if any(isinstance(o, (Job, JobSource)) for o in changed):
         session.info["jobs_changed"] = True
 
 
 @event.listens_for(Session, "do_orm_execute")
 def _jobs_written(state) -> None:
-    if (state.is_update or state.is_delete or state.is_insert) and state.bind_mapper is (
-        Job.__mapper__
+    if (state.is_update or state.is_delete or state.is_insert) and state.bind_mapper in (
+        Job.__mapper__,
+        JobSource.__mapper__,
     ):
         state.session.info["jobs_changed"] = True
 
@@ -189,11 +202,19 @@ def _facet_index(session: Session) -> dict[int, tuple]:
     rows = session.execute(
         select(Job.id, *columns).outerjoin(Location).where(Job.status == "active")
     )
+    sources: dict[int, set[str]] = {}
+    for job_id, source_id in session.execute(
+        select(JobSource.job_id, JobSource.source_id)
+        .join(Job)
+        .where(Job.status == "active", JobSource.status == "active")
+    ):
+        sources.setdefault(job_id, set()).add(source_id)
     index = {
         row[0]: (
             *(frozenset(cast(list[str], v) or ()) for v in row[1 : 1 + len(LIST_FIELDS)]),
             row[-2],
             level_code.get(row[-1]),
+            frozenset(sources.get(row[0], ())),
         )
         for row in rows
     }
@@ -216,6 +237,9 @@ def _facet_counts(session: Session, f: Filters, match: str | None, params) -> di
         if name == "education":
             if level is not None:
                 checks.append((pos, lambda v: v is None or EDUCATION_LEVEL[v] <= level))
+        elif name == "sources":
+            if f.sources_off:
+                checks.append((pos, lambda v, off=frozenset(f.sources_off): not v <= off))
         elif selected[name]:
             wanted = selected[name]
             if name in LIST_FIELDS:
@@ -223,8 +247,7 @@ def _facet_counts(session: Session, f: Filters, match: str | None, params) -> di
             else:
                 checks.append((pos, lambda v, w=wanted: v in w))
 
-    counts: list[dict[str, int]] = [{} for _ in _FACET_COLUMNS]
-    n_lists = len(LIST_FIELDS)
+    counts: list[dict[str, int]] = [{} for _ in FACETS]
     for job_id in ids:
         values = index.get(job_id)
         if values is None:
@@ -240,7 +263,7 @@ def _facet_counts(session: Session, f: Filters, match: str | None, params) -> di
             for pos in positions:
                 bucket = counts[pos]
                 value = values[pos]
-                for item in value if pos < n_lists else (value,):
+                for item in value if isinstance(value, frozenset) else (value,):
                     if item is not None:
                         bucket[item] = bucket.get(item, 0) + 1
     return {

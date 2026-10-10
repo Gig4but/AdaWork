@@ -72,10 +72,10 @@ def test_download_falls_back_to_cached_export_when_offline(tmp_path):
 
 def test_lookup(ruian):
     assert sorted(ruian.municipality_codes()) == ["500020", "537683"]
-    found, centre = ruian.lookup("500020", {"8053332", "9999999"})
-    assert set(found) == {"8053332"}  # the point without coordinates is skipped
+    points, _, centre = ruian.lookup("500020", {"8053332", "9999999"})
+    assert set(points) == {"8053332"}  # the point without coordinates is skipped
     assert centre.name == "Petrov nad Desnou" and centre.address_count == 3
-    assert ruian.lookup("123456", set()) == ({}, None)
+    assert ruian.lookup("123456", set()) == ({}, {}, None)
 
 
 def test_rebuild_and_geocode(session, ruian):

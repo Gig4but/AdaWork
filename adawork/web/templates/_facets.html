@@ -47,6 +47,22 @@
   </select>
 </label>
 
+{# Sources are all on; unticking one sends it as source_off (the hidden field next to it).
+   Those with jobs first, then the ones that found none yet. #}
+{% set source_counts = dict(facets.get("sources", [])) %}
+{% set source_ids = facets.get("sources", []) | map(attribute=0) | list %}
+<details open>
+  <summary>{{ t("filters.sources") }}{% if f.sources_off %} <span class="badge">−{{ f.sources_off | length }}</span>{% endif %}</summary>
+  {% for code in source_ids + ((sources_on + f.sources_off) | reject("in", source_ids) | unique | list) %}
+    {% set on = code not in f.sources_off %}
+    <label class="facet{% if not source_counts.get(code) %} empty{% endif %}">
+      <input type="checkbox" {% if on %}checked{% endif %} onchange="this.nextElementSibling.disabled = this.checked">
+      <input type="hidden" name="source_off" value="{{ code }}" {% if on %}disabled{% endif %}>
+      <span>{{ code | source_label }}</span>
+      <small>{{ source_counts.get(code, 0) }}</small>
+    </label>
+  {% endfor %}
+</details>
 {{ group("contract_types", t("filters.contract"), vocab.contract_types | list, f.contract_types, "contract_types") }}
 {{ group("shifts", t("filters.shifts"), vocab.shifts | list, f.shifts, "shifts") }}
 {{ group("suitable_for", t("filters.suitable"), vocab.suitable_for | list, f.suitable_for, "suitable_for") }}

@@ -18,7 +18,7 @@ FIXTURES = Path(__file__).parents[1] / "fixtures" / "sources" / "mpsv"
 
 
 class FakeRunner:
-    def __init__(self, sessions, cache_dir) -> None:
+    def __init__(self, sessions, cache_dir, **kwargs) -> None:
         self.sessions = sessions
         self.progress = Progress()
         self.starts = 0
@@ -101,6 +101,20 @@ def test_wizard_rejects_bad_input(client):
     assert r.status_code == 422
     r = client.post("/wizard/welcome", data={"language": "cs", "theme": "neon"})
     assert r.status_code == 422
+
+
+def test_scraped_links_are_web_addresses_only(app, client):
+    from adawork.db.models import JobSource
+
+    app.state.services.settings.wizard_completed = True
+    load_fixture_jobs(app)
+    with app.state.services.sessions() as s:
+        s.execute(update(JobSource).values(url="javascript:alert(1)"))
+        s.commit()
+        location_id = s.query(Job.location_id).filter(Job.location_id.is_not(None)).first()[0]
+    for page in ("/results", f"/map/location/{location_id}"):
+        text = client.get(page).text
+        assert "javascript:" not in text and 'href="#"' in text
 
 
 def test_only_local_same_origin_requests(app, client):
@@ -270,7 +284,14 @@ def test_filters_from_url_and_facets_panel(app, client):
 
     panel = client.get("/facets", params=params).text
     assert 'name="categories" value="14" checked' in panel
-    assert panel.index("Typ úvazku") < panel.index("Obor") < panel.index("Kraj")
+    assert 'name="source_off" value="mpsv" disabled' in panel  # every source on
+    assert 'name="source_off" value="prace_cz" disabled' in panel  # no jobs from it yet
+    assert panel.index("Zdroje") < panel.index("Typ úvazku") < panel.index("Obor")
+    assert panel.index("Obor") < panel.index("Kraj")
+    off = client.get("/facets", params=[*params, ("source_off", "mpsv")]).text
+    assert 'name="source_off" value="mpsv" >' in off
+    r = client.get("/results", params={"source_off": "mpsv"}, headers={"HX-Request": "true"})
+    assert r.headers["HX-Push-Url"] == "/?source_off=mpsv" and 'class="job"' not in r.text
     assert "Služby" in panel and "Plný úvazek" in panel
     assert '<option value="25000" selected>' in panel
 

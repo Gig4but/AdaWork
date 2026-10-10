@@ -6,6 +6,7 @@ import httpx
 import pytest
 from sqlalchemy import func, select
 
+from adawork.config import Profile
 from adawork.db.models import Job, Location, Run
 from adawork.db.session import make_engine, make_sessionmaker, migrate
 from adawork.scraper.runner import ScrapeRunner
@@ -84,7 +85,11 @@ def make_transport(records, etag='"v1"'):
 def run_once(sessions, tmp_path, records, etag='"v1"', phase="done"):
     transport, calls = make_transport(records, etag)
     runner = ScrapeRunner(
-        sessions, tmp_path / "cache", lambda: httpx.Client(transport=transport), geocode=False
+        sessions,
+        tmp_path / "cache",
+        lambda: httpx.Client(transport=transport),
+        geocode=False,
+        sources=[mpsv.SOURCE],
     )
     assert runner.start()
     runner.wait(60)
@@ -123,23 +128,33 @@ def test_import_update_and_expire(sessions, tmp_path):
         assert (last.new_count, last.updated_count, last.removed_count) == (0, 0, 0)
 
 
-def test_a_fresh_search_finds_everything_again(sessions, tmp_path):
+def test_a_changed_search_or_a_fresh_one_finds_everything_again(sessions, tmp_path):
     transport, calls = make_transport(RECORDS)
-    runner = ScrapeRunner(sessions, tmp_path / "cache", lambda: httpx.Client(transport=transport))
+    profile = Profile(home_address="Kolín")
+    runner = ScrapeRunner(
+        sessions,
+        tmp_path / "cache",
+        lambda: httpx.Client(transport=transport),
+        geocode=False,
+        sources=[mpsv.SOURCE],
+        profile=lambda: profile,
+    )
 
     def run(fresh=False):
+        """New jobs of the run."""
         assert runner.start(fresh=fresh)
         runner.wait(60)
         assert runner.progress.phase == "done", runner.progress.message
+        with sessions() as s:
+            return s.scalars(select(Run.new_count).order_by(Run.id.desc())).first()
 
-    run()
-    run()
-    assert not runner.progress.cleared
-    run(fresh=True)
-    assert runner.progress.cleared and calls["dump"] == 1  # imported from the cached file
+    assert run() == 30
+    assert run() == 0 and not runner.progress.cleared  # the same search: nothing deleted
+    profile.max_minutes = 30
+    assert run() == 30 and runner.progress.cleared
+    assert calls["dump"] == 1  # imported again from the cached file
+    assert run(fresh=True) == 30 and runner.progress.cleared
     with sessions() as s:
-        last = s.scalars(select(Run).order_by(Run.id.desc())).first()
-        assert last.status == "ok" and last.new_count == 30
         assert s.scalar(select(func.count(Job.id))) == 30
 
 
@@ -157,6 +172,7 @@ def test_failed_import_is_retried_with_the_same_dump(sessions, tmp_path, monkeyp
             tmp_path / "cache",
             lambda: httpx.Client(transport=transport),
             geocode=False,
+            sources=[mpsv.SOURCE],
         )
         runner.start()
         runner.wait(60)

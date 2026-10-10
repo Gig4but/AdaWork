@@ -1,6 +1,8 @@
 """Entry point: `adawork` opens the app window; `adawork --browser` serves the UI only."""
 
 import argparse
+import logging
+import os
 import webbrowser
 
 from adawork import __version__
@@ -53,4 +55,14 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         server.stop()
         instance.release()
+    leave_search(app)
     return 0
+
+
+def leave_search(app) -> None:
+    """A search the shutdown could not stop (a long download): Python would wait at exit for
+    its threads, keeping the process and the terminal busy for minutes. What it found so far
+    is saved."""
+    if app.state.services.runner.progress.running:
+        logging.shutdown()
+        os._exit(0)

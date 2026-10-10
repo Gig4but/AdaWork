@@ -11,7 +11,7 @@ from typing import Any, Literal, Protocol
 Precision = Literal["address", "street", "part", "municipality", "district", "region", "unknown"]
 SalaryUnit = Literal["month", "hour", "piece"]
 JobStatus = Literal["active", "expired"]  # also of a job's source
-RunStatus = Literal["running", "ok", "failed", "skipped"]
+RunStatus = Literal["running", "ok", "partial", "failed", "blocked", "skipped"]
 SourceKind = Literal["portal", "classifieds", "api", "social"]  # groups of the Sources page
 
 

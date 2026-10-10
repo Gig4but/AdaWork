@@ -8,7 +8,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from adawork.db.models import Location, Municipality
-from adawork.geo.ruian import RuianAddresses
+from adawork.geo.ruian import PlaceQuery, RuianAddresses
 
 
 def normalize_name(name: str) -> str:
@@ -27,7 +27,7 @@ def rebuild_municipalities(
     session.execute(delete(Municipality))
     count = 0
     for code in ruian.municipality_codes():
-        _, m = ruian.lookup(code, set())
+        _, _, m = ruian.lookup(code, set())
         if m is None:
             continue
         okres_code, okres, kraj = okres_of.get(code, (None, None, None))
@@ -42,6 +42,7 @@ def rebuild_municipalities(
                 lat=m.lat,
                 lon=m.lon,
                 address_count=m.address_count,
+                postal_codes=" ".join(sorted(m.postal_codes)),
             )
         )
         count += 1
@@ -49,6 +50,17 @@ def rebuild_municipalities(
             progress(count)
     session.commit()
     return count
+
+
+def place_query(key: str) -> PlaceQuery | None:
+    """Street or part named by an "addr:<obec>:<street>:<number>" or "part:<obec>:<part>" key."""
+    kind, _, rest = key.partition(":")
+    if kind == "addr":
+        _, street, number = rest.split(":", 2)
+        return PlaceQuery(street=street, number=number or None)
+    if kind == "part":
+        return PlaceQuery(part=rest.split(":", 1)[1])
+    return None
 
 
 def geocode_locations(session: Session, ruian: RuianAddresses) -> int:
@@ -65,15 +77,19 @@ def geocode_locations(session: Session, ruian: RuianAddresses) -> int:
     updated = 0
     for obec_code, locations in by_obec.items():
         wanted = {loc.key.split(":", 1)[1] for loc in locations if loc.key.startswith("ruian:")}
-        found, centre = ruian.lookup(obec_code, wanted)
+        places = {loc.key: q for loc in locations if (q := place_query(loc.key))}
+        points, matches, centre = ruian.lookup(obec_code, wanted, places)
         for loc in locations:
             adm = loc.key.split(":", 1)[1] if loc.key.startswith("ruian:") else None
-            if adm in found:
-                loc.lat, loc.lon = found[adm]
+            match = matches.get(loc.key)
+            if adm in points:
+                loc.lat, loc.lon = points[adm]
+            elif match is not None:
+                loc.lat, loc.lon, loc.precision = match.lat, match.lon, match.precision
             elif centre is not None:
                 loc.lat, loc.lon = centre.lat, centre.lon
-                if loc.precision == "address":
-                    loc.precision = "municipality"  # address point unknown to RÚIAN
+                if loc.precision in ("address", "street", "part"):
+                    loc.precision = "municipality"  # place unknown to RÚIAN
             else:
                 continue
             updated += 1

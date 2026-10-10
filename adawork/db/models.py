@@ -7,6 +7,7 @@ from sqlalchemy import JSON, ForeignKey, Index, String, Table, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from adawork.core import JobStatus, Precision, RunStatus, SalaryUnit
+from adawork.normalize.vocab import derived_values
 
 
 class Base(DeclarativeBase):
@@ -24,9 +25,12 @@ class Location(Base):
     __tablename__ = "locations"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    key: Mapped[str] = mapped_column(String(200), unique=True)  # dedup key, see normalize later
+    # "ruian:<address code>", "addr:<obec>:<street>:<number>", "part:<obec>:<part>",
+    # "obec:<code>", "okres:<codes>", "kraj:<name>"
+    key: Mapped[str] = mapped_column(String(200), unique=True)
     lat: Mapped[float | None]
     lon: Mapped[float | None]
+    # address | street | part | municipality | district | region | unknown
     precision: Mapped[Precision] = mapped_column(String(20), default="unknown")
     address_text: Mapped[str | None]
     municipality: Mapped[str | None]
@@ -49,6 +53,7 @@ class Municipality(Base):
     lat: Mapped[float]
     lon: Mapped[float]
     address_count: Mapped[int] = mapped_column(default=0)
+    postal_codes: Mapped[str] = mapped_column(default="")  # space-separated PSČ, e.g. "14000 14200"
 
 
 class Job(Base):
@@ -97,9 +102,24 @@ class Job(Base):
         back_populates="job", cascade="all, delete-orphan"
     )
 
+    def update_derived(self) -> None:
+        """Recomputes the monthly pay and the education level from the fields they come from."""
+        values = {
+            "salary_min": self.salary_min,
+            "salary_max": self.salary_max,
+            "salary_unit": self.salary_unit,
+            "education": self.education,
+        }
+        for name, value in derived_values(values).items():
+            setattr(self, name, value)
+
 
 class JobSource(Base):
-    """Where a job was seen. One job can come from several portals (dedup in M3)."""
+    """Where a job was seen. One job can come from several portals (see scraper/dedup.py).
+
+    The primary source owns the job's fields; the others only fill fields it leaves empty.
+    A job expires when none of its sources offers it any more.
+    """
 
     __tablename__ = "job_sources"
     __table_args__ = (UniqueConstraint("source_id", "external_id"),)
@@ -109,6 +129,10 @@ class JobSource(Base):
     source_id: Mapped[str] = mapped_column(String(40))
     external_id: Mapped[str] = mapped_column(String(200))
     url: Mapped[str | None]
+    is_primary: Mapped[bool] = mapped_column(default=True)
+    status: Mapped[JobStatus] = mapped_column(String(10), default="active")
+    content_hash: Mapped[str | None] = mapped_column(String(64))  # of this source's version
+    detail_at: Mapped[datetime | None]  # when the detail page was read; None = listing only
     first_seen_at: Mapped[datetime]
     last_seen_at: Mapped[datetime]
 

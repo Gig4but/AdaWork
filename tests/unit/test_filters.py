@@ -73,6 +73,8 @@ def brute_force_facets(session, f: Filters) -> dict[str, dict[str, int]]:
             values = {j.location.kraj for j in jobs if j.location and j.location.kraj}
         elif name == "education":
             values = set(EDUCATION_LEVEL)
+        elif name == "sources":
+            values = {src.source_id for j in jobs for src in j.sources}
         else:
             values = {v for j in jobs for v in getattr(j, name)}
         counts = {}
@@ -80,6 +82,9 @@ def brute_force_facets(session, f: Filters) -> dict[str, dict[str, int]]:
             if name == "education":
                 g = replace(f, education=None)
                 n = sum(1 for j in all_jobs(session, g) if j.education == v)
+            elif name == "sources":
+                g = replace(f, sources_off=[])
+                n = sum(1 for j in all_jobs(session, g) if v in {s.source_id for s in j.sources})
             else:
                 n = search_jobs(session, replace(f, **{name: [v]}), limit=0).total
             if n:
@@ -95,6 +100,7 @@ def brute_force_facets(session, f: Filters) -> dict[str, dict[str, int]]:
         Filters(categories=["13"]),
         Filters(categories=["8", "14"], contract_types=["full_time"], salary_min=25000),
         Filters(education="vocational", shifts=["jednoSm"]),
+        Filters(categories=["13"], sources_off=["mpsv"]),
     ],
 )
 def test_facets_match_brute_force(session, f):
@@ -151,3 +157,9 @@ def test_facet_cache_notices_a_change_within_one_clock_tick(tmp_path):
         result = search_jobs(s, Filters(), facets=True)
         assert dict(result.facets["contract_types"])["new-type"] == 1
     engine.dispose()
+
+
+def test_sources_switched_off_hide_their_jobs(session):
+    every = search_jobs(session, Filters()).total
+    assert every and search_jobs(session, Filters(sources_off=["prace_cz"])).total == every
+    assert search_jobs(session, Filters(sources_off=["mpsv"])).total == 0

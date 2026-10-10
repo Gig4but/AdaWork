@@ -106,3 +106,11 @@ def monthly_salary(amount: int | None, unit: str | None) -> int | None:
     if unit == "hour" and amount <= MAX_PLAUSIBLE_HOURLY:
         return amount * HOURS_PER_MONTH
     return amount
+
+
+def derived_values(values: dict) -> dict:
+    return {
+        "salary_month_min": monthly_salary(values.get("salary_min"), values.get("salary_unit")),
+        "salary_month_max": monthly_salary(values.get("salary_max"), values.get("salary_unit")),
+        "education_level": EDUCATION_LEVEL.get(values.get("education") or ""),
+    }

@@ -3,12 +3,18 @@
     {% if progress.phase == "clear" %}{{ t("scrape.clear") }}
     {% elif progress.phase == "import" %}{{ t("scrape.import", n=progress.processed) }}
     {% elif progress.phase == "download" %}{{ t("scrape.download") }}
+    {% elif progress.phase == "listing" %}{{ t("scrape.listing", source=progress.source_label, n=progress.processed) }}
+    {% elif progress.phase == "details" %}{{ t("scrape.details", source=progress.source_label, n=progress.processed) }}
     {% elif progress.phase == "geocode" %}{{ t("scrape.geocode") }}
     {% else %}{{ t("scrape.start") }}{% endif %}
   </div>
 {% elif progress.phase == "done" %}
-  {% set r = progress.results.get("mpsv") %}
-  {% if r %}<small class="muted">{{ t("scrape.done", new=r.new, updated=r.updated, removed=r.removed) }}</small>{% endif %}
+  {% if progress.results %}
+    {% set r = progress.totals() %}
+    <small class="muted">{{ t("scrape.done", new=r.new, updated=r.updated, removed=r.removed) }}
+      {% if r.merged %}{{ t("scrape.merged", n=r.merged) }}{% endif %}</small>
+  {% endif %}
+  {% if progress.errors %}<small class="error">{{ t("scrape.partial", sources=progress.error_labels()) }}</small>{% endif %}
 {% elif progress.phase == "failed" %}
   <small class="error">{{ t("scrape.failed", msg=progress.message) }}</small>
 {% endif %}

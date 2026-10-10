@@ -54,10 +54,14 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "wizard.done": {"cs": "Hotovo", "en": "Done"},
     "wizard.done.text": {
-        "cs": "Po kliknutí na Start stáhneme nabídky z úřadu práce (všechny obory, asi minuta). "
-        "Další zdroje přibudou v příštích verzích.",
+        "cs": "Po kliknutí na Start stáhneme nabídky z úřadu práce (všechny obory, asi minuta) "
+        "a potom z portálů prace.cz, jenprace.cz a profesia.cz pro kraje ve vašem dosahu. "
+        "Portály čteme pomalu, aby nás nezablokovaly, takže to může trvat i desítky minut. "
+        "Nabídky přibývají průběžně.",
         "en": "Start downloads job offers from the labour office (every field, about a "
-        "minute). More sources will follow in later versions.",
+        "minute), then from prace.cz, jenprace.cz and profesia.cz for the regions within "
+        "your reach. Portals are read slowly so they do not block us, which can take tens "
+        "of minutes. Jobs appear as they come in.",
     },
     "wizard.auto_off": {
         "cs": "Automatické hledání je vypnuté. Zapnout ho můžete později v Nastavení.",
@@ -106,6 +110,7 @@ TEXTS: dict[str, dict[str, str]] = {
     "filters.day1": {"cs": "za poslední den", "en": "in the last day"},
     "filters.categories": {"cs": "Obor", "en": "Field"},
     "filters.kraj": {"cs": "Kraj", "en": "Region"},
+    "filters.sources": {"cs": "Zdroje", "en": "Sources"},
     "filters.contract": {"cs": "Typ úvazku", "en": "Contract type"},
     "filters.shifts": {"cs": "Směny", "en": "Shifts"},
     "filters.suitable": {"cs": "Vhodné pro", "en": "Suitable for"},
@@ -133,6 +138,22 @@ TEXTS: dict[str, dict[str, str]] = {
     "scrape.download": {"cs": "Stahuji data…", "en": "Downloading…"},
     "scrape.import": {"cs": "Zpracovávám nabídky: {n}", "en": "Processing jobs: {n}"},
     "scrape.geocode": {"cs": "Určuji polohu nabídek…", "en": "Locating jobs…"},
+    "scrape.listing": {
+        "cs": "Procházím {source}: {n} nabídek",
+        "en": "Browsing {source}: {n} jobs",
+    },
+    "scrape.details": {
+        "cs": "Čtu podrobnosti nabídek na {source}: {n}",
+        "en": "Reading job details on {source}: {n}",
+    },
+    "scrape.merged": {
+        "cs": "Sloučeno s nabídkou z jiného portálu: {n}.",
+        "en": "Merged with a job from another portal: {n}.",
+    },
+    "scrape.partial": {
+        "cs": "Některé zdroje se nepodařilo načíst: {sources}.",
+        "en": "Some sources could not be read: {sources}.",
+    },
     "scrape.start": {"cs": "Spouštím…", "en": "Starting…"},
     "scrape.clear": {"cs": "Mažu dříve nalezené nabídky…", "en": "Deleting the jobs found before…"},
     "scrape.fresh": {"cs": "Obnovit od začátku", "en": "Start over"},

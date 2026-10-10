@@ -23,7 +23,7 @@ def make_client(timeout: float = 60.0) -> httpx.Client:
     return httpx.Client(
         headers={"User-Agent": USER_AGENT, "Accept-Language": "cs,en;q=0.8"},
         timeout=timeout,
-        follow_redirects=True,
+        follow_redirects=False,  # PoliteFetcher checks robots.txt and waits for each hop
     )
 
 
@@ -88,7 +88,7 @@ def _download_once(
             headers["If-Modified-Since"] = meta["last_modified"]
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    with client.stream("GET", url, headers=headers) as resp:
+    with client.stream("GET", url, headers=headers, follow_redirects=True) as resp:
         if resp.status_code == 304:
             return Download(path, changed=False)
         resp.raise_for_status()

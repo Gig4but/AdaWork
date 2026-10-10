@@ -15,7 +15,7 @@ Three main modules:
 Shared services: a small **local AI model** (reads messy ads and posters, summarizes
 reviews) and a **local routing engine** (travel times and routes, offline maps).
 
-Status: **M0, M1 and M2 done** (2026-10-06); next is M3. Spike results: `docs/spikes.md`.
+Status: **M0–M3 done** (2026-10-06); next is M4. Spike results: `docs/spikes.md`.
 
 ---
 
@@ -69,6 +69,10 @@ Verified live in the M0 spike (`docs/spikes/sources.md`, 2026-10-06). No source 
 | **dobraprace.cz** (7.7k) (= jobsik.cz, same operator) | Ads sitemap → JSON-LD | jobsik.cz skipped at first (same inventory). |
 | **fajn-brigady.cz** (2.1k) | Detail sitemap with `lastmod` → rule-based HTML parser | |
 | ~~volnamista.cz~~ | — | **Dropped**: robots.txt allows only named search engines (`User-agent: * Disallow: /`). |
+| **pracezarohem.cz** (21.5k) | Listing pages carry `__NEXT_DATA__` JSON (50 ads/page) | Checked 2026-10-06, robots.txt allows listings. GPS, salary text, IČO inside `ga.itemBrand`. Part of the inventory is re-listed from profesia.cz (`PROF…` IDs). M6 candidate, easy. |
+| **inwork.cz** (31.9k) | Detail sitemap → HTML (no structured data) | Checked 2026-10-06, robots.txt allows details. Custom HTML parser. M6 candidate. |
+| **easy-prace.cz** (10.4k own + 24k re-listed) | Sitemaps → HTML (no structured data) | Checked 2026-10-06, `Allow: /`. Only the own ads (`/nabidka/…`) are worth reading; `/volne-misto/…` re-lists Úřad práce. M6 candidate. |
+| **personalka.cz** (40.6k) | Sitemaps → HTML | Checked 2026-10-06, robots.txt allows details. Titles are CZ-ISCO names: probably re-listed Úřad práce ads. Check the share of new ads before building. |
 | **Jooble** / **Careerjet** | Free APIs with key | Careerjet API v4: key as HTTP Basic user, `user_ip` + `user_agent` required. Jooble: request limit unconfirmed (sign-up page behind Cloudflare). |
 | `outpost2026/MCP-Jobs` | GitHub, no license | Reference only. |
 
@@ -212,8 +216,8 @@ at the same time**. A `ResourceManager` lets only one heavy job run at a time, i
 | AI model, **Good** tier (4B) | ~4.5–5 GB | on demand; too tight next to Windows on 8 GB (yellow icon) |
 | MOTIS routing server (home area) | ~0.5–1.5 GB (to be measured in M0) | on demand for route/commute calls; stopped when idle; results cached |
 | MOTIS import | to be measured in M0 | only when no other heavy job runs, preferably while the PC is idle |
-| Edge (Playwright: jobs.cz, social reader) | ~0.4–0.8 GB | short sessions, never in parallel with the AI model |
-| Embeddings (e5-small) + RapidOCR | ~0.3 GB | in short batches |
+| Edge (Playwright: social reader only) | ~0.4–0.8 GB | short sessions, never in parallel with the AI model |
+| Embeddings (e5-small) | ~0.15 GB | in short batches |
 
 **Consequences on the minimum machine:**
 - **Recommended model there: Simple (Qwen3-VL 2B).** Expected icons:
@@ -383,10 +387,13 @@ HTML → text).
 4. Normalize with rules: salary → monthly CZK, contract types, shifts, education, licences,
 languages, location.
 5. Enrich with AI when needed.
-6. **Geocode**: an exact address when the ad has one (MOTIS geocoder from OSM addresses;
-MPSV gives workplace addresses), else the municipality centroid. A precision flag is stored:
-`address` / `municipality` / `region`.
-7. Dedup (URL/ID → fingerprint → SimHash → image hash).
+6. **Geocode** from RÚIAN: the exact address point (MPSV address codes, portal street +
+house number), else the street, the city part ("Praha-Krč") or the municipality centre.
+A precision flag is stored: `address` / `street` / `part` / `municipality` / `district` /
+`region`. The MOTIS geocoder (M8) is only needed for free-text addresses.
+7. Dedup (`scraper/dedup.py`): same place + employer + matching title across sources;
+partial title matches also need overlapping descriptions (word 3-grams). Image hash for
+social posts (M6b).
 8. Index (FTS5 + embeddings).
 9. **Employer link**: resolve the employer (§4.5) and queue cheap official checks.
 10. Expire.
@@ -762,7 +769,29 @@ AdaWork/
 - Map tiles come **online from OpenFreeMap** (free, no key, apps allowed, attribution shown)
   until M8 switches to offline MOTIS tiles.
 
-### M3 — Generic JSON-LD + prace.cz, jenprace.cz, profesia.cz + dedup (3 days)
+### M3 — Generic JSON-LD + prace.cz, jenprace.cz, profesia.cz + dedup (3 days) — done
+- Built:
+  - Polite HTTP (`net/polite.py`, `robots.py`): robots.txt with `*`/`$` wildcards
+    (urllib.robotparser has neither), ≥ 1.5 s between requests per host, retries on 5xx,
+    a source that answers 403/429 or a bot challenge is paused for 12 h.
+  - Generic `JobPosting` reader (`scraper/structured.py`): JSON-LD and microdata, lenient
+    dates, `baseSalary` units, address → location.
+  - Crawl framework (`scraper/crawl.py`): region listings → cards → detail pages, ≤ 300 detail
+    pages per source and run (the rest stay card-only and are completed on later runs),
+    expiry only after a complete pass. Adapters: prace.cz (jobs.cz career pages: card only),
+    jenprace.cz, profesia.cz (branded pages: card + page text).
+  - Crawl scope: the regions reachable from home within the travel-time limit
+    (`geo/scope.py`); every region when home is unknown.
+  - Places (`geo/places.py`): "Praha-Krč", "Brno - Líšeň", "Králíky, Ústí nad Orlicí",
+    regions; same-name villages told apart by PSČ, district or region. Street addresses and
+    city parts get RÚIAN coordinates in the geocode step.
+  - Dedup (`scraper/dedup.py`): same place + same employer + matching title from another
+    source → one job with several sources. Partial title matches also need similar
+    descriptions; district-level MPSV jobs match on the full title. The primary source owns
+    the fields, others fill gaps; a job expires when no source offers it.
+- **Done when:** a run for one home (Kolín, 30 min by car) reads all three portals without
+  errors, and re-listed ads appear once with several source links. Measured 2026-10-06:
+  see `docs/spikes.md` § M3.
 
 ### M4 — Indeed CZ + LinkedIn (2 days)
 - Indeed: own adapter on the public search page (embedded job-card JSON).
@@ -787,6 +816,11 @@ AdaWork/
     decision is recorded in `docs/spikes.md`.
 
 ### M6 — Rest of the top 10 portals (5–6 days)
+- jobs.cz (custom HTML; also the career pages prace.cz links to), startupjobs.cz, hitprace.cz,
+  dobraprace.cz, fajn-brigady.cz, prace.bazos.cz.
+- Candidates checked 2026-10-06 (§2.1), to confirm: pracezarohem.cz (+0.5 day),
+  inwork.cz (+1), easy-prace.cz own ads (+0.5–1); personalka.cz only if it has enough ads
+  that Úřad práce does not.
 
 ### M6b — Social media, forums, images (7–9 days)
 

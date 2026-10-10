@@ -22,6 +22,9 @@ class Services:
     cache_dir: Path
     runner: ScrapeRunner
 
+    def stop(self) -> None:
+        self.runner.stop()
+
 
 def build(
     settings: Settings | None = None,
@@ -34,5 +37,5 @@ def build(
     migrate(engine)
     sessions = make_sessionmaker(engine)
     cache_dir = cache_dir or paths.data_dir() / "cache"
-    runner = (runner_factory or ScrapeRunner)(sessions, cache_dir)
+    runner = (runner_factory or ScrapeRunner)(sessions, cache_dir, profile=lambda: settings.profile)
     return Services(settings=settings, sessions=sessions, cache_dir=cache_dir, runner=runner)

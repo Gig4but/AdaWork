@@ -8,8 +8,9 @@
   <ul>
     {% for job in jobs %}
       <li>
-        {% set url = job.sources[0].url if job.sources else None %}
-        {% if url %}<a href="{{ url }}" target="_blank" rel="noopener">{{ job.title }}</a>{% else %}{{ job.title }}{% endif %}
+        {% set active = job.sources | selectattr("status", "equalto", "active") | list %}
+        {% set url = (active or job.sources)[0].url if job.sources else None %}
+        {% if url %}<a href="{{ url | safe_url }}" target="_blank" rel="noopener">{{ job.title }}</a>{% else %}{{ job.title }}{% endif %}
         {% set pay = salary(job) %}
         <br><small>{{ job.employer_name or "" }}{% if pay %} · {{ pay }}{% endif %}</small>
       </li>

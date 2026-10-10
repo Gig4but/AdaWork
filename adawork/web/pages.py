@@ -16,6 +16,7 @@ from adawork import __version__
 from adawork.db.models import Job, Run
 from adawork.i18n import translate
 from adawork.normalize.vocab import VOCABULARIES, label
+from adawork.scraper.sources import LABELS as SOURCE_LABELS
 from adawork.search.service import LIST_FIELDS, Filters
 from adawork.services import Services
 
@@ -52,11 +53,17 @@ def format_salary(job: Job, lang: str) -> str | None:
         return f"{n:,}".replace(",", "\xa0")
 
     unit = translate(lang, f"job.salary_{job.salary_unit}") if job.salary_unit else ""
+    if job.salary_currency and job.salary_currency != "CZK":
+        unit = unit.replace("Kč", job.salary_currency).replace("CZK", job.salary_currency)
     if job.salary_min and job.salary_max and job.salary_max != job.salary_min:
         amount = f"{num(job.salary_min)} – {num(job.salary_max)}"
     else:
         amount = num(job.salary_min or job.salary_max or 0)
     return f"{amount} {unit}".strip()
+
+
+def _safe_url(url: str | None) -> str:
+    return url if url and url.lower().startswith(("http://", "https://")) else "#"
 
 
 def _format_date(value: datetime | None) -> str:
@@ -72,8 +79,10 @@ def local_time(utc: datetime) -> datetime:
     return datetime.fromtimestamp((utc - datetime(1970, 1, 1)).total_seconds())
 
 
+TEMPLATES.env.filters["safe_url"] = _safe_url
 TEMPLATES.env.filters["date"] = _format_date
 TEMPLATES.env.filters["datetime"] = _format_datetime
+TEMPLATES.env.filters["source_label"] = lambda source_id: SOURCE_LABELS.get(source_id, source_id)
 
 
 def render(request: Request, name: str, **context) -> HTMLResponse:
@@ -108,7 +117,8 @@ def filters_from_query(request: Request) -> Filters:
     q = qp.get("q")
     return Filters(
         q=", ".join(services_of(request).settings.profile.kinds_of_work) if q is None else q,
-        **{name: [v for v in qp.getlist(name) if v] for name in (*LIST_FIELDS, "kraj", "okres")},
+        **{name: [v for v in qp.getlist(name) if v] for name in (*LIST_FIELDS, "kraj")},
+        sources_off=[v for v in qp.getlist("source_off") if v],
         education=qp.get("education") or None,
         salary_min=number("salary_min", 1_000_000),
         with_salary=qp.get("with_salary") == "1",

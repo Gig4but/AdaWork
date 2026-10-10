@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from adawork.db.models import Job
+from adawork.scraper.sources import LABELS as SOURCE_LABELS
 from adawork.search.service import jobs_found_since, search_jobs
 from adawork.services import Services
 from adawork.web.pages import (
@@ -113,6 +114,7 @@ def facets(request: Request, svc: Svc) -> HTMLResponse:
         request,
         "_facets.html",
         f=f,
+        sources_on=list(SOURCE_LABELS),
         facets=result.facets,
         salary_steps=SALARY_STEPS,
         posted_days=POSTED_DAYS,

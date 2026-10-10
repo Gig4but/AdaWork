@@ -61,3 +61,26 @@ Plan B (Mapy.com API + IDOS links) is kept as a fallback; it gives no public-tra
   positions for MPSV jobs with an address code, municipality or district centres otherwise.
   96.7 % of MPSV jobs get coordinates. MOTIS geocoding is only needed for free-text addresses.
 - Categories are the 16 official Úřad práce fields, derived from CZ-ISCO.
+
+## M3 live run (2026-10-06)
+
+Home Kolín, 30 min by car → crawl scope Středočeský, Pardubický and Královéhradecký kraj.
+At most 15 detail pages per portal (the default is 300), on a copy of the real database
+(39,487 MPSV jobs).
+
+| Source | Listing pages + details | Time | New jobs | Merged into existing |
+|---|---|---|---|---|
+| prace.cz | ~105 + 15 | 3 min 35 s | 4,080 | 180 (into MPSV) |
+| jenprace.cz | ~40 + 15 | 1 min 26 s | 1,123 | 2,174 (1,872 into MPSV, 302 into prace.cz) |
+| profesia.cz | ~15 + 15 | 57 s | 206 | 70 (into prace.cz and jenprace.cz) |
+
+- No source refused us. The polite pace averaged 1.8 s per request.
+- **jenprace.cz re-lists Úřad práce ads** (IDs starting with `u`): 1,830 of 1,867 merged into
+  their MPSV job (98 %). The first run found 87 %; the misses were jenprace's
+  "<village>, <district>" place format and MPSV jobs placed only by district, both fixed.
+- 2,370 jobs now have more than one source, 54 have three.
+- Portal places: 66 % municipality, 21 % city part, 4 % region, 8 % none. The 8 % are
+  "Celá ČR", remote work or abroad; "Kolín IV"-style town parts and "Okres X" were fixed
+  after the run.
+- Salary is known for 66 % of jenprace, 49 % of prace.cz and 62 % of profesia jobs (from
+  listing cards; detail pages add some).
