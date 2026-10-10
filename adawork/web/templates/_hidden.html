@@ -1,0 +1,13 @@
+{# How many ads the user hid, with the way back. `oob`: sent after hiding one from the list. #}
+<div id="hidden-bar" class="hidden-bar small"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% if hidden %}
+    <span class="muted">{{ t("hidden.count", n=hidden) }}</span>
+    <button type="button" class="secondary outline" hx-post="/hidden/restore"
+            hx-target="#hidden-bar" hx-swap="outerHTML">{{ t("hidden.restore_last") }}</button>
+    <button type="button" class="secondary outline" hx-post="/hidden/restore?every=1"
+            hx-target="#hidden-bar" hx-swap="outerHTML">{{ t("hidden.restore_all") }}</button>
+  {% endif %}
+</div>
+{% if oob and total is not none %}
+  <p id="found-count" class="muted small" hx-swap-oob="true">{{ t("search.found", n=total) }}</p>
+{% endif %}

@@ -77,9 +77,10 @@ async def wizard_ai(request: Request, svc: Svc) -> RedirectResponse:
 @router.post("/wizard/sources", response_class=HTMLResponse)
 async def wizard_sources(request: Request, svc: Svc) -> Response:
     form = await request.form()
-    error = apply_source_choices(svc.settings, form)
-    if error:
-        return render_step(request, svc, "sources", sources=source_rows(svc, form), error=error)
+    missing = apply_source_choices(svc.settings, form)
+    if missing:
+        rows = source_rows(svc, form)
+        return render_step(request, svc, "sources", sources=rows, consent_missing=missing)
     return RedirectResponse("/wizard/done", status_code=303)
 
 

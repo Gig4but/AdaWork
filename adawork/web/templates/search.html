@@ -63,6 +63,24 @@
 <button type="button" id="to-top" class="secondary" hidden title="{{ t('page.top') }}" aria-label="{{ t('page.top') }}"
         onclick="window.scrollTo({top: 0, behavior: 'smooth'})">{{ icon("up") }}</button>
 <script>
+  // A hidden ad goes at once; the server's answer (the count) follows. Back if it fails.
+  document.body.addEventListener("htmx:beforeRequest", (event) => {
+    if (event.detail.elt.matches(".job .hide")) event.detail.elt.closest(".job").classList.add("hiding");
+  });
+  document.body.addEventListener("htmx:afterRequest", (event) => {
+    if (event.detail.elt.matches(".job .hide") && !event.detail.successful) {
+      event.detail.elt.closest(".job")?.classList.remove("hiding");
+    }
+  });
+  // While a refresh checks the ads found before, those not checked yet are dimmed; the
+  // poll for new finds (#live) tells which.
+  document.body.addEventListener("htmx:afterSettle", () => {
+    const live = document.getElementById("live");
+    const ids = new Set((live?.dataset.unchecked || "").split(","));
+    for (const job of document.querySelectorAll("#job-list > .job")) {
+      job.classList.toggle("unchecked", ids.has(job.dataset.id));
+    }
+  });
   // Back to the top, once the list is scrolled a screen down.
   const toTop = document.getElementById("to-top");
   window.addEventListener("scroll", () => { toTop.hidden = window.scrollY < window.innerHeight; },

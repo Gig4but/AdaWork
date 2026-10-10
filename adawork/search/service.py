@@ -11,6 +11,7 @@ from sqlalchemy import (
     ColumnElement,
     Select,
     and_,
+    case,
     event,
     exists,
     func,
@@ -21,10 +22,11 @@ from sqlalchemy import (
     table,
     text,
 )
+from sqlalchemy.engine import Row
 from sqlalchemy.orm import Session, selectinload
 
 from adawork.core import utcnow
-from adawork.db.models import Job, JobSource, Location
+from adawork.db.models import Job, JobSource, Location, SourceState
 from adawork.normalize.text import accented_words, fold
 from adawork.normalize.vocab import EDUCATION_LEVEL
 from adawork.search import kinds
@@ -36,6 +38,8 @@ _TOKEN = re.compile(r"\w+", re.UNICODE)
 Sort = Literal["relevance", "date", "salary"]
 LIST_FIELDS = ("categories", "contract_types", "shifts", "suitable_for", "benefits")
 FACETS = (*LIST_FIELDS, "kraj", "education", "sources")
+BATCHES = "batches"  # SourceState row: the last job id stored before each search
+MAX_BATCHES = 50
 
 
 def fts_query(user_text: str) -> str | None:
@@ -96,14 +100,16 @@ class Filters:
     salary_min: int | None = None  # monthly CZK; jobs whose pay can reach this amount
     with_salary: bool = False
     posted_days: int | None = None
+    flagged: bool = False  # also show offers with red flags (hidden by default)
     sort: Sort = "relevance"
 
     def is_filtered(self) -> bool:
         return replace(self, sort="relevance") != Filters()
 
-    def newest_found_first(self) -> bool:
-        """Without words to rank by, the jobs found last come first."""
-        return self.sort == "relevance" and fts_query(self.q) is None
+    def new_first(self) -> bool:
+        """The last search's finds are listed above the jobs found before: in the order
+        found, or by rank when there are words to rank by."""
+        return self.sort == "relevance"
 
 
 @dataclass
@@ -112,6 +118,7 @@ class SearchResult:
     jobs: list[Job]
     took_ms: float
     facets: dict[str, list[tuple[str, int]]] = field(default_factory=dict)
+    flagged: int = 0  # matching offers hidden for their red flags (with facets=True)
 
 
 def _any_of(column, values: list[str]) -> ColumnElement[bool]:
@@ -133,7 +140,13 @@ def _from_sources_on(off: list[str]) -> ColumnElement[bool]:
 
 def _conditions(f: Filters, skip: frozenset[str] = frozenset()) -> list[ColumnElement[bool]]:
     """WHERE conditions for the filters; `skip` leaves facet dimensions out."""
-    conds: list[ColumnElement[bool]] = [Job.status == "active"]
+    conds: list[ColumnElement[bool]] = [
+        Job.status == "active",
+        Job.is_offer.is_(True),
+        Job.hidden_at.is_(None),
+    ]
+    if not f.flagged:
+        conds.append(func.json_array_length(Job.red_flags) == 0)
     for name in LIST_FIELDS:
         values = getattr(f, name)
         if values and name not in skip:
@@ -328,6 +341,51 @@ def _facet_counts(session: Session, f: Filters, match: TextMatch) -> dict:
     }
 
 
+def facet_counts(session: Session, f: Filters) -> tuple[dict, int]:
+    """Counts per facet value, and how many matching offers are hidden for their red flags."""
+    match = text_match(session, f.q)
+    flagged = 0
+    if not f.flagged:
+        stmt, _ = _base(replace(f, flagged=True), match, [func.count()])
+        stmt = stmt.where(func.json_array_length(Job.red_flags) > 0)
+        flagged = session.scalar(stmt, match.params) or 0
+    return _facet_counts(session, f, match), flagged
+
+
+def batch_starts(session: Session) -> list[int]:
+    row = session.get(SourceState, BATCHES)
+    return list((row.state or {}).get("starts", [])) if row else []
+
+
+def start_batch(session: Session, last_id: int | None = None) -> None:
+    """Jobs stored from now on are listed above the ones before, in the order found.
+    `last_id`: the last job id kept (after a clear, ids continue from it)."""
+    cleared = last_id is not None
+    if last_id is None:
+        last_id = session.scalar(select(func.max(Job.id))) or 0
+    row = session.get(SourceState, BATCHES) or SourceState(source_id=BATCHES)
+    starts = [b for b in batch_starts(session) if b < last_id] + [last_id]
+    row.state = {"starts": starts[-MAX_BATCHES:], "cleared": cleared}
+    session.add(row)
+    session.commit()
+
+
+def new_after(session: Session) -> int | None:
+    """Jobs stored after this id are new: the last search found them. None when that search
+    found everything (the first one, or one that started over)."""
+    row = session.get(SourceState, BATCHES)
+    state = (row.state or {}) if row else {}
+    starts = state.get("starts") or [0]
+    return None if state.get("cleared") or not starts[-1] else starts[-1]
+
+
+def _batch_order(session: Session) -> tuple:
+    """The last search's finds first, then those of the search before, …"""
+    starts = batch_starts(session)
+    batch = case(*((Job.id > b, i) for i, b in reversed(list(enumerate(starts, 1)))), else_=0)
+    return (batch.desc(),) if starts else ()
+
+
 def search_jobs(
     session: Session,
     q: str | Filters = "",
@@ -346,45 +404,79 @@ def search_jobs(
     count_stmt, _ = _base(f, match, [func.count()])
     total = session.scalar(count_stmt.where(*known), params) or 0
 
-    stmt, hits = _base(f, match, [Job])
-    stmt = stmt.where(*known)
-    newest = (Job.posted_at.desc().nulls_last(), Job.id.desc())
-    if f.sort == "salary":
-        salary = func.coalesce(Job.salary_month_max, Job.salary_month_min)
-        stmt = stmt.order_by(salary.desc().nulls_last(), *newest)
-    elif f.sort == "relevance" and hits is not None:
-        stmt = stmt.order_by(hits.c.rank.nulls_last(), Job.id.desc())
-    elif f.newest_found_first():
-        stmt = stmt.order_by(Job.id.desc())
-    else:
-        stmt = stmt.order_by(*newest)
-
-    stmt = stmt.options(selectinload(Job.sources), selectinload(Job.location))
+    stmt = _sorted(session, f, match).where(*known)
+    stmt = stmt.options(
+        selectinload(Job.sources), selectinload(Job.location), selectinload(Job.images)
+    )
     jobs = list(session.scalars(stmt.limit(limit).offset(offset), params))
     result = SearchResult(total, jobs, 0.0)
     if facets:
-        result.facets = _facet_counts(session, f, match)
+        result.facets, result.flagged = facet_counts(session, f)
     result.took_ms = (time.perf_counter() - started) * 1000
     return result
 
 
+def _sorted(session: Session, f: Filters, match: TextMatch) -> Select:
+    """The matching jobs in the order the list shows them."""
+    newest = (Job.posted_at.desc().nulls_last(), Job.id.desc())
+    stmt, hits = _base(f, match, [Job])
+    if f.sort == "salary":
+        salary = func.coalesce(Job.salary_month_max, Job.salary_month_min)
+        return stmt.order_by(salary.desc().nulls_last(), *newest)
+    if f.sort == "relevance" and hits is not None:
+        return stmt.order_by(*_batch_order(session), hits.c.rank.nulls_last(), Job.id.desc())
+    if f.sort == "relevance":
+        return stmt.order_by(*_batch_order(session), Job.id)
+    return stmt.order_by(*newest)
+
+
+def in_list_order(
+    session: Session, f: Filters, columns, where: list[ColumnElement[bool]], limit: int
+) -> list[Row]:
+    """`columns` of the matching jobs' sources that meet `where`, in list order."""
+    match = text_match(session, f.q)
+    stmt = (
+        _sorted(session, f, match)
+        .with_only_columns(*columns)
+        .join(JobSource, JobSource.job_id == Job.id)
+        .where(*where)
+        .limit(limit)
+    )
+    return list(session.execute(stmt, match.params))
+
+
 def jobs_found_since(
-    session: Session, f: Filters, since: int, up_to_id: int, limit: int
+    session: Session, f: Filters, since: int, up_to_id: int, limit: int, skip=()
 ) -> tuple[list[Job], int]:
-    """(Matching jobs stored after `since` up to `up_to_id`, the last found first; how many
-    jobs match in all.) Lets the list put a running search's finds on top of it."""
+    """(Matching jobs stored after `since` up to `up_to_id` in the order found, without the
+    `skip` ids; how many jobs match in all.) Lets the list add a running search's finds."""
     match = text_match(session, f.q)
     params = match.params
     count_stmt, _ = _base(f, match, [func.count()])
     total = session.scalar(count_stmt.where(Job.id <= up_to_id), params) or 0
     stmt, _ = _base(f, match, [Job])
     stmt = (
-        stmt.where(Job.id > since, Job.id <= up_to_id)
-        .order_by(Job.id.desc())
-        .options(selectinload(Job.sources), selectinload(Job.location))
+        stmt.where(Job.id > since, Job.id <= up_to_id, Job.id.not_in(skip))
+        .order_by(Job.id)
+        .options(selectinload(Job.sources), selectinload(Job.location), selectinload(Job.images))
         .limit(limit)
     )
     return list(session.scalars(stmt, params)), total
+
+
+def still_matching(session: Session, f: Filters, ids: list[int]) -> set[int]:
+    """Those of the jobs that still match the filters (the others expired, were merged or
+    hidden)."""
+    match = text_match(session, f.q)
+    stmt, _ = _base(f, match, [Job.id])
+    return set(session.scalars(stmt.where(Job.id.in_(ids)), match.params))
+
+
+def count_between(session: Session, f: Filters, after: int, up_to_id: int) -> int:
+    match = text_match(session, f.q)
+    stmt, _ = _base(f, match, [func.count()])
+    stmt = stmt.where(Job.id > after, Job.id <= up_to_id)
+    return session.scalar(stmt, match.params) or 0
 
 
 def job_points(session: Session, f: Filters) -> list[tuple]:

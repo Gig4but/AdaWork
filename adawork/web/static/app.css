@@ -48,6 +48,24 @@ button .icon { margin-right: .45rem; vertical-align: -.18em; }
 #job-list > .job { cursor: pointer; }  /* a click opens the whole text (static/job.js) */
 #job-list > .job h3::before { content: counter(job) "."; margin-right: .4rem;
                               color: var(--pico-muted-color); font-weight: 400; }
+.job-side { display: flex; gap: 1rem; align-items: baseline; margin-left: auto; }
+.job .hide { margin: 0; padding: .1rem .6rem; font-size: .8rem; }
+.job.hiding { display: none; }
+/* Found by the last search: a corner in the colour scheme's colour. */
+.job { position: relative; }
+.job .new-mark { position: absolute; top: 0; left: 0; width: 1.1rem; height: 1.1rem;
+                 border-top-left-radius: var(--pico-border-radius); pointer-events: none;
+                 background: linear-gradient(135deg, var(--pico-primary-background) 50%,
+                                             transparent 50%); }
+/* Found before and not checked yet by the running refresh. */
+.job.unchecked { opacity: .55; border-style: dashed; }
+.job .checking-note { display: none; }
+.job.unchecked .checking-note { display: inline; }
+.list-head { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: baseline;
+             justify-content: space-between; margin-bottom: var(--pico-typography-spacing-vertical); }
+.list-head p { margin: 0; }
+.hidden-bar { display: flex; gap: .5rem; align-items: baseline; }
+.hidden-bar button { margin: 0; padding: .1rem .6rem; font-size: .8rem; }
 .job header { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: baseline;
               justify-content: space-between; margin-bottom: .5rem; padding-block: .5rem; }
 .job h3 { margin: 0; font-size: 1.15rem; }
@@ -109,6 +127,9 @@ body[data-view="map"] #results { display: none; }
 
 .risk { border: 2px solid var(--pico-del-color); padding: 1rem; }
 .risk p { margin-block: .5rem; }
+.warning { color: var(--pico-del-color); margin-block: .25rem; }
+.pictures { display: flex; gap: .5rem; margin-block: .5rem; }
+.pictures img { height: 96px; width: auto; max-width: 160px; object-fit: cover; border-radius: 4px; }
 .ok { color: var(--pico-ins-color); }
 .elsewhere { text-align: right; margin-bottom: .25rem; }
 

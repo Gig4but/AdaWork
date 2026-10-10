@@ -1,0 +1,81 @@
+# Public Czech classified boards with a job section (PLAN §4.3 "Forums").
+# Each board: robots.txt allows the pages, no login, no bot challenge for an honest User-Agent.
+# Checked live on 2026-10-09 (detail pages and paging); fixtures in tests/fixtures/sources/classifieds/.
+#
+# Fields:
+#   id, name, section_url  the first listing page
+#   page                   URL of listing page {n} (n >= 2; {p} = n - 1); none = one page only
+#   ad_link                regex on absolute link URLs; group 1 is the ad's id
+#   skip_link              optional regex: links to leave out
+#   title, text            CSS selectors on the ad page (title defaults to h1)
+#   image                  optional regex on picture URLs of the ad ({id} = the ad's id);
+#                          without it the page's og:image is used
+#   place_url, place_title optional regexes: the place from the ad URL or the og:title
+#   default_enabled        false = off until the user switches it on
+#
+# Not included:
+# - avizo.cz: answers an honest User-Agent with a bot challenge since 2026-10-09.
+# - emimino.cz "Zaměstnání" and okoun.cz "Práce": discussions about work, no job offers on
+#   2026-10-09 (68 threads, 0 offers). Their employer-experience threads ("Práce v Kauflandu -
+#   zkušenosti") belong to the employer module (M9, web mentions).
+# - sbazar.cz: robots.txt disallows generic crawlers. inzerce.denik.cz: HTTP 403.
+# - prace.bazos.cz is a source of its own (scraper/sources/bazos.py).
+# Annonce is read with its "offers only" filter (?nabidkovy=1): without it 46 of 60 brigády
+# ads were people looking for work, each costing a 20 s request.
+# HyperInzerce marks ads "nabídka" or "poptávka", but "poptávka" mixes employers ("Poptáváme
+# manažery") with people looking for work; the offer rules decide per ad.
+
+- id: hyperinzerce_prace
+  name: HyperInzerce – práce
+  section_url: https://prace.hyperinzerce.cz/
+  page: https://prace.hyperinzerce.cz/?page={n}
+  ad_link: 'https://prace\.hyperinzerce\.cz/prace/inzerat/(\d+)-[a-z0-9-]+'
+  text: .c-ad-detail__description-text
+  image: '/inzeraty/{id}%2Foriginal%2F'
+  place_url: '-(?:nabidka|poptavka)-([a-z0-9-]+)$'
+
+- id: hyperinzerce_brigady
+  name: HyperInzerce – brigády
+  section_url: https://brigady.hyperinzerce.cz/
+  page: https://brigady.hyperinzerce.cz/?page={n}
+  ad_link: 'https://brigady\.hyperinzerce\.cz/brigady/inzerat/(\d+)-[a-z0-9-]+'
+  text: .c-ad-detail__description-text
+  image: '/inzeraty/{id}%2Foriginal%2F'
+  place_url: '-(?:nabidka|poptavka)-([a-z0-9-]+)$'
+
+- id: annonce_prace
+  name: Annonce – nabídky práce
+  section_url: https://www.annonce.cz/nabizim-praci-dam-vydelat$18.html?nabidkovy=1
+  page: https://www.annonce.cz/nabizim-praci-dam-vydelat$18.html?nabidkovy=1&page={n}
+  ad_link: 'https://www\.annonce\.cz/inzerat/[a-z0-9-]+-(\d+)-[a-z0-9]+\.html'
+  text: p.ad-desc
+  image: '/public/[0-9a-f/]+/\d+_\d+_(?!facebook)[^/]+\.(?:jpe?g|png)$'
+
+- id: annonce_brigady
+  name: Annonce – brigády
+  section_url: https://www.annonce.cz/brigady-prace-doma-au-pair$18.html?nabidkovy=1
+  page: https://www.annonce.cz/brigady-prace-doma-au-pair$18.html?nabidkovy=1&page={n}
+  ad_link: 'https://www\.annonce\.cz/inzerat/[a-z0-9-]+-(\d+)-[a-z0-9]+\.html'
+  text: p.ad-desc
+  image: '/public/[0-9a-f/]+/\d+_\d+_(?!facebook)[^/]+\.(?:jpe?g|png)$'
+
+- id: bazar_cz
+  name: Bazar.cz – přivýdělek, brigáda
+  section_url: https://www.bazar.cz/privydelek-brigada-prace/
+  ad_link: 'https://www\.bazar\.cz/xad(\d+)-[a-z0-9-]+\.aspx'
+  text: p.text-justify
+
+- id: cbazar_prace
+  name: cBazar – práce
+  section_url: https://prace.cbazar.cz/
+  page: https://prace.cbazar.cz/{p}/
+  ad_link: 'https://prace\.cbazar\.cz/[a-z0-9-]+-(\d+)\.html'
+  text: p.description
+
+- id: mimibazar_prace
+  name: Mimibazar – práce, přivýdělek
+  section_url: https://www.mimibazar.cz/inzeraty-nove-prace-privydelek/
+  page: https://www.mimibazar.cz/inzeraty-nove-prace-privydelek/?strana={n}
+  ad_link: 'https://www\.mimibazar\.cz/inzerat/(\d+)/[a-z0-9-]+'
+  text: div.typography.border-b
+  place_title: ',\s*([^,|]+?)\s*\|\s*Mimibazar'

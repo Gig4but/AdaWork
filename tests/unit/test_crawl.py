@@ -5,18 +5,20 @@ from pathlib import Path
 import httpx
 import pytest
 from selectolax.lexbor import LexborHTMLParser
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 
 from adawork.config import Profile
-from adawork.core import utcnow
+from adawork.core import ScrapeQuery, utcnow
 from adawork.db.models import Job, JobSource, Location, Run, SourceState
 from adawork.db.session import make_engine, make_sessionmaker, migrate
 from adawork.geo.places import PlaceResolver
 from adawork.geo.scope import build_query
 from adawork.net.polite import PoliteFetcher
 from adawork.scraper.crawl import has_page_link
-from adawork.scraper.runner import ScrapeRunner
-from adawork.scraper.sources import jenprace, linkedin, prace_cz, profesia
+from adawork.scraper.probe import probe
+from adawork.scraper.runner import RunHooks, ScrapeRunner
+from adawork.scraper.sources import classifieds, jenprace, jobs_cz, linkedin, prace_cz, profesia
+from adawork.search.service import Filters
 
 SOURCES = Path(__file__).parents[1] / "fixtures" / "sources"
 LAST_PAGE = """<html><body>
@@ -37,6 +39,7 @@ class Site:
         self.last_page = LAST_PAGE
         self.status = 200
         self.detail_status = 200
+        self.drop_details = 0  # detail requests answered by a dropped connection
         self.requests: list[str] = []
         self.answers: dict[str, httpx.Response] = {}  # by URL: other regions, redirects
 
@@ -54,6 +57,9 @@ class Site:
                 return httpx.Response(200, text=self.last_page)
             return httpx.Response(200, content=self.first_page)
         if path.startswith("/nabidka/") or "/nabidka/" in path:
+            if self.drop_details:
+                self.drop_details -= 1
+                raise httpx.RemoteProtocolError("Server disconnected", request=request)
             if self.detail_status != 200:
                 return httpx.Response(self.detail_status)
             return httpx.Response(200, content=(SOURCES / "prace_cz/detail_1.html").read_bytes())
@@ -212,6 +218,28 @@ def test_old_detail_pages_are_read_again(sessions, tmp_path):
     assert site.details() == 0
 
 
+def test_a_listing_that_lost_most_ads_expires_nothing(sessions, tmp_path):
+    site = Site()
+    run(sessions, tmp_path, site, max_details=0)
+    site.first_page = OTHER_LAST_PAGE.encode()  # one ad, no next page: 41 of 41 unseen
+    runner = run(sessions, tmp_path, site, max_details=0)
+    results = runner.progress.results["prace_cz"]
+    assert (results["new"], results["removed"]) == (1, 0)
+    with sessions() as s:
+        assert s.scalar(select(Run.status).order_by(Run.id.desc()).limit(1)) == "partial"
+
+
+def test_known_card_only_jobs_follow_their_card(sessions, tmp_path):
+    site = Site()
+    run(sessions, tmp_path, site, max_details=0)
+    site.last_page = LAST_PAGE.replace(">Skladník<", ">Skladník – noční směny<")
+    runner = run(sessions, tmp_path, site, max_details=0)
+    assert runner.progress.results["prace_cz"]["updated"] == 1
+    with sessions() as s:
+        job = s.scalar(select(Job).join(JobSource).where(JobSource.external_id == "extra-1"))
+        assert job.title == "Skladník – noční směny"
+
+
 def test_failing_detail_pages_keep_the_cards(sessions, tmp_path):
     site = Site()
     site.detail_status = 500
@@ -220,6 +248,173 @@ def test_failing_detail_pages_keep_the_cards(sessions, tmp_path):
     assert runner.progress.results["prace_cz"]["new"] == 41
     with sessions() as s:
         assert s.scalar(select(Run.status)) == "ok"
+
+
+def test_a_dropped_connection_loses_one_ad_not_the_run(sessions, tmp_path):
+    site = Site()
+    site.drop_details = 3  # every attempt at the first detail page
+    runner = run(sessions, tmp_path, site)
+    assert runner.progress.phase == "done" and not runner.progress.errors
+    assert site.details() == 3 + 4  # the dropped page's attempts, then the next four
+    with sessions() as s:
+        assert s.scalar(select(Run.status)) == "ok"
+        assert s.scalar(select(func.count()).where(JobSource.detail_at.is_not(None))) == 4
+
+
+def test_a_site_that_stops_answering_stops_its_source(sessions, tmp_path):
+    site = Site()
+    run(sessions, tmp_path, site, max_details=0)
+    site.drop_details = 10**6
+    runner = run(sessions, tmp_path, site)
+    assert "not answering" in runner.progress.errors["prace_cz"]
+    assert site.details() == 3 * 3  # three pages in a row, each tried three times
+    with sessions() as s:
+        run_row = s.scalar(select(Run).order_by(Run.id.desc()).limit(1))
+        assert run_row.status == "partial" and "Server disconnected" in run_row.error
+        assert s.scalar(select(func.count()).where(Job.status == "expired")) == 0
+
+
+def test_stop_ends_a_running_search_at_once(sessions, tmp_path):
+    site, finished = Site(), []
+    transport = httpx.MockTransport(site)
+    runner = ScrapeRunner(
+        sessions,
+        tmp_path / "cache",
+        lambda: httpx.Client(transport=transport),
+        geocode=False,
+        profile=lambda: PRAHA,
+        sources=[prace_cz.SOURCE],
+        fetcher_factory=lambda client: PoliteFetcher(client, delay=30),  # real waits
+        hooks=RunHooks(after_run=lambda: finished.append(True)),
+    )
+    runner.start()
+    deadline = time.monotonic() + 10
+    while not site.requests and time.monotonic() < deadline:
+        time.sleep(0.05)
+    started = time.monotonic()
+    assert runner.stop(timeout=10)  # the next listing page was 30 s away
+    assert time.monotonic() - started < 5
+    assert not runner.progress.running and not finished
+
+
+def test_a_refresh_checks_the_listed_ads_first_and_the_rest_after_the_search(sessions, tmp_path):
+    site = Site()
+    run(sessions, tmp_path, site, max_details=0)
+    with sessions() as s:
+        s.execute(update(JobSource).values(last_seen_at=utcnow() - timedelta(days=1)))
+        s.commit()
+        listed = s.scalars(select(JobSource).where(JobSource.url.like("%prace.cz/nabidka/%")))
+        first = listed.first()
+        assert first is not None
+        url, title = first.url, s.get_one(Job, first.job_id).title
+    site.answers[url] = httpx.Response(404)  # the listed ad is gone
+    site.first_page = LAST_PAGE.encode()  # most ads are not listed any more
+    transport = httpx.MockTransport(site)
+    runner = ScrapeRunner(
+        sessions,
+        tmp_path / "cache",
+        lambda: httpx.Client(transport=transport),
+        geocode=False,
+        profile=lambda: PRAHA,
+        sources=[prace_cz.SOURCE],
+        fetcher_factory=lambda client: PoliteFetcher(client, delay=0, sleep=lambda s: None),
+        max_details=0,
+    )
+    runner.focus = Filters(q=title)  # what the user's list shows
+    site.requests.clear()
+    runner.start()
+    runner.wait(60)
+    p = runner.progress
+    assert p.phase == "done" and p.checking == ("prace_cz",)
+    listing = next(i for i, u in enumerate(site.requests) if "/nabidky/praha/" in u)
+    assert site.requests.index(url) < listing  # checked before the search
+    others = [i for i, u in enumerate(site.requests) if "/nabidka/" in u and u != url]
+    assert others and min(others) > listing  # the rest after it
+    assert p.results["check"]["removed"] >= 1
+    with sessions() as s:
+        job = s.scalar(select(Job).join(JobSource).where(JobSource.url == url))
+        assert job is not None and job.status == "expired"
+        assert p.checked_since is not None
+        due = [JobSource.status == "active", JobSource.last_seen_at < p.checked_since]
+        assert s.scalar(select(func.count()).select_from(JobSource).where(*due)) == 0
+
+
+def test_starting_over_stops_the_running_search_first(sessions, tmp_path):
+    site, finished = Site(), []
+    transport = httpx.MockTransport(site)
+    runner = ScrapeRunner(
+        sessions,
+        tmp_path / "cache",
+        lambda: httpx.Client(transport=transport),
+        geocode=False,
+        profile=lambda: PRAHA,
+        sources=[prace_cz.SOURCE],
+        fetcher_factory=lambda client: PoliteFetcher(client, delay=30),  # real waits
+        hooks=RunHooks(after_run=lambda: finished.append(True)),
+    )
+    runner.start()
+    deadline = time.monotonic() + 10
+    while not site.requests and time.monotonic() < deadline:
+        time.sleep(0.05)
+    runner.start_over()
+    assert runner.progress.restarting
+    while not runner.progress.cleared and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert runner.progress.running and runner.progress.cleared  # the fresh run
+    assert runner.stop(timeout=10)
+    assert not finished  # neither run finished
+
+
+def test_runs_are_planned_longest_first_and_slow_sites_beside_the_slots(sessions, tmp_path):
+    by_id = {s.id: s for s in classifieds.SOURCES}
+    annonce = [by_id["annonce_prace"], by_id["annonce_brigady"]]
+    sources = [prace_cz.SOURCE, by_id["mimibazar_prace"], jobs_cz.SOURCE, *annonce]
+
+    def robots(request: httpx.Request) -> httpx.Response:
+        if request.url.host == "www.annonce.cz":
+            return httpx.Response(200, text="User-agent: *\nCrawl-delay: 20\nAllow: /\n")
+        return httpx.Response(404)
+
+    fetcher = PoliteFetcher(httpx.Client(transport=httpx.MockTransport(robots)))
+    runner = ScrapeRunner(sessions, tmp_path, sources=sources)
+    query = ScrapeQuery(kraje=["Hlavní město Praha"])
+    groups, slow = runner.schedule(sources, query, fetcher)
+    # Annonce asks for 20 s between requests: both sections (one host) in one thread of their
+    # own beside the slots; the rest longest first (a board reads 60 ads, a portal 300).
+    assert slow == [annonce]
+    assert groups == [[prace_cz.SOURCE], [jobs_cz.SOURCE], [by_id["mimibazar_prace"]]]
+
+    # Once a source has run, its last duration counts.
+    with sessions() as s:
+        start = utcnow()
+        s.add(Run(source_id="jobs_cz", started_at=start, finished_at=start + timedelta(hours=2),
+                  status="ok"))  # fmt: skip
+        s.commit()
+    assert runner.schedule(sources, query, fetcher)[0][0] == [jobs_cz.SOURCE]
+
+
+def test_a_source_without_a_first_page_url_is_still_planned(sessions, tmp_path):
+    class Broken(classifieds.Classifieds):
+        def listings(self, query):
+            return [(None, ("not", "callable"))]
+
+    broken = Broken(classifieds.boards()[0])
+    fetcher = PoliteFetcher(
+        httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(404)))
+    )
+    runner = ScrapeRunner(sessions, tmp_path, sources=[broken])
+    query = ScrapeQuery(kraje=["Hlavní město Praha"], keywords=["učitelka ve školce"])
+    groups, slow = runner.schedule([broken, prace_cz.SOURCE], query, fetcher)
+    assert sorted(map(len, groups)) == [1, 1] and slow == []
+
+
+def test_jobs_cz_names_vysocina_its_own_way():
+    query = ScrapeQuery(kraje=["Kraj Vysočina", "Hlavní město Praha"])
+    urls = [url(2) for _, url in jobs_cz.SOURCE.listings(query)]
+    assert urls == [
+        "https://www.jobs.cz/prace/vysocina-kraj/?page=2",
+        "https://www.jobs.cz/prace/praha/?page=2",
+    ]
 
 
 def test_next_page_link_is_exact():
@@ -256,28 +451,6 @@ def test_blocked_source_is_paused(sessions, tmp_path):
     site.status = 200
     run(sessions, tmp_path, site)
     assert site.requests == []  # still paused
-
-
-def test_stop_ends_a_running_search_at_once(sessions, tmp_path):
-    site = Site()
-    transport = httpx.MockTransport(site)
-    runner = ScrapeRunner(
-        sessions,
-        tmp_path / "cache",
-        lambda: httpx.Client(transport=transport),
-        geocode=False,
-        profile=lambda: PRAHA,
-        sources=[prace_cz.SOURCE],
-        fetcher_factory=lambda client: PoliteFetcher(client, delay=30),  # real waits
-    )
-    runner.start()
-    deadline = time.monotonic() + 10
-    while not site.requests and time.monotonic() < deadline:
-        time.sleep(0.05)
-    started = time.monotonic()
-    assert runner.stop(timeout=10)  # the next listing page was 30 s away
-    assert time.monotonic() - started < 5
-    assert not runner.progress.running
 
 
 def listing(name: str, source, page: int = 1):
@@ -418,3 +591,19 @@ def test_query_from_profile(sessions):
     assert nowhere.home is None and len(nowhere.kraje) == 14
     urls = [f(1) for _, f in linkedin.SOURCE.listings(query)]
     assert len(urls) == 1 and "keywords=a" in urls[0]
+
+
+def test_probe_tells_a_readable_portal_from_a_changed_one(sessions):
+    def fetcher(site: Site) -> PoliteFetcher:
+        client = httpx.Client(transport=httpx.MockTransport(site))
+        return PoliteFetcher(client, delay=0, sleep=lambda s: None)
+
+    with sessions() as s:
+        places = PlaceResolver(s)
+    found = probe(prace_cz.SOURCE, fetcher(Site()), places)
+    assert found.ok and found.leads > 10 and found.detail
+    assert "title" not in found.empty and "employer_name" not in found.empty
+    changed = Site()
+    changed.first_page = b"<html><body>Nov\xc3\xbd vzhled</body></html>"
+    found = probe(prace_cz.SOURCE, fetcher(changed), places)
+    assert not found.ok and "no ads" in found.error

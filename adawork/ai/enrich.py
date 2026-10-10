@@ -4,7 +4,10 @@
    vote is clear (it gives the job its categories, so the category filter finds portal ads),
    and contract types named in the description ("HPP", "DPP", "na živnostenský list").
    The kinds of work in the profile are mapped to occupations the same way (`wanted`).
-2. AI (the local model, minutes to hours): ads with a description that still lack fields.
+2. Pictures (the model with its vision part): the text of posters and photos of notices
+   attached to ads with little text of their own is written out and added to the ad, which
+   then goes through the rules and the AI like any other text (PLAN §6.8).
+3. AI (the local model, minutes to hours): ads with a description that still lack fields.
    Jobs matching the user's profile go first; on slow PCs only those are processed.
 
 Only empty fields are filled; what a source states is never overwritten. Filled fields are
@@ -22,9 +25,9 @@ from pathlib import Path
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from adawork.ai import wanted
+from adawork.ai import vision, wanted
 from adawork.ai.catalog import DEFAULT_STYLE, PromptStyle
-from adawork.ai.client import BadAnswer, LlmError
+from adawork.ai.client import BadAnswer, LlmError, ServerDown
 from adawork.ai.extract import (
     EDUCATION,
     FIELDS,
@@ -39,7 +42,7 @@ from adawork.ai.isco import IscoCodebook, IscoIndex, Lookup
 from adawork.ai.manager import Busy, ModelManager, NoModel
 from adawork.config import Profile
 from adawork.core import ParsedLocation, utcnow
-from adawork.db.models import Job, JobSource, LlmCache, Location
+from adawork.db.models import Job, JobImage, JobSource, LlmCache, Location
 from adawork.geo.places import PlaceResolver
 from adawork.geo.scope import build_query
 from adawork.normalize.text import contract_types, salary_in_text
@@ -55,12 +58,17 @@ BATCH = 200
 AI_CHUNK = 10  # jobs per hold of the AI slot, so user-facing work can step in
 WAIT_SECONDS = 60
 SLOW_SECONDS = 20.0  # above this per ad, only jobs matching the profile are processed
+# Pictures are read for ads whose own text is shorter than this (a poster with a two-line
+# post); a long ad with a photo of the workplace gains nothing from it.
+IMAGE_TEXT_BELOW = 600
+IMAGES_PER_RUN = 100
+IMAGE_TEXT_HEADER = "Text z obrázku:"
 
 
 @dataclass
 class EnrichProgress:
     running: bool = False
-    phase: str = ""  # rules | ai | waiting | done | failed
+    phase: str = ""  # rules | images | ai | waiting | done | failed
     done: int = 0
     total: int = 0
     classified: int = 0  # jobs that got an occupation from the rules
@@ -77,6 +85,7 @@ class Enricher:
         profile: Callable[[], Profile | None] = lambda: None,
         index_cache: Path | None = None,
         wait_seconds: float = WAIT_SECONDS,
+        images_dir: Path | None = None,
     ) -> None:
         self.sessions = sessions
         self.manager = manager
@@ -84,6 +93,7 @@ class Enricher:
         self.profile = profile
         self.index_cache = index_cache
         self.wait_seconds = wait_seconds
+        self.images_dir = images_dir
         self.progress = EnrichProgress()
         self._index: IscoIndex | None = None
         self._examples: list[tuple[str, str]] = []
@@ -132,6 +142,8 @@ class Enricher:
                 self.run_rules()
                 self.resolve_kinds()
             if self.manager.ready and not self._stop.is_set():
+                if self.run_images() and self.manager.embedder.available:
+                    self.run_rules()  # the ads that gained text from their pictures
                 self.run_ai()
                 if not self.manager.tier_still_right():
                     self.manager.start_download()
@@ -165,6 +177,7 @@ class Enricher:
                 return 0
             stmt = select(Job.id).where(
                 Job.status == "active",
+                Job.is_offer.is_(True),
                 or_(
                     Job.isco_code.is_(None),
                     func.json_array_length(Job.contract_types) == 0,
@@ -234,14 +247,72 @@ class Enricher:
                 log.info("kinds of work mapped without the model: %s", exc)
         return {p: wanted.resolve(index, p) for p in phrases}
 
-    @staticmethod
-    def _set_isco(job: Job, codebook: IscoCodebook, code: str, origin: str) -> None:
-        job.isco_code = code
-        if not job.categories or job.categories == [UNCATEGORIZED]:
-            job.categories = codebook.categories(code) or [UNCATEGORIZED]
-        _mark(job, ["isco_code", "categories"], origin)
+    # --- 2. pictures --------------------------------------------------------------------
 
-    # --- 2. AI --------------------------------------------------------------------------
+    def image_queue(self, session: Session) -> list[int]:
+        """Stored pictures of short ads not read yet, newest ads first."""
+        stmt = (
+            select(JobImage.id)
+            .join(Job, Job.id == JobImage.job_id)
+            .where(
+                JobImage.status == "stored",
+                JobImage.text.is_(None),
+                Job.status == "active",
+                Job.is_offer.is_(True),
+                func.length(Job.description) < IMAGE_TEXT_BELOW,
+            )
+            .order_by(Job.first_seen_at.desc(), JobImage.position)
+            .limit(IMAGES_PER_RUN)
+        )
+        return list(session.scalars(stmt))
+
+    def run_images(self) -> int:
+        """Writes out the text of pictures; returns the number of ads that gained text."""
+        spec = None if self.manager.custom_server else self.manager.active_model()
+        if self.images_dir is None or (spec is not None and spec.mmproj is None):
+            return 0  # a text-only model cannot read pictures
+        p = self.progress
+        with self.sessions() as session:
+            ids = self.image_queue(session)
+        p.phase, p.done, p.total = "images", 0, len(ids)
+        changed = 0
+        while ids and not self._stop.is_set():
+            try:
+                with self.manager.session(vision=True) as client, self.sessions() as session:
+                    p.phase, p.wait_reason = "images", ""
+                    while ids and not self._stop.is_set():
+                        image = session.get(JobImage, ids[0])
+                        if image is not None and image.file is not None:
+                            path = self.images_dir / image.file
+                            if path.exists():
+                                text = read_before(session, image)
+                                _ = image.job.images  # loaded before the session lets go
+                                session.commit()  # no transaction open while the model reads
+                                try:
+                                    if text is None:
+                                        text = vision.transcribe(client, path.read_bytes()).data
+                                except BadAnswer as exc:
+                                    log.warning("picture %s not read: %s", image.id, exc)
+                                    text = ""
+                                # Not counted in the speed statistics, which are per text ad.
+                                image.text, image.text_model = text, client.model[:40]
+                                changed += add_image_text(image.job)
+                            else:
+                                image.status = "failed"
+                            session.commit()
+                        ids = ids[1:]
+                        p.done += 1
+            except NoModel:
+                break
+            except Busy as exc:
+                p.phase, p.wait_reason = "waiting", str(exc)
+                self._stop.wait(self.wait_seconds)
+            except LlmError as exc:  # e.g. an own server without image support
+                log.warning("pictures not read: %s", exc)
+                break
+        return changed
+
+    # --- 3. AI --------------------------------------------------------------------------
 
     def queue(self, session: Session) -> list[int]:
         """Job ids for the model, profile matches first. On slow PCs only those."""
@@ -253,6 +324,7 @@ class Enricher:
             .outerjoin(Location, Location.id == Job.location_id)
             .where(
                 Job.status == "active",
+                Job.is_offer.is_(True),
                 or_(Job.ai_hash.is_(None), Job.ai_hash != Job.content_hash),
                 Job.id.not_in(mpsv_primary),  # Úřad práce ads are fully structured
             )
@@ -275,8 +347,6 @@ class Enricher:
         return matching if slow else matching + rest
 
     def run_ai(self) -> int:
-        from adawork.ai.client import ServerDown
-
         p = self.progress
         with self.sessions() as session:
             index = self.index(session)
@@ -335,6 +405,10 @@ class Enricher:
         elif not fields:
             result = Extraction()
         else:
+            # No transaction stays open while the model reads (seconds): a scrape may write
+            # meanwhile, and SQLite then refuses a write from an older read transaction.
+            _ = job.location, job.sources
+            session.commit()
             result = extract(client, text, candidates, fields, style=style, found=found)
             self.manager.record(result.timing)
             session.add(
@@ -347,6 +421,36 @@ class Enricher:
                 )
             )
         apply(session, job, result, found, index.codebook if index else None, places)
+
+
+def read_before(session: Session, image: JobImage) -> str | None:
+    """The text of the same picture read for another ad (an employer's logo or poster on
+    many ads is read once)."""
+    if not image.phash:
+        return None
+    return session.scalar(
+        select(JobImage.text)
+        .where(JobImage.phash == image.phash, JobImage.text.is_not(None), JobImage.id != image.id)
+        .limit(1)
+    )
+
+
+def add_image_text(job: Job) -> bool:
+    """Adds the text of the job's pictures to its description, once. The job is then
+    processed again by the rules and the AI (its hashes are reset)."""
+    texts = [i.text for i in job.images if i.text]
+    if not texts or IMAGE_TEXT_HEADER in (job.description or ""):
+        return False
+    pictures = IMAGE_TEXT_HEADER + "\n" + "\n\n".join(texts)
+    job.description = "\n\n".join(x for x in (job.description, pictures) if x)
+    extra = dict(job.extra or {})
+    if extra.pop("title_from_picture", False):  # an ad the user dropped in as a photo only
+        job.title = next(line.strip() for t in texts for line in t.split("\n") if line.strip())[:90]
+        job.extra = extra
+    job.rules_hash = job.ai_hash = None
+    _mark(job, ["description"], "image")
+    job.updated_at = utcnow()
+    return True
 
 
 def _ad_text(job: Job) -> str:

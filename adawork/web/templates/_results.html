@@ -1,9 +1,12 @@
 {% if offset == 0 %}
+<div class="list-head">
   {% if result.total %}
     <p id="found-count" class="muted small">{{ t("search.found", n=result.total) }} · {{ "%.0f" | format(result.took_ms) }} ms</p>
   {% else %}
     <p id="found-count" class="muted">{{ t("search.empty_filtered") if f.is_filtered() else t("search.empty") }}</p>
   {% endif %}
+  {% include "_hidden.html" %}
+</div>
   {% if request.headers.get("HX-Request") %}
     {# Refresh the filter counts after new results, without waiting for them. #}
     <div id="facets-refresh" hx-swap-oob="true" hx-get="/facets?{{ qs }}" hx-trigger="load"
@@ -16,10 +19,7 @@
   {% include "_job.html" %}
 {% endfor %}
 {% if offset + result.jobs | length < result.total %}
-  {# Counted on the page: jobs put on top while a search runs shift the next page. #}
-  <button type="button" class="secondary outline more"
-          hx-get="/results?{{ qs }}" hx-vals='js:{offset: document.querySelectorAll("#job-list > .job").length}'
-          hx-target="this" hx-swap="outerHTML">{{ t("search.more") }}</button>
+  {% include "_more.html" %}
 {% endif %}
 {% if offset == 0 %}
 </div>

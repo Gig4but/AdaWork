@@ -56,6 +56,10 @@ KRAJ_SLUGS = {
 }
 MAX_DETAILS = 300  # detail pages per source and run (~8 min at the polite pace)
 MAX_FAILED_DETAILS = 10  # in a row: the page layout probably changed
+# Pages in a row that still fail after the fetcher's retries (dropped connections, timeouts,
+# server errors): the site is down, so the source stops; a single one is skipped.
+MAX_UNREACHABLE = 3
+MAX_RECHECKS = 20  # pages of long-unseen ads read again per run (`recheck_after_days`)
 REFRESH_DAYS = 30  # a listed ad's detail page is read again after this many days
 
 
@@ -95,6 +99,9 @@ class CrawlSource:
     nationwide: bool = False  # the listings cover the whole country, not regions
     kind: SourceKind = "portal"
     needs_consent = False
+    # Newest-first listings that stop early: an ad unseen this many days may still be listed
+    # further back, so its page is read again (a few per run) and only a gone page expires it.
+    recheck_after_days: int | None = None
     # Listed ads whose detail page is older are read again (text and pay change), after the
     # new ones. Not for leads with a lastmod: that tells when they changed.
     refresh_after_days: int | None = REFRESH_DAYS
@@ -118,6 +125,10 @@ class CrawlSource:
     def wanted(self, lead: Lead, query: ScrapeQuery, places: PlaceResolver) -> bool:
         """False for a lead outside the user's regions (when its URL or card tells)."""
         return True
+
+    def gone(self, html: str) -> bool:
+        """The ad's page says the ad is over (portals that keep such pages up, HTTP 200)."""
+        return False
 
     def prepare(self, query: ScrapeQuery, places: PlaceResolver) -> None:
         """Called once before a run, e.g. to learn which towns are near home."""
@@ -195,7 +206,7 @@ class SitemapSource(CrawlSource):
         far = any("-".join(words[-n:]) in self._elsewhere for n in range(1, len(words) + 1))
         return not far or self.near_home(lead.url)
 
-    def listings(self, query: ScrapeQuery) -> list[tuple[str | None, Callable[[int], str]]]:
+    def listings(self, query: ScrapeQuery) -> list[Listing]:
         return [(None, self.sitemap_url)]
 
     def sitemap_url(self, page: int) -> str:
@@ -221,6 +232,7 @@ class CrawlResult:
     details: int = 0
     failed_details: int = 0
     blocked: str | None = None
+    unreachable: str | None = None  # why the source stopped early: the site did not answer
 
 
 def clean_url(url: str) -> str:
@@ -280,10 +292,6 @@ def set_salary(job: ParsedJob, text: str | None) -> None:
 _PRIORITY = attrgetter("priority")
 
 
-def _full(source: CrawlSource, seen: set[str]) -> bool:
-    return source.max_leads is not None and len(seen) >= source.max_leads
-
-
 def crawl(
     source: CrawlSource,
     fetcher: PoliteFetcher,
@@ -293,125 +301,241 @@ def crawl(
     max_details: int = MAX_DETAILS,
     progress: Callable[[str, int], None] = lambda phase, n: None,
 ) -> CrawlResult:
-    result = CrawlResult()
-    seen: set[str] = set()
-    new: list[Lead] = []
-    incomplete: list[Lead] = []  # known, but only from a card so far
-    changed: list[Lead] = []
-    stale: list[Lead] = []  # known, with a detail page read long ago
-    refresh_before = (
-        utcnow() - timedelta(days=source.refresh_after_days)
-        if source.refresh_after_days is not None
-        else None
-    )
-    done_kraje: list[str] = []  # regions whose listing was read to the end
-    get = partial(fetcher.get, obey_robots=source.obey_robots, min_delay=source.delay)
-    source.prepare(query, places)
-    try:
-        whole = True  # every listing was read to the end
-        for kraj, listing_url in source.listings(query):
-            complete = True
-            page = 1
-            while True:
-                if page > source.max_pages or _full(source, seen):
-                    complete = False
-                    break
-                resp = get(listing_url(page))
-                if resp is None:
-                    complete = complete and page > 1  # robots.txt or gone
-                    break
-                if resp.history and other_page(str(resp.history[0].url), str(resp.url)):
-                    complete = False  # the listing ends before its last page
-                    break
-                result.pages += 1
-                listing = source.parse_listing(resp.text, page, places)
-                fresh = 0
-                for lead in listing.leads:
-                    if lead.external_id in seen or _full(source, seen):
-                        continue
-                    seen.add(lead.external_id)
-                    if store.knows(lead.external_id):
-                        store.touch(lead.external_id)
-                        if lead.fetch_url and not store.has_detail(lead.external_id):
-                            incomplete.append(lead)
-                        elif (
-                            lead.fetch_url
-                            and lead.modified
-                            and store.detail_older_than(lead.external_id, lead.modified)
-                        ):
-                            changed.append(lead)
-                        elif (
-                            lead.fetch_url
-                            and not lead.modified
-                            and refresh_before
-                            and store.detail_older_than(lead.external_id, refresh_before)
-                        ):
-                            stale.append(lead)
-                    elif not source.wanted(lead, query, places):
-                        continue
-                    else:
-                        new.append(lead)
-                        fresh += 1
-                progress("listing", len(seen))
-                if (
-                    not listing.leads
-                    and source.expire_after_days is None
-                    and not (source.empty_last_page and page > 1)
-                ):
-                    complete = False  # an error page or a new layout, not an empty region
-                if not listing.has_next or not listing.leads:
-                    break
-                if source.newest_first and not fresh:
-                    complete = False  # the rest is known already
-                    break
-                page += 1
-            whole = whole and complete
-            if complete and kraj is not None:
-                done_kraje.append(kraj)
-        store.commit()
+    """One run of a source, as the module docstring tells."""
+    return _Crawl(source, fetcher, store, places, query, max_details, progress).run()
 
-        limit = min(max_details, source.max_details or max_details)
-        unread = sorted((lead for lead in new + incomplete if lead.fetch_url), key=_PRIORITY)
-        stale.sort(key=lambda lead: store.detail_read_at(lead.external_id))
-        queue = (unread + sorted(changed, key=_PRIORITY) + stale)[:limit]
+
+class _Crawl:
+    """The state of one `crawl`: the leads seen so far, sorted by what their pages need."""
+
+    def __init__(
+        self,
+        source: CrawlSource,
+        fetcher: PoliteFetcher,
+        store: JobStore,
+        places: PlaceResolver,
+        query: ScrapeQuery,
+        max_details: int,
+        progress: Callable[[str, int], None],
+    ) -> None:
+        self.source, self.fetcher, self.store = source, fetcher, store
+        self.places, self.query, self.progress = places, query, progress
+        self.get = partial(fetcher.get, obey_robots=source.obey_robots, min_delay=source.delay)
+        self.limit = source.detail_limit(max_details)
+        days = source.refresh_after_days
+        self.refresh_before = utcnow() - timedelta(days=days) if days is not None else None
+        self.result = CrawlResult()
+        self.seen: set[str] = set()
+        self.new: list[Lead] = []
+        self.incomplete: list[Lead] = []  # known, but only from a card so far
+        self.changed: list[Lead] = []  # the sitemap says the page changed since it was read
+        self.stale: list[Lead] = []  # known, with a detail page read long ago
+        self.done_kraje: list[str] = []  # regions whose listing was read to the end
+        self.failures = 0  # pages in a row the site did not answer
+
+    def run(self) -> CrawlResult:
+        source, result = self.source, self.result
+        source.prepare(self.query, self.places)
+        try:
+            whole = True  # every listing was read to the end
+            for kraj, listing_url in source.listings(self.query):
+                if result.unreachable:
+                    whole = False
+                    break
+                complete = self.walk(listing_url)
+                whole = whole and complete
+                if complete and kraj is not None:
+                    self.done_kraje.append(kraj)
+            self.read_details()
+            result.complete = whole and bool(self.seen) and not result.unreachable
+        except SourceBlocked as exc:
+            result.blocked = str(exc)
+            log.warning("%s blocked: %s", source.id, exc)
+        finally:
+            self.keep_cards()
+        self.expire()
+        if source.recheck_after_days is not None and not (
+            result.complete or result.unreachable or result.blocked
+        ):
+            recheck_unseen(source, self.fetcher, self.store, result)
+        return result
+
+    def full(self) -> bool:
+        return self.source.max_leads is not None and len(self.seen) >= self.source.max_leads
+
+    def unanswered(self, url: str, exc: httpx.HTTPError) -> bool:
+        """Notes a page the site did not answer; True once the site looks down. An error
+        page (HTTP 5xx after the retries) is an answer: only that page is skipped."""
+        log.warning("%s: no page at %s: %s", self.source.id, url, exc)
+        self.failures = self.failures + 1 if isinstance(exc, httpx.TransportError) else 0
+        if self.failures >= MAX_UNREACHABLE:
+            self.result.unreachable = str(exc) or type(exc).__name__
+        return self.result.unreachable is not None
+
+    def walk(self, listing_url: Callable[[int], str]) -> bool:
+        """Reads a listing page by page; True when it was read to its end."""
+        source = self.source
+        page = 1
+        while True:
+            if page > source.max_pages or self.full():
+                return False
+            url = listing_url(page)
+            try:
+                resp = self.get(url)
+            except httpx.HTTPError as exc:
+                self.unanswered(url, exc)
+                return False  # the rest of this listing waits for the next run
+            self.failures = 0
+            if resp is None:
+                return page > 1  # robots.txt or gone
+            if resp.history and other_page(str(resp.history[0].url), str(resp.url)):
+                return False  # the listing ends before its last page
+            self.result.pages += 1
+            listing = source.parse_listing(resp.text, page, self.places)
+            fresh = 0
+            with self.store.writing():
+                for lead in listing.leads:
+                    fresh += self.sort(lead)
+            self.progress("listing", len(self.seen))
+            # No ads on a page: an error page or a new layout, not an empty region.
+            empty = (
+                not listing.leads
+                and source.expire_after_days is None
+                and not (source.empty_last_page and page > 1)
+            )
+            if not listing.has_next or not listing.leads:
+                return not empty
+            if source.newest_first and not fresh:
+                return False  # the rest is known already
+            if (
+                source.newest_first
+                and len(self.new) >= self.limit
+                and not any(x.card for x in self.new)
+            ):
+                return False  # enough to read this run; listings give no cards to keep
+            page += 1
+
+    def sort(self, lead: Lead) -> bool:
+        """Notes a listed lead where it belongs; True for an ad not known before."""
+        store, external_id = self.store, lead.external_id
+        if external_id in self.seen or self.full():
+            return False
+        self.seen.add(external_id)
+        if not store.knows(external_id):
+            if not self.source.wanted(lead, self.query, self.places):
+                return False
+            self.new.append(lead)
+            return True
+        if lead.card is not None and not store.has_detail(external_id):
+            store.add(lead.card, detail=False)  # updated when it changed
+        else:
+            store.touch(external_id)
+        if not lead.fetch_url:
+            return False
+        if not store.has_detail(external_id):
+            self.incomplete.append(lead)
+        elif lead.modified:
+            if store.detail_older_than(external_id, lead.modified):
+                self.changed.append(lead)
+        elif self.refresh_before and store.detail_older_than(external_id, self.refresh_before):
+            self.stale.append(lead)
+        return False
+
+    def read_details(self) -> None:
+        """Detail pages of new ads first, then changed ones, then the longest unread."""
+        result, store = self.result, self.store
+        unread = sorted((x for x in self.new + self.incomplete if x.fetch_url), key=_PRIORITY)
+        self.stale.sort(key=lambda lead: store.detail_read_at(lead.external_id))
+        queue = (unread + sorted(self.changed, key=_PRIORITY) + self.stale)[: self.limit]
         failed_in_row = 0
-        for lead in queue:
+        for lead in [] if result.unreachable else queue:
             url = lead.fetch_url
             assert url is not None  # queued for its detail page
             try:
-                resp = get(url)
-                job = source.parse_detail(resp.text, lead, places) if resp else None
-            except (SourceBlocked, httpx.TransportError):
-                raise
+                resp = self.get(url)
+                self.failures = 0
+            except httpx.HTTPError as exc:
+                resp = None  # a dropped connection loses this ad, not the run
+                if self.unanswered(url, exc):
+                    result.failed_details += 1
+                    return
+            try:
+                job = self.source.parse_detail(resp.text, lead, self.places) if resp else None
             except Exception:
-                log.exception("%s: cannot read %s", source.id, url)
+                log.exception("%s: cannot read %s", self.source.id, url)
                 job = None
             if job is None:
                 result.failed_details += 1
                 failed_in_row += 1
                 if failed_in_row >= MAX_FAILED_DETAILS:
-                    log.error("%s: %d detail pages in a row unreadable", source.id, failed_in_row)
-                    break
+                    log.error(
+                        "%s: %d detail pages in a row unreadable", self.source.id, failed_in_row
+                    )
+                    return
                 continue
             failed_in_row = 0
             job.external_id, job.url = lead.external_id, lead.url
-            store.add(merge_card(job, lead.card), detail=True)
+            with store.writing():
+                store.add(merge_card(job, lead.card), detail=True)
             result.details += 1
-            progress("details", result.details)
-        result.complete = whole and bool(seen)
-    except SourceBlocked as exc:
-        result.blocked = str(exc)
-        log.warning("%s blocked: %s", source.id, exc)
-    finally:
-        # New jobs without a detail page yet still appear, from their card.
-        for lead in new:
-            if lead.card is not None and not store.knows(lead.external_id):
-                store.add(lead.card, detail=False)
-        store.commit()
-    if source.expire_after_days is not None:
-        store.expire_unseen(source.expire_after_days)
-    elif result.complete:
-        store.expire_missing(None if source.nationwide else query.kraje)
-    elif done_kraje:  # a region read to the end counts even when another one's broke off
-        store.expire_missing(done_kraje)
-    return result
+            self.progress("details", result.details)
+
+    def keep_cards(self) -> None:
+        """New ads without a detail page yet still appear, from their card."""
+        with self.store.writing():
+            for lead in self.new:
+                if lead.card is not None and not self.store.knows(lead.external_id):
+                    self.store.add(lead.card, detail=False)
+
+    def expire(self) -> None:
+        """Ads the source no longer lists are gone: after a listing read to its end (in its
+        region only), or when unseen for `expire_after_days`."""
+        source, result, store = self.source, self.result, self.store
+        with store.lock:
+            if result.unreachable:
+                return  # ads unseen because the site was down are not gone
+            if source.expire_after_days is not None:
+                store.expire_unseen(source.expire_after_days)
+            elif result.complete or self.done_kraje:
+                # A region read to the end counts even when another one's listing broke off.
+                kraje: list[str] | None = self.done_kraje
+                if result.complete:
+                    kraje = None if source.nationwide else self.query.kraje
+                if store.mostly_unseen(kraje):
+                    result.complete = False
+                    log.warning("%s: most known ads not listed any more: none expired", source.id)
+                else:
+                    store.expire_missing(kraje)
+
+
+def recheck_unseen(
+    source: CrawlSource, fetcher: PoliteFetcher, store: JobStore, result: CrawlResult
+) -> None:
+    """Reads the pages of ads unseen for `recheck_after_days` again, the longest unseen
+    first: a page that is gone (404/410) or says so expires its ad, a live one counts as seen."""
+    gone, live = [], []
+    for external_id, url in store.unseen_for(source.recheck_after_days or 0, MAX_RECHECKS):
+        try:
+            over = page_gone(source, fetcher, url)
+        except SourceBlocked as exc:
+            result.blocked = str(exc)
+            break
+        except httpx.HTTPError as exc:
+            log.warning("%s: cannot check %s: %s", source.id, url, exc)
+            break
+        if over is not None:
+            (gone if over else live).append(external_id)
+    with store.writing():
+        for external_id in live:
+            store.touch(external_id)
+    with store.lock:
+        store.expire_gone(gone)
+
+
+def page_gone(source: CrawlSource, fetcher: PoliteFetcher, url: str) -> bool | None:
+    """The ad's own page is gone (404/410) or says the ad is over; None when robots.txt
+    does not let us read it (so it is not known to be gone). Raises what the fetcher raises."""
+    if source.obey_robots and not fetcher.allowed(url):
+        return None
+    resp = fetcher.get(url, obey_robots=source.obey_robots, min_delay=source.delay)
+    return resp is None or source.gone(resp.text)

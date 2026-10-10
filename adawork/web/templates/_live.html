@@ -1,3 +1,6 @@
-{# Asks every few seconds for the jobs a running search has found since `since`. #}
-<div id="live" hx-get="/results/new?{{ qs }}{{ '&' if qs }}since={{ since }}&cleared={{ 1 if progress.cleared else 0 }}"
+{# Asks every few seconds for the jobs a running search has found since `since`, telling
+   which ones the list shows, so those no longer open drop out. `data-unchecked`: the listed
+   jobs a refresh has not checked yet (search.html dims them). #}
+<div id="live" data-unchecked="{{ (unchecked or []) | join(',') }}" hx-post="/results/new?{{ qs }}{{ '&' if qs }}since={{ since }}&cleared={{ 1 if progress.cleared else 0 }}"
+     hx-vals='js:{shown: Array.from(document.querySelectorAll("#job-list > .job"), e => e.dataset.id).join(","), more: document.querySelector("#job-list > .more") ? "1" : ""}'
      hx-trigger="every 3s" hx-target="this" hx-swap="outerHTML"></div>

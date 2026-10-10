@@ -6,7 +6,7 @@ from typing import Any, cast
 from sqlalchemy import JSON, ForeignKey, Index, String, Table, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from adawork.core import JobStatus, Precision, RunStatus, SalaryUnit
+from adawork.core import ImageStatus, JobStatus, Precision, RunStatus, SalaryUnit
 from adawork.normalize.vocab import derived_values
 
 
@@ -100,10 +100,18 @@ class Job(Base):
     # titles) and by the AI model. Different from content_hash = not processed yet.
     rules_hash: Mapped[str | None] = mapped_column(String(64))
     ai_hash: Mapped[str | None] = mapped_column(String(64))
+    # Free-text posts (classifieds, social): False for people looking for work, services,
+    # loans and sales (normalize/offers.py). Kept, so they are not read again, but never listed.
+    is_offer: Mapped[bool] = mapped_column(default=True, index=True)
+    red_flags: Mapped[list[str]] = mapped_column(default=list)  # vocab.RED_FLAGS codes
+    hidden_at: Mapped[datetime | None]  # the user hid the ad from the list
 
     location: Mapped[Location | None] = relationship()
     sources: Mapped[list["JobSource"]] = relationship(
         back_populates="job", cascade="all, delete-orphan"
+    )
+    images: Mapped[list["JobImage"]] = relationship(
+        back_populates="job", cascade="all, delete-orphan", order_by="JobImage.position"
     )
 
     def update_derived(self) -> None:
@@ -141,6 +149,33 @@ class JobSource(Base):
     last_seen_at: Mapped[datetime]
 
     job: Mapped[Job] = relationship(back_populates="sources")
+
+
+class JobImage(Base):
+    """A picture attached to an ad (poster, photo of a notice, social post image), PLAN §6.8.
+
+    The file is kept in the image cache; the vision model writes out its text, which then
+    goes through the same extraction as any ad text. `phash` finds the same picture posted
+    again elsewhere.
+    """
+
+    __tablename__ = "job_images"
+    __table_args__ = (UniqueConstraint("job_id", "url"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job_id: Mapped[int] = mapped_column(ForeignKey("jobs.id", ondelete="CASCADE"), index=True)
+    url: Mapped[str]
+    position: Mapped[int] = mapped_column(default=0)
+    status: Mapped[ImageStatus] = mapped_column(String(10), default="new", index=True)
+    file: Mapped[str | None]  # file name in the image cache
+    phash: Mapped[str | None] = mapped_column(String(16), index=True)  # 64-bit dHash, hex
+    width: Mapped[int | None]
+    height: Mapped[int | None]
+    text: Mapped[str | None]  # written out by the vision model; "" = no text in the image
+    text_model: Mapped[str | None] = mapped_column(String(40))
+    created_at: Mapped[datetime]
+
+    job: Mapped[Job] = relationship(back_populates="images")
 
 
 class SourceState(Base):

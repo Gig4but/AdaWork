@@ -23,6 +23,7 @@ from adawork.normalize.text import (
     node_text,
 )
 from adawork.scraper.crawl import (
+    KRAJ_SLUGS,
     CrawlSource,
     Lead,
     ListingPage,
@@ -33,6 +34,8 @@ from adawork.scraper.crawl import (
 
 SOURCE_ID = "jobs_cz"
 BASE = "https://www.jobs.cz"
+# jobs.cz names Vysočina differently ("/prace/kraj-vysocina/" is 404, found 2026-10-10).
+SLUGS = KRAJ_SLUGS | {"Kraj Vysočina": "vysocina-kraj"}
 MORE_PLACES = re.compile(r"\s*\+\s*\d+\s+dalš\w+\s+lokalit\w*$")
 DATA_LAYER = re.compile(r"dataLayer\.push\((\{.*?\})\);", re.S)
 STREET_NUMBER = re.compile(r"\d")
@@ -69,6 +72,7 @@ def occupations(html: str) -> list[str]:
 class JobsCz(CrawlSource):
     id = SOURCE_ID
     label = "Jobs.cz"
+    region_slugs = SLUGS
 
     def listing_url(self, region_slug: str, page: int) -> str:
         return f"{BASE}/prace/{region_slug}/" + (f"?page={page}" if page > 1 else "")

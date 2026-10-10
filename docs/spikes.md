@@ -347,3 +347,110 @@ a 2B model in 4-bit. These models were removed from the catalog on 2026-10-09.
 now read by the rules for every job without a structured salary, with or without a model.
 On the golden ads' text bodies it found 10 pay lines, 8 matching the label (the other 2 ads
 state hourly and monthly pay).
+
+## M6b live checks (2026-10-09)
+
+### Classified boards
+
+All 7 sections read live into a copy of the M6 database (honest User-Agent, robots.txt,
+≤ 60 ads per board and run). 71 minutes in all, mostly Annonce: its robots.txt asks for
+20 s between requests (both Annonce sections share the host, so they cannot overlap).
+
+| Board | Ads read | Not offers | Red flags | Placed | Pictures |
+|---|---|---|---|---|---|
+| HyperInzerce – práce | 60 | 5 (loans, one ad 5×) | 3 | 43 | most |
+| HyperInzerce – brigády | 60 | 5 (people looking) | 3 | 43 | most |
+| Annonce – nabídky práce | 60 (11 joined portal jobs) | 0 | 0 | 60 | few |
+| Annonce – brigády | 60 | **46** (the section is mostly "Poptávka") | 0 | 60 | few |
+| Bazar.cz | 22 (one page) | 2 | 2 | 16 | all |
+| cBazar | 60 | 0 | 2 | 30 | none |
+| Mimibazar | 60 | 1 | 11 (MLM "second salary from home") | 60 | all |
+
+- Not checked by hand in full, but every flagged and every non-offer ad was read: all
+  non-offers are people looking for work, services or loans; Annonce marks them itself
+  ("Typ inzerátu: Poptávka"). Two "fee" flags were wrong ("žádné vstupní poplatky") and the
+  rule now ignores denied fees. The red-flag rules fire on none of the 45k portal jobs.
+- Not added: avizo.cz (bot challenge for an honest User-Agent since 2026-10-09);
+  eMimino "Zaměstnání" and Okoun "Práce" (discussions, 0 offers in 68 threads).
+- A board now stops walking its listing once it has more unread ads than a run reads (a
+  board's listing has no cards to keep); Annonce then needs ~3 pages instead of 15.
+
+### Pictures (vision model reads the text)
+
+40 real board pictures (HyperInzerce, Mimibazar), the prompt of `ai/vision.py`:
+
+| What the picture is | Count | Result |
+|---|---|---|
+| Job poster | 8 | text read correctly (minor diacritic slips) |
+| Employer logo (one agency logo on 17 ads) | 18 | logo text; now read once per picture hash |
+| Photo without text / product photo | 12 | empty or a few product words |
+| Banner with a repeated price list | 1 | the model looped ("500" × 400 lines); loops are cut |
+| Echo of the prompt ("Přepis:") | 2 | removed |
+
+| Model (vision) | s per poster, iGPU (first read) | s per poster, CPU 4 threads |
+|---|---|---|
+| Qwen3-VL 2B (Simple) | 14–56, typical ~25 | 35–63, median 42 |
+| Gemma 4 E2B (Good) | 9–24, median 16 | – |
+| Qwen3-VL 4B (Excellent) | 19–45, median 32 | – |
+
+llama.cpp's DRY sampler did not stop the loop with greedy decoding and changed nothing else,
+so it is not used. **Decision:** no RapidOCR. Pictures are read only for ads with < 600
+characters of own text (≤ 100 per run), and even the CPU-only budget PC reads a poster in
+under a minute in the background.
+
+### Complete first run (all default sources, 4 in parallel)
+
+Copy of the M6 database with its jobs removed (municipalities kept), home Kolín, every source
+that is on by default (Úřad práce, 15 portals, 7 boards; LinkedIn and social off), pictures and
+geocoding included, ≤ 300 detail pages per portal and 60 per board:
+
+| | |
+|---|---|
+| **Total** | **90 min** (sum of the sources one after another: ~265 min) |
+| Úřad práce | 0.6 min, 40,050 jobs |
+| Portals (4 at a time) | done after ~35 min; 8.7–18.7 min each (Personálka, Bazoš slowest) |
+| Annonce (2 sections, one host, 20 s crawl delay) | 46 min each, side by side: the last ~45 min of the run |
+| Pictures + geocoding | ~10 min (248 pictures stored) |
+| Result | 61,535 active jobs |
+
+The first two attempts failed: a source kept its database transaction open while it downloaded
+pages ("database is locked" for 18 of 22 sources), and two sources inserted the same new place.
+Writes now go one at a time in short transactions, and a place another source added meanwhile
+is reused. easy-prace.cz failed once on a dropped connection; dropped connections are now
+retried like timeouts. Later runs are much shorter: portals re-read only new and changed ads,
+and Annonce lists only the newest page or two.
+
+### Complete first run after the fixes (2026-10-10)
+
+The 90-minute run showed five problems: Annonce (two sections, one host, 20 s crawl delay)
+started last and held two of the four slots while its sections waited for each other;
+easy-prace.cz failed on one dropped connection (the whole source, not one page); jobs.cz never
+read Vysočina (its listing is `/prace/vysocina-kraj/`, ours was 404); 46 of 60 Annonce brigády
+ads were people looking for work; pictures came one at a time after everything else, and the
+"300 newest" limit left all HyperInzerce pictures out (that board is read first, so its ads
+are the oldest).
+
+Fixed: sources on one host run one after another in one group, longest first (last run's
+duration, else detail pages × pace); every robots.txt is read at the start, all at once, and a
+site asking for ≥ 5 s between requests runs in a thread of its own beside the 4 slots; a page
+that still fails after the retries is skipped (3 dropped connections in a row: the site is
+down, the run is partial, the error shown, nothing expired); Annonce is read with its "offers
+only" filter (`?nabidkovy=1`: all 14 offers of the old run kept, 43 of 46 seekers gone, the
+other 3 caught by the offer rules); pictures are fetched per host in parallel, at most 150 per
+host and run and no more than ~5 minutes of the host's pace.
+
+Same setup as before (copy of the M6 database without jobs, home Kolín):
+
+| | before | after |
+|---|---|---|
+| **Total** | 90 min | **54.5 min** |
+| Annonce | 46 min per section, side by side, at the end | 24 + 17.6 min in its own thread from the start |
+| Portals | done after ~35 min | 4 slots for portals the whole time; done after ~48 min |
+| Failed sources | easy-prace.cz | none (easy-prace 266 new jobs) |
+| jobs.cz | partial, 2,291 new (no Vysočina) | complete, 2,734 new |
+| Pictures | 248 stored, none from HyperInzerce, ~10 min | 304 stored (all 86 HyperInzerce offers), ~6 min |
+| Result | 61,535 active jobs | 61,653 active jobs |
+
+The rest is the slowest portals themselves (Personálka, Bazoš ~18 min at 1.5 s per page with
+300 detail pages). Every region listing of every region-based portal was checked live: only
+the jobs.cz Vysočina slug was wrong.

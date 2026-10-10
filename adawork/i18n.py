@@ -69,7 +69,16 @@ TEXTS: dict[str, dict[str, str]] = {
         "cs": "Vyberte, odkud má aplikace nabídky stahovat.",
         "en": "Choose where the app downloads job offers from.",
     },
-    "sources.portals": {"cs": "Úřad práce a portály", "en": "Labour office and portals"},
+    "sources.kind.portal": {"cs": "Úřad práce a portály", "en": "Labour office and portals"},
+    "sources.kind.classifieds": {"cs": "Inzertní servery", "en": "Classified ad boards"},
+    "sources.classifieds.hint": {
+        "cs": "Inzeráty od kohokoli: nabídky, které nejsou prací (půjčky, služby, lidé hledající "
+        "práci), aplikace nezobrazí, a podezřelé nabídky (poplatky, MLM, „práce doma“) skryje, "
+        "dokud je ve filtrech nezapnete.",
+        "en": "Ads written by anyone: posts that are not jobs (loans, services, people looking "
+        "for work) are not shown, and suspicious offers (fees, MLM, 'work from home') stay "
+        "hidden until you switch them on in the filters.",
+    },
     "sources.off_default": {"cs": "ve výchozím stavu vypnuto", "en": "off by default"},
     "sources.linkedin.warning": {
         "cs": "LinkedIn automatické čtení svých stránek zakazuje, a to v podmínkách použití "
@@ -88,8 +97,8 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "I understand the risk and want to switch this source on",
     },
     "sources.consent_missing": {
-        "cs": "LinkedIn se zapne, až zaškrtnete, že rozumíte riziku.",
-        "en": "LinkedIn is switched on only after you tick that you understand the risk.",
+        "cs": "{source} se zapne, až zaškrtnete, že rozumíte riziku.",
+        "en": "{source} is switched on only after you tick that you understand the risk.",
     },
     "sources.indeed": {
         "cs": "Indeed automatické čtení blokuje. Ve vyhledávání najdete odkaz, který stejné "
@@ -97,9 +106,139 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "Indeed blocks automatic reading. The search page has a link that opens the same "
         "search on Indeed in your browser.",
     },
-    "sources.social": {
-        "cs": "Facebook a Instagram přibudou v pozdější verzi (ve výchozím stavu vypnuté).",
-        "en": "Facebook and Instagram come in a later version (off by default).",
+    "sources.social.warning_title": {
+        "cs": "Automatické čtení Facebooku a Instagramu je riskantní:",
+        "en": "Reading Facebook and Instagram automatically is risky:",
+    },
+    "sources.social.terms": {
+        "cs": "porušuje podmínky používání společnosti Meta;",
+        "en": "it breaks Meta's terms of use;",
+    },
+    "sources.social.account": {
+        "cs": "Facebook nebo Instagram může váš účet dočasně zablokovat, nebo ho i trvale "
+        "zrušit (přijdete o Messenger, skupiny a fotky);",
+        "en": "Facebook or Instagram may block your account for a while or even disable it "
+        "for good (you lose Messenger, groups and photos);",
+    },
+    "sources.social.no_safe_limit": {
+        "cs": "žádný počet příspěvků není zaručeně bezpečný;",
+        "en": "no number of posts is guaranteed to be safe;",
+    },
+    "sources.social.how": {
+        "cs": "aplikace čte pomalu (nejvýš {n} příspěvků denně, ve dvou krátkých čteních přes "
+        "den), jen čte (nic nelajkuje, nekomentuje ani se nepřidává do skupin), při prvním "
+        "varování přestane a vaše heslo nikdy nevidí ani neukládá.",
+        "en": "the app reads slowly (at most {n} posts a day, in two short sessions in the "
+        "daytime), only reads (no likes, comments or joining groups), stops at the first "
+        "warning and never sees or stores your password.",
+    },
+    "sources.social.more": {"cs": "Více o rizicích", "en": "More about the risks"},
+    "sources.instagram.separate": {
+        "cs": "Tip: Instagram dovoluje mít víc účtů. Přihlaste se raději samostatným účtem, "
+        "ne svým hlavním.",
+        "en": "Tip: Instagram allows several accounts. Better log in with a separate account, "
+        "not your main one.",
+    },
+    "sources.social.per_day": {"cs": "Nejvýš příspěvků denně", "en": "Posts a day at most"},
+    "sources.social.per_day_hint": {
+        "cs": "Výchozí je {n}. Víc znamená větší riziko pro účet.",
+        "en": "The default is {n}. More means a higher risk for the account.",
+    },
+    "sources.facebook.groups": {
+        "cs": "Další skupiny s nabídkami práce (odkazy, každý na řádek)",
+        "en": "More groups with job offers (links, one per line)",
+    },
+    "sources.facebook.suggested": {
+        "cs": "Soukromé skupiny s nabídkami poblíž. Aplikace se do skupin sama nepřidává; "
+        "pokud chcete, přidejte se ve Facebooku sami:",
+        "en": "Private groups with offers nearby. The app never joins groups itself; join in "
+        "Facebook yourself if you like:",
+    },
+    "sources.instagram.tags": {
+        "cs": "Další hashtagy (oddělené mezerou)",
+        "en": "More hashtags (separated by spaces)",
+    },
+    "risk.level": {"cs": "Co se může stát", "en": "What can happen"},
+    "risk.what": {"cs": "Co to znamená", "en": "What it means"},
+    "risk.how_long": {"cs": "Jak dlouho", "en": "How long"},
+    "risk.slow": {"cs": "Dočasné omezení „příliš rychle“", "en": "'Going too fast' block"},
+    "risk.slow.what": {
+        "cs": "Některá funkce (např. skupiny) je zablokovaná",
+        "en": "A feature (e.g. groups) is blocked",
+    },
+    "risk.slow.long": {
+        "cs": "Obvykle 24–48 h, Facebook ho dřív nezruší",
+        "en": "Usually 24–48 h, Facebook will not lift it earlier",
+    },
+    "risk.checkpoint": {"cs": "Ověření totožnosti", "en": "Identity check"},
+    "risk.checkpoint.what": {
+        "cs": "Před dalším použitím musíte potvrdit totožnost (kód, někdy fotka nebo doklad)",
+        "en": "You must confirm your identity (a code, sometimes a photo or an ID) first",
+    },
+    "risk.checkpoint.long": {"cs": "Dokud ho nevyřešíte", "en": "Until you resolve it"},
+    "risk.action": {"cs": "Blokace akcí na Instagramu", "en": "Instagram action block"},
+    "risk.action.what": {"cs": "Akce jsou zablokované", "en": "Actions are blocked"},
+    "risk.action.long": {
+        "cs": "První obvykle 24–72 h, další déle",
+        "en": "The first usually 24–72 h, later ones longer",
+    },
+    "risk.restricted": {"cs": "Dočasné omezení účtu", "en": "Temporary restriction"},
+    "risk.restricted.what": {
+        "cs": "Omezené funkce (skupiny, Marketplace)",
+        "en": "Limited features (groups, Marketplace)",
+    },
+    "risk.restricted.long": {"cs": "Dny až týdny", "en": "Days to weeks"},
+    "risk.disabled": {"cs": "Trvalé zrušení účtu", "en": "Permanent disable"},
+    "risk.disabled.what": {
+        "cs": "Ztráta účtu včetně Messengeru, skupin, Marketplace a fotek",
+        "en": "The account is lost, including Messenger, groups, Marketplace and photos",
+    },
+    "risk.disabled.long": {
+        "cs": "Trvale (lze se odvolat)",
+        "en": "Permanent (an appeal is possible)",
+    },
+    "risk.gdpr": {
+        "cs": "Příspěvky obsahují osobní údaje. Zůstávají jen v tomto počítači a 14 dní poté, "
+        "co je aplikace naposledy viděla, se smažou.",
+        "en": "Posts contain personal data. They stay on this computer only and are deleted "
+        "14 days after the app last saw them.",
+    },
+    "social.login": {"cs": "Přihlásit se", "en": "Log in"},
+    "social.login_running": {
+        "cs": "Otevřelo se okno Edge: přihlaste se v něm a okno pak zavřete.",
+        "en": "An Edge window opened: log in there, then close the window.",
+    },
+    "social.logged_out": {
+        "cs": "Nepřihlášeno: aplikace čte, až se přihlásíte.",
+        "en": "Not logged in: the app reads once you log in.",
+    },
+    "social.logged_in": {
+        "cs": "Přihlášeno · dnes přečteno {n} příspěvků",
+        "en": "Logged in · {n} posts read today",
+    },
+    "social.blocked": {
+        "cs": "Platforma varovala nebo blokovala: čtení je pozastavené do {until}.",
+        "en": "The platform warned or blocked: reading is paused until {until}.",
+    },
+    "social.login_failed": {
+        "cs": "Přihlášení se nedokončilo. Zkuste to znovu.",
+        "en": "The login did not finish. Please try again.",
+    },
+    "social.login_busy": {
+        "cs": "Aplikace právě čte v okně Edge. Přihlaste se, až čtení skončí.",
+        "en": "The app is reading in its Edge window. Log in once the reading has finished.",
+    },
+    "social.stopped.blocked": {
+        "cs": "zastaveno po varování platformy, pauza 7 dní",
+        "en": "stopped after a warning from the platform, paused for 7 days",
+    },
+    "social.stopped.login": {
+        "cs": "přihlášení vypršelo, přihlaste se znovu na stránce Zdroje",
+        "en": "the login expired, log in again on the Sources page",
+    },
+    "social.stopped.layout": {
+        "cs": "stránky se změnily a aplikace v nich nenašla příspěvky",
+        "en": "the pages changed and the app found no posts in them",
     },
     "social.stopped.failed": {
         "cs": "stránka se nenačetla nebo bylo okno Edge zavřeno",
@@ -112,6 +251,41 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "search.indeed": {"cs": "Hledat také na Indeed", "en": "Also search on Indeed"},
     "nav.ai": {"cs": "Umělá inteligence", "en": "AI"},
+    "nav.add": {"cs": "Vložit inzerát", "en": "Add an ad"},
+    "add.title": {"cs": "Vložit inzerát", "en": "Add an ad"},
+    "add.text": {
+        "cs": "Našli jste nabídku jinde (na nástěnce, v novinách, ve zprávě)? Vložte její text "
+        "nebo fotku či snímek obrazovky. Umělá inteligence z ní doplní obor, místo a mzdu.",
+        "en": "Found an offer elsewhere (a notice board, a newspaper, a message)? Paste its text "
+        "or add a photo or screenshot. The AI fills in the field, place and pay.",
+    },
+    "add.ad_text": {"cs": "Text inzerátu", "en": "Ad text"},
+    "add.placeholder": {
+        "cs": "Např. Přijmeme skladníka do Kolína, mzda 32 000 Kč…",
+        "en": "E.g. Warehouse worker wanted in Kolín, 32,000 CZK…",
+    },
+    "add.picture": {"cs": "Fotka nebo snímek obrazovky", "en": "Photo or screenshot"},
+    "add.picture_hint": {
+        "cs": "Text z obrázku přečte AI, když je model stažený.",
+        "en": "The AI reads the text in the picture once a model is downloaded.",
+    },
+    "add.link": {"cs": "Odkaz (nepovinný)", "en": "Link (optional)"},
+    "add.save": {"cs": "Uložit inzerát", "en": "Save the ad"},
+    "add.saved": {
+        "cs": "Uloženo. Chybějící údaje doplní AI na pozadí.",
+        "en": "Saved. The AI fills in missing details in the background.",
+    },
+    "add.another": {"cs": "Vložit další", "en": "Add another"},
+    "add.picture_title": {"cs": "Inzerát z obrázku", "en": "Ad from a picture"},
+    "add.empty": {
+        "cs": "Vložte text inzerátu nebo obrázek.",
+        "en": "Paste the ad text or add a picture.",
+    },
+    "add.too_big": {"cs": "Obrázek je větší než 15 MB.", "en": "The picture is larger than 15 MB."},
+    "add.not_picture": {
+        "cs": "Soubor není obrázek (JPEG, PNG…).",
+        "en": "The file is not a picture (JPEG, PNG…).",
+    },
     "wizard.ai": {"cs": "Umělá inteligence", "en": "Artificial intelligence"},
     "ai.title": {"cs": "Umělá inteligence", "en": "Artificial intelligence"},
     "ai.text": {
@@ -277,6 +451,8 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "The question could not be processed ({msg}). Try the normal search.",
     },
     "job.ai_badge": {"cs": "doplnila AI", "en": "added by AI"},
+    "job.picture": {"cs": "Obrázek z inzerátu", "en": "Picture from the ad"},
+    "job.red_flags": {"cs": "Pozor, podezřelá nabídka:", "en": "Caution, suspicious offer:"},
     "wizard.auto_off": {
         "cs": "Automatické hledání je vypnuté. Zapnout ho můžete později v Nastavení.",
         "en": "Automatic checks are off. You can switch them on later in Settings.",
@@ -317,6 +493,10 @@ TEXTS: dict[str, dict[str, str]] = {
     "filters.any": {"cs": "Nezáleží", "en": "Any"},
     "filters.salary": {"cs": "Mzda alespoň (měsíčně)", "en": "Salary at least (monthly)"},
     "filters.with_salary": {"cs": "Jen s uvedenou mzdou", "en": "Only with salary"},
+    "filters.flagged": {
+        "cs": "Zobrazit i podezřelé nabídky",
+        "en": "Also show suspicious offers",
+    },
     "filters.education": {"cs": "Moje vzdělání", "en": "My education"},
     "filters.education.any": {"cs": "Neuvádím", "en": "Not specified"},
     "filters.posted": {"cs": "Vloženo", "en": "Posted"},
@@ -338,23 +518,47 @@ TEXTS: dict[str, dict[str, str]] = {
     "job.posted": {"cs": "Vloženo", "en": "Posted"},
     "job.open": {"cs": "Otevřít původní nabídku", "en": "Open the original ad"},
     "job.full_text": {"cs": "Celý text", "en": "Full text"},
+    "job.new": {"cs": "Nová – našlo ji poslední hledání", "en": "New: found by the last search"},
     "job.no_text": {
         "cs": "Inzerát nemá popis. Celý text najdete v původní nabídce.",
         "en": "The ad has no description. The full text is in the original ad.",
     },
     "job.close": {"cs": "Zavřít", "en": "Close"},
+    "job.unchecked": {"cs": "Ověřuji, zda stále platí…", "en": "Checking it is still open…"},
     "page.top": {"cs": "Nahoru", "en": "Back to top"},
+    "job.hide": {"cs": "Skrýt", "en": "Hide"},
+    "job.hide_hint": {"cs": "Skrýt nabídku ze seznamu", "en": "Hide the job from the list"},
+    "hidden.count": {"cs": "Skryto: {n}", "en": "Hidden: {n}"},
+    "hidden.restore_last": {"cs": "Vrátit poslední", "en": "Show the last one"},
+    "hidden.restore_all": {"cs": "Vrátit všechny", "en": "Show all"},
     "scrape.button": {"cs": "Obnovit nabídky", "en": "Refresh jobs"},
     "scrape.button_hint": {
         "cs": "Ověří, zda nabídky v seznamu stále platí, a doplní nové nad ně.",
         "en": "Checks the jobs in the list are still open and adds the new ones above them.",
     },
+    "scrape.check": {
+        "cs": "Ověřuji, zda nabídky stále platí: {n}",
+        "en": "Checking the jobs are still open: {n}",
+    },
+    "scrape.restarting": {
+        "cs": "Zastavuji hledání a začínám od začátku…",
+        "en": "Stopping the search to start over…",
+    },
     "scrape.download": {"cs": "Stahuji data…", "en": "Downloading…"},
     "scrape.import": {"cs": "Zpracovávám nabídky: {n}", "en": "Processing jobs: {n}"},
+    "scrape.images": {
+        "cs": "Stahuji obrázky z inzerátů… ({n})",
+        "en": "Downloading ad pictures… ({n})",
+    },
     "scrape.geocode": {"cs": "Určuji polohu nabídek…", "en": "Locating jobs…"},
     "scrape.listing": {
         "cs": "Procházím {source}: {n} nabídek",
         "en": "Browsing {source}: {n} jobs",
+    },
+    "scrape.parallel": {"cs": "Procházím portály:", "en": "Browsing portals:"},
+    "scrape.social": {
+        "cs": "Čtu {source} pomalu, jako člověk…",
+        "en": "Reading {source} slowly, like a person would…",
     },
     "scrape.details": {
         "cs": "Čtu podrobnosti nabídek na {source}: {n}",
@@ -372,12 +576,12 @@ TEXTS: dict[str, dict[str, str]] = {
     "scrape.clear": {"cs": "Mažu dříve nalezené nabídky…", "en": "Deleting the jobs found before…"},
     "scrape.fresh": {"cs": "Obnovit od začátku", "en": "Start over"},
     "scrape.fresh_hint": {
-        "cs": "Smaže všechny nalezené nabídky a najde je znovu.",
-        "en": "Deletes all found jobs and finds them again.",
+        "cs": "Smaže všechny nalezené nabídky a najde je znovu. Ručně přidané zůstanou.",
+        "en": "Deletes all found jobs and finds them again. Jobs you added yourself stay.",
     },
     "scrape.fresh_confirm": {
-        "cs": "Smazat všechny nalezené nabídky a hledat znovu?",
-        "en": "Delete all found jobs and search again?",
+        "cs": "Smazat všechny nalezené nabídky, i skryté, a hledat znovu?",
+        "en": "Delete all found jobs, hidden ones too, and search again?",
     },
     "scrape.done": {
         "cs": "Hotovo: {new} nových, {updated} změněných, {removed} již neplatných.",

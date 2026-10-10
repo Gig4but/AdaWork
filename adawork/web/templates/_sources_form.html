@@ -1,20 +1,69 @@
 {# Source switches; shared by the wizard and the Sources page. #}
-{% if error %}<p class="error" role="alert">{{ t(error) }}</p>{% endif %}
+{% if consent_missing %}<p class="error" role="alert">{{ t("sources.consent_missing", source=consent_missing) }}</p>{% endif %}
+{% for kind in ("portal", "classifieds") %}
 <fieldset>
-  <legend>{{ t("sources.portals") }}</legend>
-  {% for s in sources if not s.consent %}
+  <legend>{{ t("sources.kind." ~ kind) }}</legend>
+  {% if kind == "classifieds" %}<small class="muted">{{ t("sources.classifieds.hint") }}</small>{% endif %}
+  {% for s in sources if not s.consent and s.kind == kind %}
     <label><input type="checkbox" role="switch" name="source_{{ s.id }}" {% if s.on %}checked{% endif %}> {{ s.label }}</label>
   {% endfor %}
 </fieldset>
+{% endfor %}
 
 {% for s in sources if s.consent %}
   <article class="risk">
     <label><input type="checkbox" role="switch" name="source_{{ s.id }}" {% if s.on %}checked{% endif %}>
       <strong>{{ s.label }}</strong> <small class="muted">({{ t("sources.off_default") }})</small></label>
-    <p>⚠ {{ t("sources." ~ s.id ~ ".warning") }}</p>
+    {% if s.social %}
+      <p>⚠ <strong>{{ t("sources.social.warning_title") }}</strong></p>
+      <ul>
+        <li>{{ t("sources.social.terms") }}</li>
+        <li>{{ t("sources.social.account") }}</li>
+        <li>{{ t("sources.social.no_safe_limit") }}</li>
+        <li>{{ t("sources.social.how", n=settings.social[s.id ~ "_per_day"]) }}</li>
+      </ul>
+      {% if s.id == "instagram" %}<p class="small">{{ t("sources.instagram.separate") }}</p>{% endif %}
+      <details>
+        <summary>{{ t("sources.social.more") }}</summary>
+        <table class="small">
+          <thead><tr><th>{{ t("risk.level") }}</th><th>{{ t("risk.what") }}</th><th>{{ t("risk.how_long") }}</th></tr></thead>
+          <tbody>
+            {% for row in ("slow", "checkpoint", "action", "restricted", "disabled") %}
+              <tr><td>{{ t("risk." ~ row) }}</td><td>{{ t("risk." ~ row ~ ".what") }}</td><td>{{ t("risk." ~ row ~ ".long") }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <p class="small">{{ t("risk.gdpr") }}</p>
+      </details>
+    {% else %}
+      <p>⚠ {{ t("sources." ~ s.id ~ ".warning") }}</p>
+    {% endif %}
     <label class="small"><input type="checkbox" name="consent_{{ s.id }}" {% if s.consented %}checked{% endif %}> {{ t("sources.consent") }}</label>
+
+    {% if s.social and s.on %}
+      <div id="social-{{ s.id }}">{% with s = s.social %}{% include "_social_status.html" %}{% endwith %}</div>
+      <label class="small">{{ t("sources.social.per_day") }}
+        <input type="number" name="{{ s.id }}_per_day" min="10" max="{{ 200 if s.id == 'facebook' else 100 }}"
+               value="{{ settings.social[s.id ~ '_per_day'] }}" aria-describedby="limit-{{ s.id }}">
+        <small id="limit-{{ s.id }}">{{ t("sources.social.per_day_hint", n=100 if s.id == "facebook" else 50) }}</small>
+      </label>
+      {% if s.id == "facebook" %}
+        <label class="small">{{ t("sources.facebook.groups") }}
+          <textarea name="facebook_groups" rows="3" placeholder="https://www.facebook.com/groups/…">{{ settings.social.facebook_groups | join("\n") }}</textarea>
+        </label>
+        {% if s.social.suggested %}
+          <p class="small">{{ t("sources.facebook.suggested") }}</p>
+          <ul class="small">
+            {% for g in s.social.suggested %}<li><a href="{{ g.url | safe_url }}" target="_blank" rel="noopener">{{ g.name }}</a></li>{% endfor %}
+          </ul>
+        {% endif %}
+      {% else %}
+        <label class="small">{{ t("sources.instagram.tags") }}
+          <input name="instagram_tags" value="{{ settings.social.instagram_tags | join(' ') }}" placeholder="#brigadabrno">
+        </label>
+      {% endif %}
+    {% endif %}
   </article>
 {% endfor %}
 
 <p class="muted small">{{ t("sources.indeed") }}</p>
-<p class="muted small">{{ t("sources.social") }}</p>

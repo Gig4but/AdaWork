@@ -16,6 +16,8 @@ from adawork.config import Settings
 from adawork.db.session import db_file, make_engine, make_sessionmaker, migrate
 from adawork.geo.places import SharedPlaces
 from adawork.scraper.runner import RunHooks, ScrapeRunner
+from adawork.scraper.sources import MANUAL
+from adawork.social.logins import SocialLogins
 
 log = logging.getLogger(__name__)
 
@@ -24,10 +26,12 @@ log = logging.getLogger(__name__)
 class Services:
     settings: Settings
     sessions: sessionmaker[Session]
+    data_dir: Path
     cache_dir: Path
     places: SharedPlaces
     ai: AiServices
     runner: ScrapeRunner
+    logins: SocialLogins
 
     def start(self) -> None:
         if self.settings.wizard_completed:
@@ -47,6 +51,7 @@ def build(
     settings: Settings | None = None,
     db_path: Path | None = None,
     cache_dir: Path | None = None,
+    data_dir: Path | None = None,
     runner_factory=None,
     ai_factory=None,
 ) -> Services:
@@ -54,7 +59,8 @@ def build(
     engine = make_engine(db_path or db_file())
     migrate(engine)
     sessions = make_sessionmaker(engine)
-    cache_dir = cache_dir or paths.data_dir() / "cache"
+    data_dir = data_dir or paths.data_dir()
+    cache_dir = cache_dir or data_dir / "cache"
     ai: AiServices = (ai_factory or make_ai_services)(settings, sessions, cache_dir)
     runner = (runner_factory or ScrapeRunner)(
         sessions,
@@ -62,12 +68,17 @@ def build(
         profile=lambda: settings.profile,
         source_choices=lambda: settings.sources,
         hooks=RunHooks(before_clear=ai.enricher.stop, after_run=ai.enricher.start),
+        social_settings=lambda: settings.social,
+        resources=ai.manager.resources,
+        kept_sources=(MANUAL,),
     )
     return Services(
         settings=settings,
         sessions=sessions,
+        data_dir=data_dir,
         cache_dir=cache_dir,
         places=SharedPlaces(sessions),
         ai=ai,
         runner=runner,
+        logins=SocialLogins(sessions, data_dir),
     )

@@ -21,6 +21,7 @@
       <ul>
         {% if settings.wizard_completed %}
         {{ nav_item("/", "search", t("nav.search"), path == "/") }}
+        {{ nav_item("/add", "add", t("nav.add"), path == "/add") }}
         {{ nav_item("/sources", "sources", t("nav.sources"), path == "/sources") }}
         {{ nav_item("/ai", "ai", t("nav.ai"), path == "/ai") }}
         {% endif %}

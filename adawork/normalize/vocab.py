@@ -82,6 +82,22 @@ BENEFITS: Labels = {
     "jine": {"cs": "Jiné výhody", "en": "Other benefits"},
 }
 
+# Warning signs in an offer (normalize/offers.py). Such offers are hidden unless the user
+# asks to see them, and then carry a warning.
+RED_FLAGS: Labels = {
+    "fee": {"cs": "Chce poplatek od uchazeče", "en": "Asks the applicant for a fee"},
+    "mlm": {"cs": "Síťový marketing (MLM)", "en": "Multi-level marketing"},
+    "home_assembly": {
+        "cs": "Kompletace doma – častý podvod",
+        "en": "Assembly at home – a common scam",
+    },
+    "easy_money": {"cs": "Slibuje snadný výdělek", "en": "Promises easy money"},
+    "unpaid_trial": {"cs": "Neplacené zkušební dny", "en": "Unpaid trial days"},
+    "adult": {"cs": "Erotika / „pro pohledné ženy“", "en": "Adult / 'for attractive women'"},
+    "referral": {"cs": "Jen provize za tipy", "en": "Referral commissions only"},
+    "investment": {"cs": "Investice / kryptoměny", "en": "Investments / crypto"},
+}
+
 VOCABULARIES: dict[str, Labels] = {
     "categories": CATEGORIES,
     "contract_types": CONTRACT_TYPES,
@@ -89,6 +105,7 @@ VOCABULARIES: dict[str, Labels] = {
     "shifts": SHIFTS,
     "suitable_for": SUITABLE_FOR,
     "benefits": BENEFITS,
+    "red_flags": RED_FLAGS,
 }
 
 

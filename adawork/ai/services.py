@@ -37,5 +37,6 @@ def make_ai_services(
         codebook_path=codebook,
         profile=lambda: settings.profile,
         index_cache=models_dir / EMBEDDER_DIR / "isco-titles.npz",
+        images_dir=cache_dir / "images",
     )
     return AiServices(manager, enricher)

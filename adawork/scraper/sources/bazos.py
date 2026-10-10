@@ -8,7 +8,8 @@ skipped. Categories are sorted newest first, but a page of only far-away ads wou
 that are gone.
 
 Ads are free text written by anyone: we keep the title, place, date, the salary when it is a
-plausible monthly or hourly amount, and the text; the AI reads the rest from the text.
+plausible monthly or hourly amount, and the text; the AI reads the rest from the text. Posts
+that are not job offers (people looking for work, services) are kept but not listed.
 """
 
 import re
@@ -20,7 +21,8 @@ from selectolax.lexbor import LexborHTMLParser, LexborNode
 
 from adawork.core import ParsedJob, ParsedLocation, ScrapeQuery
 from adawork.geo.places import PlaceResolver
-from adawork.normalize.text import clean_spaces, fold, node_text, parse_salary
+from adawork.normalize.offers import not_offer_reason
+from adawork.normalize.text import clean_spaces, clean_title, fold, node_text, parse_salary
 from adawork.scraper.crawl import CrawlSource, Lead, Listing, ListingPage, node_value
 
 SOURCE_ID = "bazos"
@@ -92,9 +94,10 @@ def _lines(node: LexborNode | None) -> list[str]:
     return [line for p in node.text(separator="\n").split("\n") if (line := clean_spaces(p))]
 
 
-def clean_title(text: str | None) -> str:
-    """ "🚛 ŘIDIČ C+E" -> "ŘIDIČ C+E"."""
-    return re.sub(r"^[^\w(]+", "", clean_spaces(text or ""))
+def mark_not_offer(job: ParsedJob) -> None:
+    """ "Hledám práci řidiče", "Nabízím hlídání": kept, but not listed as a job."""
+    if reason := not_offer_reason(job.title, job.description):
+        job.extra["not_offer"] = reason
 
 
 class Bazos(CrawlSource):
@@ -130,6 +133,7 @@ class Bazos(CrawlSource):
                 posted_at=posted(row.css_first(".velikost10")),
             )
             set_salary(job, node_value(row.css_first(".inzeratycena")))
+            mark_not_offer(job)
             leads.append(Lead(m[1], url, url, job))
         next_page = re.compile(rf"^/[a-z]+/{page * PAGE_SIZE}/$")
         has_next = any(next_page.match(a.attributes.get("href") or "") for a in tree.css("a"))
@@ -179,6 +183,12 @@ class Bazos(CrawlSource):
             job.place_text = area
             job.location = location(places, area, psc, town)
         set_salary(job, node_value(info.get("Mzda/plat")))
+        mark_not_offer(job)
+        photos = (
+            img.attributes.get("data-flickity-lazyload") or img.attributes.get("src")
+            for img in tree.css("img.carousel-cell-image")
+        )
+        job.images = list(dict.fromkeys(p for p in photos if p))[:6]
         return job
 
 

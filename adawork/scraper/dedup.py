@@ -10,6 +10,7 @@ titles match.
 """
 
 import re
+import threading
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -59,6 +60,14 @@ def jaccard(a: set | frozenset, b: set | frozenset) -> float:
     return len(a & b) / len(a | b) if a and b else 0.0
 
 
+def same_post(title_a: str, text_a: str, title_b: str, text_b: str) -> bool:
+    """Two posts with the same picture are one offer only if their words agree too: an
+    employer's logo alone appears on all of its different ads."""
+    if jaccard(title_words(title_a), title_words(title_b)) >= TITLE_SAME:
+        return True
+    return jaccard(_shingles(text_a), _shingles(text_b)) >= 0.5
+
+
 def place_key(municipality_code: str | None, location_key: str | None, place_text: str | None):
     if municipality_code:
         return municipality_code
@@ -100,7 +109,8 @@ class DedupIndex:
     _blocks: dict[tuple[str, str], list[Entry]] = field(default_factory=lambda: defaultdict(list))
     _by_ico: dict[tuple[str, str], list[Entry]] = field(default_factory=lambda: defaultdict(list))
     _by_okres: dict[tuple[str, str], list[Entry]] = field(default_factory=lambda: defaultdict(list))
-    size: int = 0
+    # Sources are read in parallel: a store holds this while it looks up and adds a job.
+    lock: threading.RLock = field(default_factory=threading.RLock)
 
     @classmethod
     def load(cls, session: Session, sessions: Callable[[], Session] | None = None) -> "DedupIndex":

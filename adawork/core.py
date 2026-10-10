@@ -11,7 +11,12 @@ from typing import Any, Literal, Protocol
 Precision = Literal["address", "street", "part", "municipality", "district", "region", "unknown"]
 SalaryUnit = Literal["month", "hour", "piece"]
 JobStatus = Literal["active", "expired"]  # also of a job's source
-RunStatus = Literal["running", "ok", "partial", "failed", "blocked", "skipped"]
+# "stopped": the app closed mid-run; "login" | "layout" | "blocked": why a social reading
+# session stopped (social/reader.py).
+RunStatus = Literal[
+    "running", "ok", "partial", "failed", "stopped", "blocked", "skipped", "login", "layout"
+]
+ImageStatus = Literal["new", "stored", "failed", "read"]  # read: its text written out
 SourceKind = Literal["portal", "classifieds", "api", "social"]  # groups of the Sources page
 
 
@@ -72,10 +77,13 @@ class ParsedJob:
     expires_at: datetime | None = None
     contact: dict[str, Any] = field(default_factory=dict)
     extra: dict[str, Any] = field(default_factory=dict)
+    images: list[str] = field(default_factory=list)  # picture URLs: posters, photos of notices
 
     def content_hash(self) -> str:
         data = asdict(self)
         data.pop("external_id")
+        if not data["images"]:  # the same hash as before images existed
+            data.pop("images")
         raw = json.dumps(data, sort_keys=True, default=str, ensure_ascii=False)
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 

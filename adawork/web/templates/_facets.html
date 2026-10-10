@@ -47,6 +47,9 @@
   </select>
 </label>
 
+<label class="facet"><input type="checkbox" name="flagged" value="1" {% if f.flagged %}checked{% endif %}>
+  <span>{{ t("filters.flagged") }}</span>{% if not f.flagged %} <small>{{ flagged }}</small>{% endif %}</label>
+
 {# Sources are all on; unticking one sends it as source_off (the hidden field next to it).
    Those with jobs first, then the ones that found none yet. #}
 {% set source_counts = dict(facets.get("sources", [])) %}

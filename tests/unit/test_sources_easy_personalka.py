@@ -7,12 +7,12 @@ import pytest
 from sqlalchemy import func, select
 from test_sources_m6 import fixture, run_crawl
 
-from adawork.core import ScrapeQuery
+from adawork.core import ScrapeQuery, utcnow
 from adawork.db.models import Job, JobSource
 from adawork.db.session import make_engine, make_sessionmaker, migrate
 from adawork.geo.places import PlaceResolver
 from adawork.net.polite import PoliteFetcher
-from adawork.scraper.crawl import Lead, crawl
+from adawork.scraper.crawl import MAX_RECHECKS, Lead, crawl
 from adawork.scraper.sources import easy_prace, personalka
 from adawork.scraper.store import JobStore
 
@@ -179,8 +179,8 @@ PERSONALKA_PAGES = {
 
 
 def crawl_personalka(sessions, pages=PERSONALKA_PAGES, detail="personalka/detail_2.html"):
-    """pages: path -> fixture; any other page is `detail`. Returns the result and the
-    requested URLs."""
+    """pages: path -> fixture (None: 404); any other page is `detail`. Returns the result
+    and the requested URLs."""
     requested = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -188,8 +188,8 @@ def crawl_personalka(sessions, pages=PERSONALKA_PAGES, detail="personalka/detail
         requested.append(url)
         if request.url.path == "/robots.txt":
             return httpx.Response(200, content=fixture("personalka/robots.txt"))
-        path = url.removeprefix("https://personalka.cz")
-        return httpx.Response(200, content=fixture(pages.get(path, detail)))
+        path = pages.get(url.removeprefix("https://personalka.cz"), detail)
+        return httpx.Response(200, content=fixture(path)) if path else httpx.Response(404)
 
     fetcher = PoliteFetcher(
         httpx.Client(transport=httpx.MockTransport(handler)), delay=0, sleep=lambda s: None
@@ -239,3 +239,27 @@ def test_personalka_keeps_ads_a_short_pass_did_not_reach(sessions):
     with sessions() as s:
         statuses = s.scalars(select(JobSource.status)).all()
         assert len(statuses) == 58 and set(statuses) == {"active"}
+
+
+def test_personalka_reads_long_unseen_ads_again(sessions):
+    assert personalka.SOURCE.gone(html("personalka/detail_gone.html"))
+    assert not personalka.SOURCE.gone(html("personalka/detail_2.html"))
+
+    crawl_personalka(sessions)
+    older = ["448241", "443595"]  # on page 2, which the next run does not reach
+    with sessions() as s:
+        for row in s.scalars(select(JobSource)):
+            row.last_seen_at -= timedelta(days=60 if row.external_id in older else 40)
+        s.commit()
+
+    # The ads unseen longest are read first: one page says the ad is over, one is gone.
+    pages = {**PERSONALKA_PAGES, "/448241": "personalka/detail_gone.html", "/443595": None}
+    result, _ = crawl_personalka(sessions, pages)
+    assert not result.complete and result.pages == 1
+    with sessions() as s:
+        rows = {r.external_id: r for r in s.scalars(select(JobSource))}
+        assert {i for i, r in rows.items() if r.status == "expired"} == set(older)
+        assert rows["448241"].job.status == "expired"
+        # The others still online count as seen: read again only after another month.
+        recent = utcnow() - timedelta(days=1)
+        assert sum(r.last_seen_at > recent for r in rows.values()) == 30 + MAX_RECHECKS - 2

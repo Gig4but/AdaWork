@@ -4,7 +4,7 @@ import pytest
 
 from adawork.db.models import Job, JobSource
 from adawork.db.session import backup, make_engine, make_sessionmaker, migrate
-from adawork.search.service import fts_query, search_jobs
+from adawork.search.service import fts_query, search_jobs, start_batch
 
 
 @pytest.fixture
@@ -77,6 +77,15 @@ def test_title_ranks_above_description(session):
     titles = {j.title for j in search_jobs(session, "řidič").jobs}
     assert "Řídící pracovník výroby" not in titles and "Prodavač" in titles  # "řidiče"
     assert "Řídící pracovník výroby" in {j.title for j in search_jobs(session, "ridic").jobs}
+
+
+def test_the_last_searchs_finds_come_first_then_by_rank(session):
+    add_job(session, "Prodavač", description="Hledáme řidiče na rozvoz", ext="a")
+    add_job(session, "Řidič sk. C", ext="b")
+    start_batch(session)
+    add_job(session, "Skladník", description="Také řidič", ext="c")
+    titles = [j.title for j in search_jobs(session, "řidič").jobs]
+    assert titles == ["Skladník", "Řidič sk. C", "Prodavač"]
 
 
 def test_phrases_separated_by_commas_are_alternatives(session):

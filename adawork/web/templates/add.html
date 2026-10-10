@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ t("add.title") }} – AdaWork{% endblock %}
+{% block content %}
+<article class="wizard">
+  <h2>{{ t("add.title") }}</h2>
+  <p>{{ t("add.text") }}</p>
+  {% if error %}<p class="error" role="alert">{{ t(error) }}</p>{% endif %}
+  {% if job %}
+    <p class="ok" role="status">{{ t("add.saved") }}</p>
+    <div class="results">{% include "_job.html" %}</div>
+    <a href="/add" role="button" class="secondary outline">{{ t("add.another") }}</a>
+  {% else %}
+    <form method="post" action="/add" enctype="multipart/form-data">
+      <label>{{ t("add.ad_text") }}
+        <textarea name="text" rows="10" placeholder="{{ t('add.placeholder') }}">{{ text or "" }}</textarea>
+      </label>
+      <label>{{ t("add.picture") }}
+        <input type="file" name="picture" accept="image/*" aria-describedby="picture-hint">
+        <small id="picture-hint">{{ t("add.picture_hint") }}</small>
+      </label>
+      <label>{{ t("add.link") }}
+        <input type="url" name="link" value="{{ link or '' }}" placeholder="https://…">
+      </label>
+      <button type="submit">{{ t("add.save") }}</button>
+    </form>
+  {% endif %}
+</article>
+{% endblock %}

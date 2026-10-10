@@ -2,6 +2,7 @@
 same host, retries with backoff, and stopping a source that is being refused.
 """
 
+import copy
 import logging
 import random
 import threading
@@ -63,6 +64,7 @@ class PoliteFetcher:
         self.requests = 0
         self._robots: dict[str, RobotsRules] = {}
         self._last: dict[str, float] = {}
+        self._turns = threading.Lock()  # sources on different threads may share a host
 
     def robots(self, url: str) -> RobotsRules:
         parts = urlsplit(url)
@@ -120,6 +122,12 @@ class PoliteFetcher:
     def allowed(self, url: str) -> bool:
         return self.robots(url).allowed(url)
 
+    def with_client(self, client) -> "PoliteFetcher":
+        """The same robots.txt rules and turns per host, over another client."""
+        other = copy.copy(self)
+        other.client = client
+        return other
+
     def get(
         self, url: str, obey_robots: bool = True, min_delay: float | None = None
     ) -> httpx.Response | None:
@@ -147,7 +155,7 @@ class PoliteFetcher:
             self._wait_turn(url, min_delay)
             try:
                 resp = self.client.get(url)
-            except (httpx.TimeoutException, httpx.NetworkError):
+            except (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError):
                 if attempt == len(RETRY_WAITS):
                     raise
                 self._pause(RETRY_WAITS[attempt])
@@ -168,12 +176,15 @@ class PoliteFetcher:
         delay = max(self.delay, min_delay or 0)
         if rules and rules.crawl_delay:
             delay = min(max(delay, rules.crawl_delay), MAX_DELAY)
-        if host in self._last:
-            wait = self._last[host] + delay * random.uniform(1.0, 1.3) - self.clock()
-            if wait > 0:
-                self._pause(wait)
-        self._last[host] = self.clock()
-        self.requests += 1
+        with self._turns:  # book this host's next turn, then wait for it outside the lock
+            now = self.clock()
+            turn = now
+            if host in self._last:
+                turn = max(now, self._last[host] + delay * random.uniform(1.0, 1.3))
+            self._last[host] = turn
+            self.requests += 1
+        if turn > now:
+            self._pause(turn - now)
 
     def _pause(self, seconds: float) -> None:
         (self.sleep or self.stop.wait)(seconds)

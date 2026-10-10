@@ -1,5 +1,6 @@
-"""Entry point: `adawork` opens the app window; `adawork --browser` serves the UI only;
-`adawork eval --model <id>` measures an AI model on the golden set."""
+"""Entry point: `adawork` opens the app window; `adawork --browser` serves the UI only.
+Developer tools: `adawork eval --model <id>` measures an AI model on the golden set,
+`adawork probe [source ...]` checks that the portals can still be read."""
 
 import argparse
 import logging
@@ -20,6 +21,10 @@ def main(argv: list[str] | None = None) -> int:
         from adawork.ai.evaluate import main as eval_main
 
         return eval_main(argv[1:])
+    if argv[:1] == ["probe"]:
+        from adawork.scraper.probe import main as probe_main
+
+        return probe_main(argv[1:])
     parser = argparse.ArgumentParser(prog="adawork")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument(

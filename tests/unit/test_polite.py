@@ -334,3 +334,35 @@ def test_salary_in_ad_text(text, expected):
 
     salary = salary_in_text(text)
     assert (salary and (salary.min, salary.max, salary.unit)) == expected
+
+
+def test_threads_sharing_a_host_take_turns():
+    import threading
+
+    waits = []
+    fetcher = PoliteFetcher(httpx.Client(), delay=1.0, sleep=waits.append, clock=lambda: 100.0)
+    threads = [
+        threading.Thread(target=fetcher._wait_turn, args=("https://a.cz/x",)) for _ in range(3)
+    ]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    # The first goes at once; the others booked the next turns, one delay apart.
+    assert len(waits) == 2
+    first, second = sorted(waits)
+    assert 1.0 <= first <= 1.3 and 2.0 <= second <= 2.6
+
+
+def test_a_dropped_connection_is_retried():
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.url.path)
+        if request.url.path == "/robots.txt":
+            return httpx.Response(404)
+        if len(calls) < 3:
+            raise httpx.RemoteProtocolError("Server disconnected without sending a response.")
+        return httpx.Response(200, text="ok")
+
+    assert fetcher(handler).get("https://a.cz/page").text == "ok"

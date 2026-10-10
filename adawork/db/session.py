@@ -22,7 +22,8 @@ def db_file() -> Path:
 
 
 def make_engine(path: Path | None = None) -> Engine:
-    engine = create_engine(f"sqlite:///{path or db_file()}")
+    # Several sources write in parallel: a writer waits up to 60 s for the others.
+    engine = create_engine(f"sqlite:///{path or db_file()}", connect_args={"timeout": 60})
 
     @event.listens_for(engine, "connect")
     def _pragmas(dbapi_conn, _record) -> None:

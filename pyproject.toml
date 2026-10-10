@@ -24,6 +24,8 @@ dependencies = [
     "onnxruntime>=1.30.0",
     "tokenizers>=0.23.2",
     "numpy>=2.5.3",
+    "pyyaml>=6.0.3",
+    "playwright>=1.63.0",
 ]
 
 [project.scripts]
@@ -80,7 +82,7 @@ layers = [
     "services",
     "desktop",
     "scraper",
-    "ai",
+    "social | ai",
     "search",
     "geo",
     "db",

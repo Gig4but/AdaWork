@@ -1,16 +1,19 @@
 import gzip
 import json
+from datetime import datetime
 from pathlib import Path
 
 import httpx
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 
 from adawork.config import Profile
-from adawork.db.models import Job, Location, Run
+from adawork.core import ParsedJob
+from adawork.db.models import Job, JobSource, Location, Run
 from adawork.db.session import make_engine, make_sessionmaker, migrate
 from adawork.scraper.runner import ScrapeRunner
 from adawork.scraper.sources import mpsv
+from adawork.scraper.store import JobStore
 from adawork.search.service import search_jobs
 
 FIXTURES = Path(__file__).parents[1] / "fixtures" / "sources" / "mpsv"
@@ -140,6 +143,7 @@ def test_a_changed_search_or_a_fresh_one_finds_everything_again(sessions, tmp_pa
         sources=[mpsv.SOURCE],
         profile=lambda: profile,
         source_choices=lambda: choices,
+        kept_sources=("manual",),
     )
 
     def run(fresh=False):
@@ -151,6 +155,12 @@ def test_a_changed_search_or_a_fresh_one_finds_everything_again(sessions, tmp_pa
             return s.scalars(select(Run.new_count).order_by(Run.id.desc())).first()
 
     assert run() == 30
+    with sessions() as s:
+        store = JobStore(s, "manual")
+        store.add(ParsedJob(external_id="mine", title="Moje vlastní nabídka"))
+        store.commit()
+        s.execute(update(Job).values(hidden_at=datetime(2026, 10, 10)))
+        s.commit()
     assert run() == 0 and not runner.progress.cleared  # the same search: nothing deleted
     profile.max_minutes = 30
     assert run() == 30 and runner.progress.cleared
@@ -159,7 +169,10 @@ def test_a_changed_search_or_a_fresh_one_finds_everything_again(sessions, tmp_pa
     assert run() == 30 and runner.progress.cleared
     assert run(fresh=True) == 30 and runner.progress.cleared
     with sessions() as s:
-        assert s.scalar(select(func.count(Job.id))) == 30
+        assert s.scalar(select(func.count(Job.id))) == 31
+        mine = s.scalar(select(Job).join(JobSource).where(JobSource.source_id == "manual"))
+        assert mine.hidden_at is not None  # added by hand: kept with its mark
+        assert s.scalar(select(func.count(Job.hidden_at))) == 1
 
 
 def test_failed_import_is_retried_with_the_same_dump(sessions, tmp_path, monkeypatch):

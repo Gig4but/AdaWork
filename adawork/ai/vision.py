@@ -5,10 +5,13 @@ Keeping one path means the checks still work: a salary is accepted only if it ap
 transcribed text. The model is loaded with its vision part (`mmproj`) only for this work.
 """
 
+import re
+
 from adawork.ai.client import LlmClient, Reply, image_part
 
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 MAX_IMAGE_SIDE = 1024  # larger images cost much more time and add little for posters
+MAX_REPEATS = 2  # a line the model writes more often in a row is a loop, not the poster
 
 SYSTEM = """Přepiš veškerý čitelný text z obrázku přesně tak, jak je napsaný, řádek po řádku.
 Nic nepřidávej, nevysvětluj a nepřekládej. Pokud na obrázku žádný text není, napiš jen: -"""
@@ -39,7 +42,21 @@ def transcribe(client: LlmClient, data: bytes) -> Reply:
                 "content": [image_part(jpeg, mime), {"type": "text", "text": "Přepis:"}],
             },
         ],
-        max_tokens=600,
+        max_tokens=800,  # a full A4 poster; a longer text is kept as far as it got
     )
-    text = str(reply.data).strip()
-    return Reply("" if text in ("-", "") else text, reply.timing)
+    return Reply(clean(str(reply.data)), reply.timing)
+
+
+def clean(text: str) -> str:
+    """Without an echoed "Přepis:" and without loops (a real ad picture got "500" written
+    400 times); "-" or nothing means the picture has no text."""
+    text = re.sub(r"^\s*Přepis:\s*", "", text.strip())
+    lines: list[str] = []
+    run = 0
+    for line in text.split("\n"):
+        same = bool(lines) and bool(line.strip()) and line.strip() == lines[-1].strip()
+        run = run + 1 if same else 0
+        if run < MAX_REPEATS:
+            lines.append(line)
+    text = "\n".join(lines).strip()
+    return "" if text in ("-", "") else text

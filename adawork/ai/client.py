@@ -125,8 +125,8 @@ class LlmClient:
             text = choice["message"].get("content") or ""
         except (ValueError, KeyError, IndexError, TypeError) as exc:
             raise LlmError(f"unexpected reply from the AI server: {resp.text[:200]}") from exc
-        if choice.get("finish_reason") == "length":
-            raise BadAnswer("answer was cut off (max_tokens)")
+        if choice.get("finish_reason") == "length" and schema is not None:
+            raise BadAnswer("answer was cut off (max_tokens)")  # plain text is kept as it is
         data: Any = text
         if schema is not None:
             try:

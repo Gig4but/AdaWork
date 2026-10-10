@@ -40,6 +40,7 @@ _CONTRACT_LABELS = {"hpp", "ico", "dpp", "dpc", "brigada", "zkraceny uvazek", "p
 _HEADER_TAGS = {"doporucujeme", "top zamestnavatel"}
 _WORKPLACE = re.compile(r"^(?:(?P<street>.*),\s*)?(?P<psc>\d{3}\s?\d{2})\s+(?P<town>.+)$")
 _FOUND = re.compile(r"Našli jsme\s*<strong>\s*([\d\s]+?)\s*nabíd")  # "Našli jsme 4 554 nabídek"
+_GONE = re.compile(r"Litujeme, ale pracovní inzerát.{0,500}?již není aktuální", re.S)
 _BENEFITS = (
     ("premie", ("premie", "bonus")),
     ("strav", ("strav",)),
@@ -153,10 +154,11 @@ class Personalka(CrawlSource):
     label = "Personálka.cz"
     # Region listings run to 150–400 pages, newest first: after the first full pass a run
     # stops at the first page with nothing new. Older ads stay listed for months without
-    # being seen again, so only a complete pass tells which are gone.
+    # being seen again: a complete pass, or the ad's own page, tells which are gone.
     max_pages = 400
     newest_first = True
     empty_last_page = True
+    recheck_after_days = 30
     region_slugs = SLUGS
 
     def listing_url(self, region_slug: str, page: int) -> str:
@@ -179,6 +181,10 @@ class Personalka(CrawlSource):
             found = _FOUND.search(html)
             more = page * PAGE_SIZE < int(re.sub(r"\D", "", found[1])) if found else bool(leads)
         return ListingPage(leads, has_next=more)
+
+    def gone(self, html: str) -> bool:
+        """An ended ad keeps its page: "Litujeme, ale pracovní inzerát … již není aktuální."."""
+        return _GONE.search(html) is not None
 
     def parse_detail(self, html: str, lead: Lead, places: PlaceResolver) -> ParsedJob | None:
         tree = LexborHTMLParser(html)

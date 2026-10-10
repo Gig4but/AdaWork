@@ -1,0 +1,4 @@
+{# Counted on the page: jobs added while a search runs shift the next page. #}
+<button type="button" class="secondary outline more"
+        hx-get="/results?{{ qs }}" hx-vals='js:{offset: document.querySelectorAll("#job-list > .job").length}'
+        hx-target="this" hx-swap="outerHTML">{{ t("search.more") }}</button>

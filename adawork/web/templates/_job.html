@@ -1,13 +1,19 @@
-<article class="job" data-id="{{ job.id }}">
+<article class="job{% if unchecked and job.id in unchecked %} unchecked{% endif %}" id="job-{{ job.id }}" data-id="{{ job.id }}">
+  {% if new_after and job.id > new_after %}<span class="new-mark" title="{{ t('job.new') }}"></span>{% endif %}
   <header>
     <h3><a href="/jobs/{{ job.id }}" class="job-open" data-job="{{ job.id }}">{{ job.title }}</a></h3>
-    {% set pay = salary(job) %}
-    {% if pay %}<span class="salary">{{ pay }}</span>{% endif %}
+    <div class="job-side">
+      <small class="checking-note muted" aria-busy="true">{{ t("job.unchecked") }}</small>
+      {% set pay = salary(job) %}
+      {% if pay %}<span class="salary">{{ pay }}</span>{% endif %}
+      <button type="button" class="hide secondary outline" hx-post="/jobs/{{ job.id }}/hide"
+              hx-target="closest .job" hx-swap="outerHTML" title="{{ t('job.hide_hint') }}">{{ t("job.hide") }}</button>
+    </div>
   </header>
   <p class="meta">
     {% if job.employer_name %}<strong>{{ job.employer_name }}</strong>{% endif %}
-    {% if job.place_text %} · {{ job.place_text }}{% endif %}
-    {% if job.posted_at %} · {{ t("job.posted") }} {{ job.posted_at | date }}{% endif %}
+    {% if job.place_text %}{% if job.employer_name %} · {% endif %}{{ job.place_text }}{% endif %}
+    {% if job.posted_at %}{% if job.employer_name or job.place_text %} · {% endif %}{{ t("job.posted") }} {{ job.posted_at | date }}{% endif %}
   </p>
   {% if job.contract_types or job.shifts or job.benefits %}
     <p class="tags">
@@ -15,6 +21,14 @@
       {% for c in job.shifts %}<span class="tag">{{ label("shifts", c) }}</span>{% endfor %}
       {% for c in job.benefits %}<span class="tag">{{ label("benefits", c) }}</span>{% endfor %}
     </p>
+  {% endif %}
+  {% if job.red_flags %}
+    <p class="warning small" role="note">⚠ {{ t("job.red_flags") }}
+      {% for c in job.red_flags %}{{ label("red_flags", c) }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+  {% endif %}
+  {% set pictures = job.images | selectattr("file") | list %}
+  {% if pictures %}
+    <p class="pictures">{% for img in pictures[:3] %}<a href="/images/{{ img.id }}" target="_blank"><img src="/images/{{ img.id }}" alt="{{ t('job.picture') }}" loading="lazy"></a>{% endfor %}</p>
   {% endif %}
   {% if job.description %}<p class="desc">{{ job.description | truncate(260) }}
     {%- if job.description | length > 260 %} <a href="/jobs/{{ job.id }}" class="job-open" data-job="{{ job.id }}">{{ t("job.full_text") }}</a>{% endif %}</p>{% endif %}

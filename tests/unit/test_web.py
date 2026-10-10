@@ -1,19 +1,23 @@
 import json
 import re
+import threading
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 from conftest import make_ai
 from fastapi.testclient import TestClient
-from sqlalchemy import func, select, update
+from sqlalchemy import update
 
 from adawork.config import Settings
-from adawork.db.models import Job
+from adawork.db.models import Job, JobSource
 from adawork.scraper.runner import Progress
 from adawork.scraper.sources import SWITCHABLE, mpsv
 from adawork.scraper.store import JobStore
+from adawork.search.service import start_batch
+from adawork.social import browser as social_browser
 from adawork.web.app import create_app
-from adawork.web.routes import maps
+from adawork.web.routes import maps, search
 
 FIXTURES = Path(__file__).parents[1] / "fixtures" / "sources" / "mpsv"
 
@@ -23,7 +27,9 @@ class FakeRunner:
         self.sessions = sessions
         self.progress = Progress()
         self.starts = 0
+        self.restarts = 0
         self.fresh = False
+        self.focus = None
 
     def start(self, fresh: bool = False) -> bool:
         if self.progress.running:
@@ -32,6 +38,11 @@ class FakeRunner:
         self.fresh = fresh
         self.progress = Progress(running=True, phase="download")
         return True
+
+    def start_over(self) -> None:
+        self.restarts += 1
+        self.progress = Progress()
+        self.start(fresh=True)
 
 
 @pytest.fixture
@@ -43,6 +54,7 @@ def app(tmp_path):
         cache_dir=tmp_path / "cache",
         runner_factory=FakeRunner,
         ai_factory=lambda st, sessions, cache: make_ai(tmp_path, st, sessions),
+        data_dir=tmp_path / "data",
     )
 
 
@@ -122,6 +134,59 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
     chosen = {"mpsv", "prace_cz", "jenprace", "linkedin"}  # ticked in the form above
     assert saved.sources == {source_id: source_id in chosen for source_id, _ in SWITCHABLE}
     assert saved.automation.enabled is False
+
+
+def test_facebook_and_instagram_need_consent_then_offer_a_login(app, client):
+    app.state.services.settings.wizard_completed = True
+    page = client.get("/sources").text
+    assert "Více o rizicích" in page and "trvale" in page  # the warning is always shown
+    assert "Přihlásit se" not in page  # only once switched on
+
+    r = client.post("/sources", data={"source_mpsv": "on", "source_facebook": "on"})
+    assert "Facebook se zapne, až zaškrtnete" in r.text
+    assert not app.state.services.settings.sources.get("facebook")
+    assert 'name="consent_facebook" checked' not in r.text  # Save again must not consent
+    r = client.post("/sources", data={"source_mpsv": "on", "source_facebook": "on"})
+    assert "Facebook se zapne, až zaškrtnete" in r.text
+    form = {"source_linkedin": "on", "consent_linkedin": "on", "source_facebook": "on"}
+    r = client.post("/sources", data=form)
+    assert "Facebook se zapne" in r.text and 'name="consent_linkedin" checked' in r.text
+
+    form = {
+        "source_mpsv": "on",
+        "source_facebook": "on",
+        "consent_facebook": "on",
+        "facebook_per_day": "500",
+        "facebook_groups": "https://m.facebook.com/groups/brigadykolin/\nnot a link",
+        "instagram_tags": "#brigadabrno prace_kolin",
+    }
+    assert client.post("/sources", data=form, follow_redirects=False).status_code == 303
+    social = app.state.services.settings.social
+    assert (
+        app.state.services.settings.sources["facebook"]
+        and not app.state.services.settings.sources["instagram"]
+    )
+    assert social.facebook_per_day == 200  # at most 200, with a warning in the form
+    assert social.facebook_groups == ["https://www.facebook.com/groups/brigadykolin"]
+    assert social.instagram_tags == ["brigadabrno", "prace_kolin"]
+    page = client.get("/sources").text
+    assert "Přihlásit se" in page and "Nepřihlášeno" in page
+    assert "Nepřihlášeno" in client.get("/social/facebook/status").text
+    assert client.post("/social/instagram/login").status_code == 404  # switched off
+
+
+def test_a_login_while_the_app_reads_says_so(app, client, tmp_path):
+    app.state.services.settings.wizard_completed = True
+    app.state.services.settings.sources["facebook"] = True
+    held = social_browser.hold_profile(social_browser.profile_dir(tmp_path / "data", "facebook"))
+    try:
+        client.post("/social/facebook/login")
+        for thread in threading.enumerate():
+            if thread.name == "login-facebook":
+                thread.join(10)
+    finally:
+        held.release()
+    assert "Aplikace právě čte" in client.get("/social/facebook/status").text
 
 
 def test_sources_page_and_indeed_link(app, client, municipalities):
@@ -250,49 +315,149 @@ def test_the_kinds_of_work_fill_the_search(app, client):
     assert 'name="q" value=""' in client.get("/?q=").text  # cleared by the user
 
 
-def test_list_is_numbered_with_the_last_found_first(app, client):
+def fixture_jobs():
+    records = json.loads((FIXTURES / "volna-mista.first30.json").read_text(encoding="utf-8"))
+    codebooks = mpsv.Codebooks.load_dir(FIXTURES / "codebooks")
+    return [mpsv.parse_record(r, codebooks) for r in records["polozky"]]
+
+
+def store_jobs(app, batch) -> None:
+    with app.state.services.sessions() as s:
+        JobStore(s, "mpsv").add_all(batch)
+
+
+def new_batch(app) -> None:
+    with app.state.services.sessions() as s:
+        start_batch(s)
+
+
+def order(page: str, ids) -> list[int]:
+    return sorted(ids, key=lambda i: page.index(f'id="job-{i}"'))
+
+
+def test_list_is_in_found_order_the_last_search_first(app, client):
+    app.state.services.settings.wizard_completed = True
+    jobs = fixture_jobs()
+    store_jobs(app, jobs[:10])
+    new_batch(app)
+    store_jobs(app, jobs[10:20])
+    page = client.get("/").text
+    assert 'id="job-list"' in page and page.count('class="job"') == 20
+    assert order(page, range(1, 21)) == [*range(11, 21), *range(1, 11)]
+    assert page.count('class="new-mark"') == 10  # the last search's finds
+    assert page.index('class="new-mark"') < page.index('id="job-1"')
+    with app.state.services.sessions() as s:
+        start_batch(s, 0)  # started over: everything was found again, nothing is new
+    assert 'class="new-mark"' not in client.get("/").text
+
+
+def test_jobs_can_be_hidden_and_brought_back(app, client):
     app.state.services.settings.wizard_completed = True
     load_fixture_jobs(app)
     page = client.get("/").text
-    assert 'id="job-list"' in page and page.count('class="job"') == 30
-    with app.state.services.sessions() as s:
-        newest = s.scalar(select(func.max(Job.id)))
-    assert page.index(f'data-id="{newest}"') < page.index(f'data-id="{newest - 1}"')
+    assert page.count('class="hide secondary outline"') == 30 and "Skryto" not in page
+    for job_id in (29, 30):
+        r = client.post(f"/jobs/{job_id}/hide", data={"sort": "relevance"})
+    assert 'id="hidden-bar"' in r.text and 'hx-swap-oob="true"' in r.text
+    assert "Skryto: 2" in r.text and "Nalezené nabídky: 28" in r.text
+    page = client.get("/results").text
+    assert 'id="job-30"' not in page and 'id="job-29"' not in page and "Skryto: 2" in page
+
+    r = client.post("/hidden/restore")  # the last hidden comes back first
+    assert r.headers["HX-Trigger"] == "jobs-updated" and "Skryto: 1" in r.text
+    page = client.get("/results").text
+    assert 'id="job-30"' in page and 'id="job-29"' not in page
+    r = client.post("/hidden/restore?every=1")
+    assert "Skryto" not in r.text and 'id="job-29"' in client.get("/results").text
+    assert client.post("/jobs/999999/hide").status_code == 404
 
 
-def test_new_finds_go_on_top_while_a_search_runs(app, client):
+def test_a_running_search_adds_its_finds_in_found_order(app, client, monkeypatch):
+    monkeypatch.setattr(search, "PAGE_SIZE", 10)
     app.state.services.settings.wizard_completed = True
-    records = json.loads((FIXTURES / "volna-mista.first30.json").read_text(encoding="utf-8"))
-    codebooks = mpsv.Codebooks.load_dir(FIXTURES / "codebooks")
-    jobs = [mpsv.parse_record(r, codebooks) for r in records["polozky"]]
+    jobs = fixture_jobs()
 
-    def store(batch):
-        with app.state.services.sessions() as s:
-            JobStore(s, "mpsv").add_all(batch)
+    def poll(since, shown, more=False, qs=""):
+        data = {"shown": ",".join(map(str, shown)), "more": "1" if more else ""}
+        return client.post(f"/results/new?{qs}since={since}&cleared=0", data=data)
 
-    store(jobs[:20])
     assert "/results/new" not in client.get("/").text  # no search running
+    new_batch(app)  # the first search: the list is empty
     app.state.services.runner.progress = Progress(running=True, phase="import")
+    assert "since=0&cleared=0" in client.get("/").text
+    r = poll(0, [])
+    assert "since=0" in r.text and "hx-swap-oob" not in r.text  # nothing new yet
+
+    store_jobs(app, jobs[:5])  # put at the end, in the order found
+    r = poll(0, [])
+    assert 'hx-swap-oob="beforeend:#job-list"' in r.text
+    assert order(r.text, range(1, 6)) == [1, 2, 3, 4, 5] and "since=5" in r.text
+    assert "Nalezené nabídky: 5" in r.text
+    store_jobs(app, jobs[5:15])  # fills the page; the rest is behind "more"
+    r = poll(5, range(1, 6))
+    assert r.text.count('class="job"') == 5 and order(r.text, range(6, 11)) == [6, 7, 8, 9, 10]
+    assert 'class="secondary outline more"' in r.text and "since=15" in r.text
+
+    with app.state.services.sessions() as s:  # no longer offered: drops out of the list
+        s.execute(update(Job).where(Job.id == 2).values(status="expired"))
+        s.commit()
+    store_jobs(app, jobs[15:16])  # belongs on a page not loaded yet
+    r = poll(15, range(1, 11), more=True)
+    assert '<div id="job-2" hx-swap-oob="delete">' in r.text
+    assert 'class="job"' not in r.text and "since=16" in r.text
+
+    new_batch(app)  # the next search: its finds go above the jobs found before
+    store_jobs(app, jobs[16:19])
+    shown = [1, *range(3, 11)]
+    r = poll(16, shown, more=True)
+    assert 'hx-swap-oob="beforebegin:#job-1"' in r.text
+    assert order(r.text, range(17, 20)) == [17, 18, 19] and "since=19" in r.text
     page = client.get("/").text
-    assert "since=20&cleared=0" in page
+    assert order(page, [3, 1, 19, 18, 17]) == [17, 18, 19, 1, 3]
 
-    r = client.get("/results/new?since=20&cleared=0")
-    assert "since=20" in r.text and "job-list" not in r.text  # nothing new yet
-    store(jobs[20:25])
-    r = client.get("/results/new?since=20&cleared=0")
-    assert 'hx-swap-oob="afterbegin:#job-list"' in r.text and r.text.count('class="job"') == 5
-    assert "since=25" in r.text and "Nalezené nabídky: 25" in r.text
-
-    store(jobs[25:])  # with words to rank by, new finds belong anywhere: the list reloads
-    r = client.get("/results/new?q=a&since=25&cleared=0")
+    store_jobs(app, jobs[19:])  # with words to rank by too, above the jobs found before
+    r = poll(19, shown, qs="q=praha&")
+    assert "HX-Trigger" not in r.headers and 'hx-swap-oob="beforebegin:#job-1"' in r.text
+    assert 'id="job-24"' in r.text and 'id="job-21"' not in r.text  # Praha only
+    assert '<div id="job-4" hx-swap-oob="delete">' in r.text  # Poděbrady
+    r = poll(19, shown, qs="sort=date&")  # another order: new finds belong anywhere, reload
     assert r.headers["HX-Trigger"] == "jobs-updated" and r.text == ""
 
     app.state.services.runner.progress.cleared = True  # old jobs deleted: ids start again
-    r = client.get("/results/new?since=30&cleared=0")
-    assert r.headers["HX-Trigger"] == "jobs-updated"
-
+    assert poll(30, shown).headers["HX-Trigger"] == "jobs-updated"
     app.state.services.runner.progress = Progress(phase="done")
-    assert client.get("/results/new?since=30&cleared=1").text == ""  # the poll stops
+    r = client.post("/results/new?since=30&cleared=1")
+    assert r.text == ""  # the poll stops
+
+
+def test_starting_over_empties_the_list_at_once(app, client):
+    app.state.services.settings.wizard_completed = True
+    load_fixture_jobs(app)
+    for progress in (
+        Progress(running=True, phase="listing", restarting=True),  # the running one stops
+        Progress(running=True, phase="clear"),
+    ):
+        app.state.services.runner.progress = progress
+        r = client.get("/results", headers={"HX-Request": "true"})
+        assert 'class="job' not in r.text and "since=0&cleared=0" in r.text
+
+
+def test_a_refresh_dims_the_listed_jobs_until_checked(app, client):
+    app.state.services.settings.wizard_completed = True
+    load_fixture_jobs(app)
+    checked_since = datetime.now(UTC).replace(tzinfo=None) + timedelta(minutes=1)
+    app.state.services.runner.progress = Progress(
+        running=True, phase="check", checked_since=checked_since, checking=("mpsv",)
+    )
+    with app.state.services.sessions() as s:  # one was checked already
+        s.execute(update(JobSource).where(JobSource.job_id == 2).values(last_seen_at=checked_since))
+        s.commit()
+    page = client.get("/").text
+    assert 'class="job unchecked" id="job-1"' in page and 'class="job" id="job-2"' in page
+    r = client.post("/results/new?since=30&cleared=0", data={"shown": "1,2,3"})
+    assert 'data-unchecked="1,3"' in r.text
+    app.state.services.runner.progress.checking = ()  # an Úřad práce ad has no page to check
+    assert 'class="job unchecked"' not in client.get("/").text
 
 
 def test_a_job_opens_with_its_whole_text(app, client):
@@ -325,9 +490,8 @@ def test_scrape_button_starts_and_polls(app, client):
     assert 'hx-post="/scrape"' in page and 'hx-post="/scrape?fresh=1"' in page
     client.post("/scrape")
     assert runner.starts == 1  # not again while one runs
-    runner.progress = Progress()
-    client.post("/scrape?fresh=1")
-    assert runner.fresh
+    client.post("/scrape?fresh=1")  # starts over: the running one stops for it
+    assert runner.restarts == 1 and runner.starts == 2 and runner.fresh
 
     app.state.services.runner.progress = Progress(
         running=False, phase="done", results={"mpsv": {"new": 5, "updated": 1, "removed": 2}}
@@ -478,3 +642,34 @@ def test_downloaded_models_are_listed_and_deleted_only_on_request(app, client):
     client.post("/ai/delete", data={"model_id": "gemma-4-e2b"})
     client.post("/ai/delete", data={"model_id": "qwen3-vl-2b"})
     assert manager.downloaded() == {"gemma-4-e2b"}
+
+
+def test_manual_import_of_text_and_of_a_photo(app, client):
+    from io import BytesIO
+
+    from PIL import Image
+
+    app.state.services.settings.wizard_completed = True
+    assert "Vložit inzerát" in client.get("/add").text
+    assert "Vložte text inzerátu nebo obrázek" in client.post("/add", data={"text": " "}).text
+
+    r = client.post("/add", data={"text": "Přijmeme skladníka do Kolína\nMzda 32 000 Kč"})
+    assert "Uloženo" in r.text and "Přijmeme skladníka do Kolína" in r.text
+
+    photo = BytesIO()
+    Image.new("RGB", (800, 600), "white").save(photo, format="PNG")
+    r = client.post("/add", files={"picture": ("plakat.png", photo.getvalue(), "image/png")})
+    assert "Inzerát z obrázku" in r.text and "/images/" in r.text
+    bad = client.post("/add", files={"picture": ("x.png", b"not an image", "image/png")})
+    assert "Soubor není obrázek" in bad.text
+    with app.state.services.sessions() as s:
+        jobs = s.query(Job).all()
+        assert sorted(j.title for j in jobs) == [
+            "Inzerát z obrázku",
+            "Přijmeme skladníka do Kolína",
+        ]
+        pictured = next(j for j in jobs if j.images)
+        assert pictured.extra["title_from_picture"] and pictured.images[0].status == "stored"
+        image_id = pictured.images[0].id
+    assert client.get(f"/images/{image_id}").headers["content-type"] == "image/jpeg"
+    assert client.get("/images/999").status_code == 404

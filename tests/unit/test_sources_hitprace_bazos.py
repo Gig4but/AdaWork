@@ -221,6 +221,8 @@ def test_bazos_detail_pages(places):
     assert job.description.startswith("🚗 Hledáme nové zaměstnance")
     assert "Firemní auto zdarma" in job.description
     assert job.employer_name is None and job.contact == {}
+    assert job.images == ["https://www.bazos.cz/img/1/656/224343656.jpg?t=1790499463"]
+    assert "not_offer" not in job.extra
 
     # The town in the place link, with the PSČ, picks the municipality.
     page = page.replace("slan%C3%BD-1/27401", "lhota-1/27301").replace(">274 01<", ">273 01<")

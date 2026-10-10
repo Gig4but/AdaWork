@@ -1,10 +1,17 @@
 {% if progress.running %}
   <div hx-get="/scrape/progress" hx-trigger="every 1s" hx-target="#progress" aria-busy="true">
-    {% if progress.phase == "clear" %}{{ t("scrape.clear") }}
+    {% if progress.restarting %}{{ t("scrape.restarting") }}
+    {% elif progress.phase == "clear" %}{{ t("scrape.clear") }}
     {% elif progress.phase == "import" %}{{ t("scrape.import", n=progress.processed) }}
     {% elif progress.phase == "download" %}{{ t("scrape.download") }}
+    {% elif progress.phase == "check" %}{{ t("scrape.check", n=progress.processed) }}
+    {% elif progress.active %}
+      {{ t("scrape.parallel") }}
+      {% for label, phase, n in progress.active_labels() %}{{ label }} ({{ n }}){% if not loop.last %}, {% endif %}{% endfor %}
     {% elif progress.phase == "listing" %}{{ t("scrape.listing", source=progress.source_label, n=progress.processed) }}
     {% elif progress.phase == "details" %}{{ t("scrape.details", source=progress.source_label, n=progress.processed) }}
+    {% elif progress.phase == "social" %}{{ t("scrape.social", source=progress.source_label) }}
+    {% elif progress.phase == "images" %}{{ t("scrape.images", n=progress.processed) }}
     {% elif progress.phase == "geocode" %}{{ t("scrape.geocode") }}
     {% else %}{{ t("scrape.start") }}{% endif %}
   </div>

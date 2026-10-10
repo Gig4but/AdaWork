@@ -11,6 +11,7 @@ from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select
+from starlette.datastructures import QueryParams
 
 from adawork import __version__
 from adawork.db.models import Job, Run
@@ -106,6 +107,14 @@ def filters_from_query(request: Request) -> Filters:
     """Filters from the query string; unknown or malformed values are ignored. Without
     `q`: the kinds of work from the wizard."""
     qp = request.query_params
+    if "q" not in qp:
+        kinds = ", ".join(services_of(request).settings.profile.kinds_of_work)
+        qp = QueryParams([*qp.multi_items(), ("q", kinds)])
+    return filters_from(qp)
+
+
+def filters_from(qp) -> Filters:
+    """Filters from query or form fields."""
 
     def number(name: str, maximum: int) -> int | None:
         value = qp.get(name, "")
@@ -114,15 +123,15 @@ def filters_from_query(request: Request) -> Filters:
         return None
 
     sort = qp.get("sort", "relevance")
-    q = qp.get("q")
     return Filters(
-        q=", ".join(services_of(request).settings.profile.kinds_of_work) if q is None else q,
+        q=qp.get("q", ""),
         **{name: [v for v in qp.getlist(name) if v] for name in (*LIST_FIELDS, "kraj")},
         sources_off=[v for v in qp.getlist("source_off") if v],
         education=qp.get("education") or None,
         salary_min=number("salary_min", 1_000_000),
         with_salary=qp.get("with_salary") == "1",
         posted_days=number("posted_days", 3650),
+        flagged=qp.get("flagged") == "1",
         sort=sort if sort in ("relevance", "date", "salary") else "relevance",
     )
 
@@ -135,6 +144,8 @@ def filters_to_query(f: Filters) -> str:
     for name in ("education", "salary_min", "posted_days"):
         if getattr(f, name):
             pairs.append((name, getattr(f, name)))
+    if f.flagged:
+        pairs.append(("flagged", 1))
     return urlencode(pairs)
 
 

@@ -15,7 +15,7 @@ Three main modules:
 Shared services: a small **local AI model** (reads messy ads and posters, summarizes
 reviews) and a **local routing engine** (travel times and routes, offline maps).
 
-Status: **M0–M6 done** (2026-10-07); next is M6b. Spike results: `docs/spikes.md`.
+Status: **M0–M6b done** (2026-10-09); next is M7. Spike results: `docs/spikes.md`.
 
 ---
 
@@ -53,7 +53,8 @@ Status: **M0–M6 done** (2026-10-07); next is M6b. Spike results: `docs/spikes.
 
 ### 2.1 Job portals and official data
 
-Verified live in the M0 spike (`docs/spikes/sources.md`, 2026-10-06). No source needs a browser.
+Verified live in the M0 spike (`docs/spikes/sources.md`, 2026-10-06). No portal needs a browser;
+only the opt-in Facebook/Instagram reader drives Edge (§4.3.1).
 
 | Source | Access method | Verified facts |
 |---|---|---|
@@ -83,7 +84,7 @@ Verified live in the M0 spike (`docs/spikes/sources.md`, 2026-10-06). No source 
 | Facebook groups | No (a logged-out request returns a ~1.5 KB stub page) | Automatic reader with the user's own login |
 | Facebook Marketplace | Search needs login; the jobs category exists only in the US, so in CZ jobs are ordinary listings | Same reader, keyword searches near home |
 | Instagram | Login wall; Graph API needs a Business account + Meta developer app | Same reader with the user's Instagram login |
-| Public forums | Usually open | Generic forum source + AI |
+| Public forums | Usually open | Checked in M6b: classified boards (HyperInzerce, Annonce, Bazar.cz, cBazar, Mimibazar) carry offers; discussion forums (eMimino, Okoun) carry none (§4.3) |
 
 Facebook's robots.txt disallows all crawlers and prohibits automated collection without
 permission. Automatic reading through a logged-in session **breaks Meta's terms and can get
@@ -95,8 +96,8 @@ shows a visible warning, and the user must switch them on and confirm (§7.1 ste
 Based on the jenprace.cz overview (18 Sep 2026, written by a competitor) and traffic knowledge:
 jobs.cz, prace.cz, jenprace.cz, ~~volnamista.cz~~ (robots.txt blocks it, replaced by
 dobraprace.cz), profesia.cz, Indeed CZ, LinkedIn, hitprace.cz, bazos.cz – práce,
-startupjobs.cz; plus fajn-brigady.cz, MPSV, Facebook, Instagram, forums (11 verified sections in
-`resources/forums.yaml`), Jooble, Careerjet.
+startupjobs.cz; plus fajn-brigady.cz, MPSV, Facebook, Instagram, classified boards (7 sections in
+`adawork/scraper/sources/classifieds.yaml`), Jooble, Careerjet.
 
 ### 2.4 Employer reviews and checks
 
@@ -327,10 +328,25 @@ ETag, raw cache.
     - Settings allow up to 200 / 100 with a warning.
   - On a session expiry, verification request or "going too fast" block: stop, notify, and
     pause that platform (7 days after a block). One click opens the login window.
-- **Forums:** a built-in list of public Czech forums with job sections plus user-added URLs;
-  auto-detected post blocks → keyword check → AI.
-- **Manual import:** paste text or drop a photo/screenshot.
-- Social posts: repost dedup (SimHash + image hash), 14-day expiry.
+- **Classified boards** (`scraper/sources/classifieds.py` + `classifieds.yaml`): 7 job sections
+  of HyperInzerce, Annonce, Bazar.cz, cBazar and Mimibazar, each a source of its own. A board is
+  described by a link pattern and a text selector; "label: value" rows (place, pay, employer,
+  education, contract) are read generically, the place also from the ad URL or page title.
+  Newest first, ≤ 60 ads per board and run, unseen for 30 days = gone. Checked 2026-10-09:
+  avizo.cz now answers an honest User-Agent with a bot challenge (dropped); the discussion
+  forums eMimino "Zaměstnání" and Okoun "Práce" had no job offers (68 threads, 0 offers), so
+  they are not read; their employer-experience threads belong to M9 (web mentions).
+  User-added board URLs are not supported: a board needs its link pattern and text selector.
+- **Offers and red flags** (`normalize/offers.py`), for every free-text source (boards, Bazoš,
+  social): posts that are not offers (people looking for work, services, loans, sales) are
+  stored but never listed, so they are not read again; red flags (fee from the applicant, MLM,
+  assembly at home, easy money, unpaid trial days, adult, referral-only, crypto) hide an offer
+  until the user ticks "Zobrazit i podezřelé nabídky", and the card names the warning.
+- **Manual import** ("Vložit inzerát", `/add`): paste text and/or drop a photo or screenshot;
+  the picture is read by the vision model, a photo-only ad takes its title from the poster.
+- Reposts: the same picture (dHash ≤ 4 bits) or the same text start, with agreeing words, is
+  one offer (`scraper/images.py`, `scraper/reposts.py`). Social posts are deleted 14 days after
+  they were last seen.
 
 ### 4.3.1 Facebook/Instagram limits and risks (researched 2026-10-06)
 
@@ -637,8 +653,13 @@ Golden set: ~60 text ads + ~30 social posts + ~20 image ads + ~20 employer revie
 (summary faithfulness). `adawork eval` per model: per-field accuracy, JSON validity, speed.
 
 ### 6.8 Images
-Skip non-ads → RapidOCR → text path; if the result is weak, the vision model reads the
-image → same schema. Images are stored and shown; perceptual-hash dedup.
+Implemented in M6b without RapidOCR: pictures of ads are downloaded (≤ 1280 px JPEG, image
+cache), shown on the result card, and for ads with less than 600 characters of own text the
+vision model writes out the picture's text, which is added to the ad and goes through the
+rules and the AI (same checks). A picture without text gives nothing; a picture already read
+(same hash, e.g. an employer's logo on many ads) is not read again. Measured on real board
+pictures (`docs/spikes.md`, "M6b pictures"): 15–30 s per poster on the iGPU, ~40 s on 4 CPU
+threads, so RapidOCR is not needed for the expected volume (tens of picture ads a day).
 
 ---
 
@@ -746,10 +767,12 @@ AdaWork/
 │  ├─ scraper/                      # MODULE 1
 │  │  ├─ base.py, registry.py, query_builder.py, http.py, browser.py, pipeline.py, scheduler.py
 │  │  ├─ extract/  jsonld.py, nextdata.py, text.py, forum_blocks.py
+│  │  ├─ images.py (pictures), reposts.py, crawl.py, polite.py, store.py, runner.py
 │  │  └─ sources/  mpsv, linkedin, indeed (link), prace_cz, jenprace, profesia,
-│  │               startupjobs_cz, jobs_cz, bazos_cz, hitprace_cz,
-│  │               dobraprace_cz, fajnbrigady_cz, forum_generic, facebook, instagram,
-│  │               manual, jooble, careerjet
+│  │               startupjobs, jobs_cz, bazos, hitprace, dobraprace, fajn_brigady,
+│  │               pracezarohem, inwork, easy_prace, personalka,
+│  │               classifieds (+ classifieds.yaml), jooble, careerjet
+│  ├─ social/  browser.py (Edge via Playwright), posts.py (page parsing), reader.py
 │  ├─ employers/                    # MODULE 3
 │  │  ├─ resolver.py (name → IČO), service.py, summary.py, scoring.py
 │  │  └─ sources/  ares, isir, vat_register, agency_register, atmoskop, indeed_reviews,
@@ -767,7 +790,7 @@ AdaWork/
 │  └─ web/                          # MODULE 2
 │     ├─ app.py, routes/ (wizard, search, job, commute, employer, sources, settings, manual)
 │     └─ templates/, static/ (htmx, alpine, pico, maplibre — vendored)
-├─ resources/  codebooks/, forums.yaml, categories.yaml
+├─ resources/  codebooks/, categories.yaml
 ├─ vendor/  llama.cpp/, motis/      # fetched by the build script
 ├─ packaging/  adawork.spec, installer.iss, build.ps1
 └─ tests/  fixtures/, golden/, unit/, contract/, integration/
@@ -880,10 +903,43 @@ AdaWork/
   smoke run"). Sitemap discovery added to the crawl framework (lastmod re-reads, region
   pre-filter from the URL, ads near home first, nationwide expiry). jobsik.cz is not read
   separately (same ads as dobraprace.cz). Career pages of big employers on jobs.cz load the ad
-  with JavaScript and stay card-only. Still to do: time a complete first run, and read
-  different portals in parallel to shorten it.
+  with JavaScript and stay card-only. Parallel reading and the timed first run followed in
+  M6b.
 
-### M6b — Social media, forums, images (7–9 days)
+### M6b — Social media, forums, images (7–9 days) — done
+- Classified boards (7 sections, §4.3), offer and red-flag rules for free-text sources.
+- Pictures: download, show, repost merge by picture hash, poster text by the vision model
+  (§6.8); text reposts merged across boards and groups.
+- Facebook/Instagram reader in the user's own Edge (§4.3, §4.3.1): consent with the risk
+  table, login window, daily budget in two daytime sessions, stop and pause on any warning,
+  posts deleted 14 days after last seen.
+- Manual import ("Vložit inzerát"): text and/or photo.
+- Rest of M6: portals read in parallel (4 at a time; per-host pace kept), complete first run
+  timed.
+- "Obnovit nabídky" (refresh): the portals' ads the list shows are checked on their own pages
+  first, in list order; then the new finds go above the jobs found before (also when ranked
+  by words); then every other ad not seen is checked. Ads not checked yet are dimmed, gone
+  ones drop out, and the filters keep working throughout. "Obnovit od začátku" empties the
+  list at once (a running search stops for it) and finds everything again.
+- **Done when:** every board parses on live pages; non-offers and scams are kept out of the
+  default results with no false alarms on portal ads; a poster's text reaches the filters
+  (place, pay) through the normal checks; the social reader stops on a block page and never
+  clicks anything but "See more"; the first run's duration is known.
+- **Result (2026-10-09, details in `docs/spikes.md`, "M6b live checks"):** 7 board sections
+  live (371 ads, every non-offer and flag checked by reading; 0 red flags on 45k portal jobs);
+  posters read on 40 real pictures (Simple ~25 s, Good 16 s, Excellent 32 s per poster on the
+  iGPU, ~40 s on 4 CPU threads; no RapidOCR needed); Facebook/Instagram built and tested on
+  hand-made pages only (the first real login is the check); the complete first run took
+  90 min with 4 sources at a time (~265 min one after another), 45 of them waiting for
+  Annonce's 20 s crawl delay, and gave 61.5k jobs.
+- **Fixes after the timed run (2026-10-10):** sources on one host run one after another in
+  one slot, longest first (last run's duration, else detail pages × pace); a site whose
+  robots.txt asks for ≥ 5 s between requests runs in a thread of its own beside the 4 slots
+  (every robots.txt is read at the start, all at once); a dropped connection loses one page,
+  not the source (3 in a row: the site is down, the run is partial and nothing expires);
+  jobs.cz Vysočina slug; Annonce read with its "offers only" filter; pictures fetched per
+  host in parallel with a share per host. **The complete first run now takes 54.5 min**
+  (61.7k jobs, no source failed).
 
 ### M7 — Automation (2–3 days)
 - Scheduler: automatic checks **off by default**, **6/12/24/48 h** intervals, pause/resume, manual "Hledat nové nabídky" button, start with Windows,

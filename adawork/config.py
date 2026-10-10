@@ -52,6 +52,16 @@ class AiSettings(BaseModel):
     server_model: str = ""
 
 
+class SocialSettings(BaseModel):
+    """Facebook and Instagram reading (PLAN §4.3): off unless switched on in `sources`.
+    No safe limit exists; these defaults are the plan's, Settings allow up to 200 / 100."""
+
+    facebook_per_day: int = Field(default=100, ge=10, le=200)
+    instagram_per_day: int = Field(default=50, ge=10, le=100)
+    facebook_groups: list[str] = Field(default_factory=list)  # group links the user adds
+    instagram_tags: list[str] = Field(default_factory=list)  # extra hashtags, without "#"
+
+
 class Settings(BaseModel):
     language: Language = "cs"
     theme: Theme = "system"
@@ -59,6 +69,7 @@ class Settings(BaseModel):
     profile: Profile = Field(default_factory=Profile)
     automation: AutomationSettings = Field(default_factory=AutomationSettings)
     ai: AiSettings = Field(default_factory=AiSettings)
+    social: SocialSettings = Field(default_factory=SocialSettings)
     # Source id -> on/off as the user chose; sources not listed use their default.
     sources: dict[str, bool] = Field(default_factory=dict)
 
