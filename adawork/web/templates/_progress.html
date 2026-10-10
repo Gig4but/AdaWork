@@ -3,6 +3,7 @@
     {% if progress.phase == "clear" %}{{ t("scrape.clear") }}
     {% elif progress.phase == "import" %}{{ t("scrape.import", n=progress.processed) }}
     {% elif progress.phase == "download" %}{{ t("scrape.download") }}
+    {% elif progress.phase == "geocode" %}{{ t("scrape.geocode") }}
     {% else %}{{ t("scrape.start") }}{% endif %}
   </div>
 {% elif progress.phase == "done" %}

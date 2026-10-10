@@ -9,6 +9,13 @@
     {% if job.place_text %} · {{ job.place_text }}{% endif %}
     {% if job.posted_at %} · {{ t("job.posted") }} {{ job.posted_at | date }}{% endif %}
   </p>
+  {% if job.contract_types or job.shifts or job.benefits %}
+    <p class="tags">
+      {% for c in job.contract_types %}<span class="tag">{{ label("contract_types", c) }}</span>{% endfor %}
+      {% for c in job.shifts %}<span class="tag">{{ label("shifts", c) }}</span>{% endfor %}
+      {% for c in job.benefits %}<span class="tag">{{ label("benefits", c) }}</span>{% endfor %}
+    </p>
+  {% endif %}
   {% if job.description %}<p class="desc">{{ job.description | truncate(260) }}
     {%- if job.description | length > 260 %} <a href="/jobs/{{ job.id }}" class="job-open" data-job="{{ job.id }}">{{ t("job.full_text") }}</a>{% endif %}</p>{% endif %}
   <footer>

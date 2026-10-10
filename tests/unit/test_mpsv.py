@@ -38,7 +38,10 @@ def test_parse_municipality_record(codebooks):
     assert job.title == "Pokojská"
     assert job.employer_name == "Evelimax, s.r.o." and job.employer_ico == "10946128"
     assert job.salary_min == 22500 and job.salary_max is None and job.salary_unit == "month"
-    assert job.contract_types == ["plny"] and job.shifts == ["jednoSm"]
+    assert job.contract_types == ["full_time"] and job.shifts == ["jednoSm"]
+    assert job.education == "basic"  # "Základní + praktická škola"
+    assert job.categories == ["8", "13", "14"]  # as shown on up.gov.cz for this ad
+    assert job.suitable_for == []  # "zdravi" (healthy people) carries no information
     assert job.isco_code == "91123"
     assert job.place_text == "Praha"
     assert job.location.key == "obec:554782" and job.location.precision == "municipality"
@@ -80,7 +83,9 @@ def make_transport(records, etag='"v1"'):
 
 def run_once(sessions, tmp_path, records, etag='"v1"', phase="done"):
     transport, calls = make_transport(records, etag)
-    runner = ScrapeRunner(sessions, tmp_path / "cache", lambda: httpx.Client(transport=transport))
+    runner = ScrapeRunner(
+        sessions, tmp_path / "cache", lambda: httpx.Client(transport=transport), geocode=False
+    )
     assert runner.start()
     runner.wait(60)
     assert runner.progress.phase == phase, runner.progress.message
@@ -148,7 +153,10 @@ def test_failed_import_is_retried_with_the_same_dump(sessions, tmp_path, monkeyp
         m.setattr(mpsv, "parse_record", disk_full)
         transport, _ = make_transport(RECORDS, etag='"v2"')
         runner = ScrapeRunner(
-            sessions, tmp_path / "cache", lambda: httpx.Client(transport=transport)
+            sessions,
+            tmp_path / "cache",
+            lambda: httpx.Client(transport=transport),
+            geocode=False,
         )
         runner.start()
         runner.wait(60)
@@ -193,6 +201,21 @@ def test_address_format():
     assert mpsv._format_address({"cisloDomovni": 701}, "Tvrdonice") == "Tvrdonice 701"
     assert mpsv._format_address({}, "Praha") == "Praha"
     assert mpsv._format_address({}, None) is None
+
+
+def test_store_derives_filter_fields(sessions, codebooks):
+    from adawork.scraper.store import JobStore
+
+    hourly = mpsv.parse_record(by_id(67299562), codebooks)
+    hourly.external_id, hourly.salary_min, hourly.salary_unit = "h1", 180, "hour"
+    bogus = mpsv.parse_record(by_id(67299562), codebooks)
+    bogus.external_id, bogus.salary_min, bogus.salary_unit = "h2", 139380, "hour"
+    with sessions() as s:
+        JobStore(s, "test").add_all([hourly, bogus])
+        jobs = {j.sources[0].external_id: j for j in s.scalars(select(Job))}
+        assert jobs["h1"].salary_month_min == 180 * 160
+        assert jobs["h2"].salary_month_min == 139380  # implausible hourly rate = monthly
+        assert jobs["h1"].education_level == 1 and jobs["h1"].categories == ["8", "13", "14"]
 
 
 def test_a_dropped_connection_is_tried_again_but_not_an_offline_one():

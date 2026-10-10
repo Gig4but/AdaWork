@@ -1,9 +1,11 @@
 """What every page of the web interface shares: the templates and their helpers, and `Svc`,
 the app's services in a route (`def page(request: Request, svc: Svc)`)."""
 
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated
+from urllib.parse import urlencode
 
 from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse
@@ -13,6 +15,8 @@ from sqlalchemy import func, select
 from adawork import __version__
 from adawork.db.models import Job, Run
 from adawork.i18n import translate
+from adawork.normalize.vocab import VOCABULARIES, label
+from adawork.search.service import LIST_FIELDS, Filters
 from adawork.services import Services
 
 WEB_DIR = Path(__file__).parent
@@ -29,6 +33,8 @@ THEMES = {
     "plum": "dark",
     "midnight": "dark",
 }
+SALARY_STEPS = (20000, 25000, 30000, 35000, 40000, 50000, 60000)
+POSTED_DAYS = (1, 3, 7, 14, 30)
 
 
 def services_of(request: Request) -> Services:
@@ -81,8 +87,40 @@ def render(request: Request, name: str, **context) -> HTMLResponse:
         "version": __version__,
         "t": lambda key, **kw: translate(lang, key, **kw),
         "salary": lambda job: format_salary(job, lang),
+        "label": lambda vocab, code: label(vocab, code, lang),
+        "vocab": VOCABULARIES,
     }
     return TEMPLATES.TemplateResponse(request, name, context)
+
+
+def filters_from_query(request: Request) -> Filters:
+    """Filters from the query string; unknown or malformed values are ignored. Without
+    `q`: the kinds of work from the wizard."""
+    qp = request.query_params
+
+    def number(name: str, maximum: int) -> int | None:
+        value = qp.get(name, "")
+        if re.fullmatch(r"[0-9]{1,9}", value) and int(value) <= maximum:
+            return int(value)
+        return None
+
+    sort = qp.get("sort", "relevance")
+    q = qp.get("q")
+    return Filters(
+        q=", ".join(services_of(request).settings.profile.kinds_of_work) if q is None else q,
+        **{name: [v for v in qp.getlist(name) if v] for name in (*LIST_FIELDS, "kraj", "okres")},
+        education=qp.get("education") or None,
+        salary_min=number("salary_min", 1_000_000),
+        with_salary=qp.get("with_salary") == "1",
+        posted_days=number("posted_days", 3650),
+        sort=sort if sort in ("relevance", "date", "salary") else "relevance",
+    )
+
+
+def query_string(request: Request) -> str:
+    """The current filters as a query string, without paging."""
+    paging = ("offset", "since", "cleared")
+    return urlencode([(k, v) for k, v in request.query_params.multi_items() if k not in paging])
 
 
 def status_context(svc: Services) -> dict:

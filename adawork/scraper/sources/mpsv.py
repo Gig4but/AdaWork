@@ -22,6 +22,8 @@ from adawork.scraper.store import JobStore
 log = logging.getLogger(__name__)
 
 SOURCE_ID = "mpsv"
+# Bump when parse_record changes, so the next run re-imports even an unchanged dump.
+PARSER_VERSION = 2
 DUMP_URL = "https://data.mpsv.cz/od/soubory/volna-mista/volna-mista.json.gz"
 CODEBOOK_URL = "https://data.mpsv.cz/od/soubory/ciselniky/{name}.json"
 # Public detail page on the Úřad práce portal (verified 2026-10-06 in a browser).
@@ -37,9 +39,35 @@ CODEBOOKS = (
     "vzdelani-detailni-kategorie",
     "vyhody-volneho-mista",
     "cz-isco",
+    "obory-cinnosti-pro-vm",
 )
 
 _SALARY_UNIT: dict[str, SalaryUnit] = {"mesic": "month", "hod": "hour"}
+_CONTRACT = {
+    "plny": "full_time",
+    "zkraceny": "part_time",
+    "dpp": "dpp",
+    "dpc": "dpc",
+    "sluzebni": "service",
+}
+_EDUCATION = {
+    "bezVzdel": "basic",
+    "neuplZakl": "basic",
+    "zaklPraktSkol": "basic",
+    "nizsiStred": "basic",
+    "nizsiStredOdbor": "basic",
+    "stredOdbor": "vocational",
+    "stredOdborVyuc": "vocational",
+    "usoSMatVyuc": "maturita",
+    "usv": "maturita",
+    "usoSMat": "maturita",
+    "konz": "higher_vocational",
+    "vyssOdbor": "higher_vocational",
+    "bakal": "bachelor",
+    "vysoka": "master",
+    "doktor": "doctoral",
+}
+_NO_VALUE = {"zdravi", "neurceno", "ne"}  # "healthy people", "unspecified", "not given"
 
 
 class Codebooks:
@@ -65,6 +93,20 @@ class Codebooks:
         for name in CODEBOOKS:
             download_if_changed(client, CODEBOOK_URL.format(name=name), directory / f"{name}.json")
         return cls.load_dir(directory)
+
+    def okres_map(self) -> dict[str, tuple[str, str, str | None]]:
+        """Municipality code -> (okres code, okres name, kraj name)."""
+        result = {}
+        for item in self._by_id.values():
+            if item["id"].startswith("Obec/") and item.get("okres"):
+                okres = self.get(item["okres"])
+                if okres:
+                    result[item["kod"]] = (
+                        okres["kod"],
+                        okres["nazev"]["cs"],
+                        self.name(okres.get("kraj")),
+                    )
+        return result
 
     def get(self, ref: dict[str, Any] | str | None) -> dict[str, Any] | None:
         if not ref:
@@ -178,6 +220,19 @@ def _location(rec: dict[str, Any], cb: Codebooks) -> tuple[ParsedLocation | None
     return None, misto.get("adresaText")
 
 
+def _codes(cb: Codebooks, refs, mapping: dict[str, str] | None = None) -> list[str]:
+    """Codebook references -> app codes, without empty/"unspecified" values or duplicates."""
+    out: list[str] = []
+    for ref in refs or []:
+        code = cb.code(ref)
+        if not code or code in _NO_VALUE:
+            continue
+        code = mapping.get(code, code) if mapping else code
+        if code not in out:
+            out.append(code)
+    return out
+
+
 def parse_record(rec: dict[str, Any], cb: Codebooks) -> ParsedJob:
     location, place_text = _location(rec, cb)
     employer = rec.get("zamestnavatel") or {}
@@ -206,8 +261,6 @@ def parse_record(rec: dict[str, Any], cb: Codebooks) -> ParsedJob:
         "reference_number": rec.get("referencniCislo"),
         "hours_per_week": rec.get("pocetHodinTydne"),
         "employer_website": rec.get("urlAdresa"),
-        "benefits": [cb.code(v.get("vyhoda")) for v in rec.get("vyhodyVolnehoMista") or []],
-        "suitable_for": [cb.code(v) for v in rec.get("vhodnostiPracovnihoMista") or []],
         "workplaces": len((rec.get("mistoVykonuPrace") or {}).get("pracoviste") or []),
         "isco_name": cb.name(rec.get("profeseCzIsco")),
         "end_date": rec.get("terminUkonceniPracovnihoPomeru"),
@@ -228,9 +281,12 @@ def parse_record(rec: dict[str, Any], cb: Codebooks) -> ParsedJob:
         salary_min=rec.get("mesicniMzdaOd") or None,
         salary_max=rec.get("mesicniMzdaDo") or None,
         salary_unit=_SALARY_UNIT.get(salary_unit or ""),
-        contract_types=[c for v in rec.get("pracovnePravniVztahy") or [] if (c := cb.code(v))],
-        shifts=[c for c in [cb.code(rec.get("smennost"))] if c],
-        education=cb.code(rec.get("minPozadovaneVzdelani")),
+        contract_types=_codes(cb, rec.get("pracovnePravniVztahy"), _CONTRACT),
+        shifts=_codes(cb, [rec.get("smennost")]),
+        education=_EDUCATION.get(cb.code(rec.get("minPozadovaneVzdelani")) or ""),
+        categories=_codes(cb, (cb.get(rec.get("profeseCzIsco")) or {}).get("oboryCinnosti")),
+        suitable_for=_codes(cb, rec.get("vhodnostiPracovnihoMista")),
+        benefits=_codes(cb, [v.get("vyhoda") for v in rec.get("vyhodyVolnehoMista") or []]),
         isco_code=cb.code(rec.get("profeseCzIsco")),
         positions_count=rec.get("pocetMist"),
         start_date=_date(rec.get("terminZahajeniPracovnihoPomeru")),
@@ -274,7 +330,7 @@ class MpsvSource:
         )
         stat = dump.path.stat()
         fingerprint = f"{stat.st_size}:{stat.st_mtime_ns}"
-        if previous.get("dump") == fingerprint:
+        if previous.get("dump") == fingerprint and previous.get("parser_version") == PARSER_VERSION:
             return DumpRead(skipped=True)
         progress("import", 0)
         imported = skipped = 0
@@ -297,7 +353,7 @@ class MpsvSource:
             notes.append("most known offers missing from the dump: none expired")
         else:
             store.expire_missing()
-        return DumpRead(notes=notes, state={"dump": fingerprint})
+        return DumpRead(notes=notes, state={"dump": fingerprint, "parser_version": PARSER_VERSION})
 
 
 SOURCE = MpsvSource()

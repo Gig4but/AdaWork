@@ -1,0 +1,56 @@
+{# Filter panel. Counts come from facets; each group ignores its own selection. #}
+{% macro group(name, title, options, selected, vocab_name=None) %}
+  {% set counts = dict(facets.get(name, [])) %}
+  <details {% if selected %}open{% endif %}>
+    <summary>{{ title }}{% if selected %} <span class="badge">{{ selected | length }}</span>{% endif %}</summary>
+    {% for code in options %}
+      {% set n = counts.get(code, 0) %}
+      <label class="facet{% if not n and code not in selected %} empty{% endif %}">
+        <input type="checkbox" name="{{ name }}" value="{{ code }}" {% if code in selected %}checked{% endif %}>
+        <span>{{ label(vocab_name, code) if vocab_name else code }}</span>
+        <small>{{ n }}</small>
+      </label>
+    {% endfor %}
+  </details>
+{% endmacro %}
+
+<div class="filters-head">
+  <strong>{{ t("filters.title") }}</strong>
+  <a href="/" class="secondary small">{{ t("filters.reset") }}</a>
+</div>
+
+<label>{{ t("filters.salary") }}
+  <select name="salary_min">
+    <option value="">{{ t("filters.any") }}</option>
+    {% for amount in salary_steps %}
+      <option value="{{ amount }}" {% if f.salary_min == amount %}selected{% endif %}>{{ "{:,}".format(amount).replace(",", " ") }} Kč</option>
+    {% endfor %}
+  </select>
+</label>
+<label class="facet"><input type="checkbox" name="with_salary" value="1" {% if f.with_salary %}checked{% endif %}> <span>{{ t("filters.with_salary") }}</span></label>
+
+<label>{{ t("filters.education") }}
+  <select name="education">
+    <option value="">{{ t("filters.education.any") }}</option>
+    {% for code in vocab.education %}
+      <option value="{{ code }}" {% if f.education == code %}selected{% endif %}>{{ label("education", code) }}</option>
+    {% endfor %}
+  </select>
+</label>
+
+<label>{{ t("filters.posted") }}
+  <select name="posted_days">
+    <option value="">{{ t("filters.any") }}</option>
+    {% for d in posted_days %}
+      <option value="{{ d }}" {% if f.posted_days == d %}selected{% endif %}>{{ t("filters.day1") if d == 1 else t("filters.days", n=d) }}</option>
+    {% endfor %}
+  </select>
+</label>
+
+{{ group("contract_types", t("filters.contract"), vocab.contract_types | list, f.contract_types, "contract_types") }}
+{{ group("shifts", t("filters.shifts"), vocab.shifts | list, f.shifts, "shifts") }}
+{{ group("suitable_for", t("filters.suitable"), vocab.suitable_for | list, f.suitable_for, "suitable_for") }}
+{{ group("benefits", t("filters.benefits"), vocab.benefits | list, f.benefits, "benefits") }}
+{% set by_count = facets.get("categories", []) | map(attribute=0) | list %}
+{{ group("categories", t("filters.categories"), by_count + (vocab.categories | reject("in", by_count) | list), f.categories, "categories") }}
+{{ group("kraj", t("filters.kraj"), facets.get("kraj", []) | map(attribute=0) | list + (f.kraj | reject("in", facets.get("kraj", []) | map(attribute=0) | list) | list), f.kraj) }}

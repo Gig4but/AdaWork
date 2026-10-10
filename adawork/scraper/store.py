@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from adawork.core import ParsedJob, ParsedLocation, utcnow
 from adawork.db.models import Job, JobSource, Location, table
+from adawork.normalize.vocab import EDUCATION_LEVEL, monthly_salary
 
 _JOB_FIELDS = [
     "title",
@@ -23,8 +24,10 @@ _JOB_FIELDS = [
     "contract_types",
     "shifts",
     "education",
+    "categories",
+    "suitable_for",
+    "benefits",
     "isco_code",
-    "category",
     "positions_count",
     "start_date",
     "posted_at",
@@ -32,6 +35,15 @@ _JOB_FIELDS = [
     "contact",
     "extra",
 ]
+
+
+def job_values(parsed: ParsedJob) -> dict:
+    """Column values for a job: copied fields plus the derived filter fields."""
+    values = {f: getattr(parsed, f) for f in _JOB_FIELDS}
+    values["salary_month_min"] = monthly_salary(parsed.salary_min, parsed.salary_unit)
+    values["salary_month_max"] = monthly_salary(parsed.salary_max, parsed.salary_unit)
+    values["education_level"] = EDUCATION_LEVEL.get(parsed.education or "")
+    return values
 
 
 @dataclass
@@ -107,7 +119,7 @@ class JobStore:
 
         if known is None:
             job = Job(
-                **{f: getattr(parsed, f) for f in _JOB_FIELDS},
+                **job_values(parsed),
                 location_id=location_id,
                 content_hash=digest,
                 status="active",
@@ -146,7 +158,7 @@ class JobStore:
     def _update(
         self, job_id: int, parsed: ParsedJob, digest: str, location_id: int | None, now: datetime
     ) -> None:
-        values = {f: getattr(parsed, f) for f in _JOB_FIELDS} | {
+        values = job_values(parsed) | {
             "location_id": location_id,
             "content_hash": digest,
             "status": "active",

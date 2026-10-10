@@ -58,11 +58,14 @@ class ParsedJob:
     salary_max: int | None = None
     salary_unit: SalaryUnit | None = None
     salary_currency: str = "CZK"
+    # Codes from adawork.normalize.vocab
     contract_types: list[str] = field(default_factory=list)
     shifts: list[str] = field(default_factory=list)
     education: str | None = None
+    categories: list[str] = field(default_factory=list)
+    suitable_for: list[str] = field(default_factory=list)
+    benefits: list[str] = field(default_factory=list)
     isco_code: str | None = None
-    category: str | None = None
     positions_count: int | None = None
     start_date: date | None = None
     posted_at: datetime | None = None

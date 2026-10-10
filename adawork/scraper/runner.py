@@ -8,11 +8,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import httpx
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from adawork.core import Source, utcnow
-from adawork.db.models import Job, Run, SourceState
+from adawork.db.models import Job, Municipality, Run, SourceState
+from adawork.geo import ruian
+from adawork.geo.geocode import geocode_locations, rebuild_municipalities
 from adawork.net.http import make_client
 from adawork.scraper.sources import SOURCES, mpsv
 from adawork.scraper.store import JobStore
@@ -24,7 +26,7 @@ log = logging.getLogger(__name__)
 class Progress:
     running: bool = False
     source_id: str | None = None
-    phase: str = ""  # clear | download | import | done | failed
+    phase: str = ""  # clear | download | import | geocode | done | failed
     cleared: bool = False  # this run deleted the jobs found before
     processed: int = 0
     message: str = ""
@@ -37,11 +39,13 @@ class ScrapeRunner:
         sessions: sessionmaker[Session],
         cache_dir: Path,
         client_factory=make_client,
+        geocode: bool = True,
         sources: Sequence[Source] = SOURCES,
     ) -> None:
         self.sessions = sessions
         self.cache_dir = cache_dir
         self.client_factory = client_factory
+        self.geocode = geocode
         self.sources = sources
         self.progress = Progress()
         self._lock = threading.Lock()
@@ -72,8 +76,12 @@ class ScrapeRunner:
                 self.clear_jobs()
                 self.progress.cleared = True
             with self.client_factory() as client:
-                for dump in self._enabled_of(mpsv.MpsvSource):
-                    self.run_mpsv(dump, client)
+                try:
+                    for dump in self._enabled_of(mpsv.MpsvSource):
+                        self.run_mpsv(dump, client)
+                finally:  # what was imported gets its places even when a step failed
+                    if self.geocode:
+                        self.run_geocode(client)
             self.progress.phase = "done"
         except Exception as exc:  # reported in the UI and in the runs table
             log.exception("scrape failed")
@@ -131,6 +139,35 @@ class ScrapeRunner:
             state.last_run_at = utcnow()
             state.state = (state.state or {}) | done.state
             return run
+
+    def run_geocode(self, client: httpx.Client) -> None:
+        """Coordinates for new locations. Failure here never loses the imported jobs."""
+        p = self.progress
+        p.phase, p.processed = "geocode", 0
+        try:
+            directory = self.cache_dir / "ruian"
+            file = directory / ruian.FILE_NAME
+            before = file.stat().st_mtime_ns if file.exists() else None
+            path = ruian.download(client, directory)
+            changed = before != path.stat().st_mtime_ns
+            addresses = ruian.RuianAddresses(path)
+            try:
+                with self.sessions() as session:
+                    empty = not session.scalar(select(func.count(Municipality.code)))
+                    if changed or empty:
+                        codebooks = mpsv.Codebooks.load_dir(self.cache_dir / "mpsv" / "codebooks")
+                        rebuild_municipalities(
+                            session,
+                            addresses,
+                            codebooks.okres_map(),
+                            progress=lambda n: setattr(p, "processed", n),
+                        )
+                    geocode_locations(session, addresses)
+            finally:
+                addresses.close()
+        except Exception as exc:
+            log.exception("geocoding failed")
+            p.message = f"geocoding: {exc}"
 
     def clear_jobs(self) -> None:
         """Deletes the found jobs, so they are all found again. Cached downloads stay."""

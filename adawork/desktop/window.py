@@ -10,9 +10,10 @@ from pathlib import Path
 import webview
 
 from adawork import APP_NAME, paths
+from adawork.desktop.icon import make_icon_image
 from adawork.desktop.instance import SingleInstance
 from adawork.desktop.server import BackgroundServer
-from adawork.desktop.tray import create_tray, make_icon_image
+from adawork.desktop.tray import create_tray
 
 # DwmSetWindowAttribute attributes (Windows 11; older Windows ignores them).
 DWMWA_USE_IMMERSIVE_DARK_MODE = 20

@@ -12,6 +12,7 @@ from adawork.scraper.runner import Progress
 from adawork.scraper.sources import mpsv
 from adawork.scraper.store import JobStore
 from adawork.web.app import create_app
+from adawork.web.routes import maps
 
 FIXTURES = Path(__file__).parents[1] / "fixtures" / "sources" / "mpsv"
 
@@ -155,6 +156,11 @@ def test_search_page_and_results(app, client):
     assert "up.gov.cz/volna-mista-v-cr#/volna-mista-detail/67299562" in partial
     assert "<html" not in partial  # fragment only
 
+    with app.state.services.sessions() as s:
+        s.execute(update(Job).values(contract_types=[], shifts=[], benefits=["strav"]))
+        s.commit()
+    assert "Podnikové stravování" in client.get("/results").text
+
 
 def test_the_kinds_of_work_fill_the_search(app, client):
     app.state.services.settings.wizard_completed = True
@@ -248,3 +254,72 @@ def test_scrape_button_starts_and_polls(app, client):
     r = client.get("/scrape/progress")
     assert r.headers["HX-Trigger"] == "jobs-updated"
     assert "5 nových, 1 změněných, 2 již neplatných" in r.text
+
+
+def test_filters_from_url_and_facets_panel(app, client):
+    app.state.services.settings.wizard_completed = True
+    load_fixture_jobs(app)
+    params = [("categories", "14"), ("salary_min", "25000"), ("sort", "salary"), ("bogus", "x")]
+    r = client.get("/results", params=params, headers={"HX-Request": "true"})
+    assert r.status_code == 200
+    assert r.headers["HX-Push-Url"].startswith("/?categories=14&salary_min=25000")
+    assert 'hx-get="/facets?categories=14' in r.text  # filter counts refresh after results
+
+    page = client.get("/", params=params)
+    assert '<option value="salary" selected>' in page.text
+
+    panel = client.get("/facets", params=params).text
+    assert 'name="categories" value="14" checked' in panel
+    assert panel.index("Typ úvazku") < panel.index("Obor") < panel.index("Kraj")
+    assert "Služby" in panel and "Plný úvazek" in panel
+    assert '<option value="25000" selected>' in panel
+
+
+def test_malformed_filters_are_ignored(app, client):
+    app.state.services.settings.wizard_completed = True
+    r = client.get("/", params={"salary_min": "abc", "sort": "drop table", "posted_days": "-1"})
+    assert r.status_code == 200
+    for value in ("²", "9" * 30, "1" * 5000):
+        r = client.get("/results", params={"salary_min": value, "posted_days": value})
+        assert r.status_code == 200
+
+
+def test_empty_database_is_not_blamed_on_filters(client):
+    r = client.get("/results?q=&sort=date", headers={"HX-Request": "true"})
+    assert "Zatím tu nejsou žádné nabídky" in r.text
+    r = client.get("/results?q=xyz", headers={"HX-Request": "true"})
+    assert "Těmto filtrům neodpovídá" in r.text
+
+
+def test_map_points_follow_filters(app, client, monkeypatch):
+    from adawork.db.models import Location
+
+    app.state.services.settings.wizard_completed = True
+    load_fixture_jobs(app)
+    with app.state.services.sessions() as s:  # coordinates normally come from RÚIAN
+        for i, loc in enumerate(s.query(Location)):
+            loc.lat, loc.lon = 50.0 + i / 100, 14.0 + i / 100
+        s.commit()
+
+    everything = client.get("/map/points").json()
+    assert everything["type"] == "FeatureCollection"
+    total = sum(f["properties"]["count"] for f in everything["features"])
+    assert total == 30
+    lon, lat = everything["features"][0]["geometry"]["coordinates"]
+    assert 14 <= lon < 15 and 50 <= lat < 51
+
+    some = client.get("/map/points", params={"q": "pokojska"}).json()
+    assert 1 <= sum(f["properties"]["count"] for f in some["features"]) < total
+
+    loc_id = some["features"][0]["properties"]["id"]
+    popup = client.get(f"/map/location/{loc_id}", params={"q": "pokojska"}).text
+    assert "Pokojská" in popup and "<html" not in popup
+
+    busiest = max(everything["features"], key=lambda f: f["properties"]["count"])
+    count = busiest["properties"]["count"]
+    monkeypatch.setattr(maps, "POPUP_SIZE", 2)
+    popup = client.get(f"/map/location/{busiest['properties']['id']}").text
+    assert popup.count("<li>") == 2 and f"další nabídky: {count - 2}" in popup
+
+    page = client.get("/", params={"view": "map"}).text
+    assert 'document.body.dataset.view = "map"' in page and 'id="map"' in page

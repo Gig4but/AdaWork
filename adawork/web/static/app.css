@@ -74,6 +74,39 @@ button .icon { margin-right: .45rem; vertical-align: -.18em; }
 .wizard fieldset label { display: inline-flex; gap: .35rem; margin-right: 1.25rem; }
 .wizard .grid > * { margin-bottom: 0; }
 
+.search-row { display: grid; grid-template-columns: 1fr auto auto; gap: .75rem; }
+.search-row select { width: auto; }
+/* One height for the search box, the view buttons and the sort box. */
+.search-row > input, .search-row > select, .search-row > .view-toggle { margin: 0; }
+.view-toggle button { display: inline-flex; align-items: center; padding-block: 0; }
+.layout { display: grid; grid-template-columns: 17rem 1fr; gap: 1.5rem; align-items: start; }
+@media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+/* One gap between all filters; a select stays close to its title. */
+#facets { font-size: .9rem; position: sticky; top: .5rem; max-height: calc(100vh - 1rem);
+          overflow-y: auto; padding-right: .25rem; display: flex; flex-direction: column; gap: .75rem; }
+#facets > * { margin: 0; }
+#facets select { font-size: .9rem; padding-block: .35rem; margin: .375rem 0 0; }
+#facets summary { font-weight: 600; }
+.filters-head { display: flex; justify-content: space-between; align-items: baseline; }
+.facet { display: flex; gap: .4rem; align-items: center; margin-bottom: .2rem; }
+.facet input { margin: 0; flex: none; }
+.facet span { flex: 1; }
+.facet small { color: var(--pico-muted-color); }
+.facet.empty { opacity: .45; }
+.tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .4rem; }
+.tag { font-size: .75rem; padding: .05rem .45rem; border-radius: 1rem;
+       border: 1px solid var(--pico-muted-border-color); color: var(--pico-muted-color); }
+
+.view-toggle { margin: 0; width: auto; }
+.view-toggle button[aria-pressed="true"] { background: var(--pico-primary-background);
+                                           color: var(--pico-primary-inverse); }
+#map { display: none; height: calc(100vh - 14rem); min-height: 420px; border-radius: .5rem; }
+body[data-view="map"] #map { display: block; }
+body[data-view="map"] #results { display: none; }
+.maplibregl-popup-content { color: #222; font-size: .85rem; }
+.popup ul { margin: 0; padding-left: 1rem; max-height: 260px; overflow-y: auto; }
+.popup li { margin-bottom: .35rem; }
+
 /* Colour schemes (Settings.theme): each refines Pico's light or dark base. */
 [data-scheme="ocean"][data-theme] {
   --pico-background-color: #d9ebf5; --pico-color: #0d2b3e; --pico-muted-color: #3f6178;
@@ -135,3 +168,7 @@ button .icon { margin-right: .45rem; vertical-align: -.18em; }
             border-radius: 50%; background: var(--pico-primary-background); }
 .swatch[data-scheme="system"] { background: linear-gradient(135deg, #fff 50%, #13171f 50%);
                                 color: #888; }
+
+#map-empty { position: absolute; z-index: 2; inset: 1rem 1rem auto; margin: 0; padding: .5rem .75rem;
+             border-radius: .5rem; background: var(--pico-card-background-color);
+             color: var(--pico-color); box-shadow: var(--pico-card-box-shadow); }

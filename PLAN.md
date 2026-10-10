@@ -15,7 +15,7 @@ Three main modules:
 Shared services: a small **local AI model** (reads messy ads and posters, summarizes
 reviews) and a **local routing engine** (travel times and routes, offline maps).
 
-Status: **M0 and M1 done, M2 done except the map** (2026-10-06). Spike results: `docs/spikes.md`.
+Status: **M0, M1 and M2 done** (2026-10-06); next is M3. Spike results: `docs/spikes.md`.
 
 ---
 
@@ -755,8 +755,12 @@ AdaWork/
 - **Done when:** fresh start → wizard steps 1, 2, 7 → MPSV import → full-text search in
   < 300 ms.
 
-### M2 — Codebooks and normalization (2–3 days)
+### M2 — Codebooks and normalization (2–3 days) — done
 - **Done when:** the full filter set works with facets; the map shows jobs.
+- Built: shared vocabulary (`normalize/vocab.py`), RÚIAN coordinates, filters + facet counts
+  (≤ 150 ms on 40k jobs), list/map toggle with clustered pins and popups.
+- Map tiles come **online from OpenFreeMap** (free, no key, apps allowed, attribution shown)
+  until M8 switches to offline MOTIS tiles.
 
 ### M3 — Generic JSON-LD + prace.cz, jenprace.cz, profesia.cz + dedup (3 days)
 
@@ -912,6 +916,8 @@ next to the model icons.
   no redistribution; every source can be switched off. Firmy.cz/Mapy.cz reviews are not
   scraped (robots.txt).
 - Google ratings only through the official API within its terms.
+- Map tiles: OpenFreeMap (free, no key, attribution "OpenFreeMap © OpenMapTiles, data ©
+  OpenStreetMap" shown by the map) until offline MOTIS tiles replace them in M8.
 - LinkedIn: guest endpoints only, no login; off by default because its robots.txt disallows
   them. Indeed: only the public search page that robots.txt allows.
 - Facebook/Instagram: breaks Meta's terms; runs only after explicit consent, low limits, stops

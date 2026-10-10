@@ -1,0 +1,21 @@
+<div class="popup">
+  {% if jobs and jobs[0].location %}
+    <p class="muted small">
+      {{ jobs[0].location.address_text or jobs[0].place_text or "" }}
+      {% if jobs[0].location.precision != "address" %} · {{ t("map.approx") }}{% endif %}
+    </p>
+  {% endif %}
+  <ul>
+    {% for job in jobs %}
+      <li>
+        {% set url = job.sources[0].url if job.sources else None %}
+        {% if url %}<a href="{{ url }}" target="_blank" rel="noopener">{{ job.title }}</a>{% else %}{{ job.title }}{% endif %}
+        {% set pay = salary(job) %}
+        <br><small>{{ job.employer_name or "" }}{% if pay %} · {{ pay }}{% endif %}</small>
+      </li>
+    {% endfor %}
+  </ul>
+  {% if total > jobs | length %}
+    <p class="muted small">{{ t("map.more", n=total - jobs | length) }}</p>
+  {% endif %}
+</div>

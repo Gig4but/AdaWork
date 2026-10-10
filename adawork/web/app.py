@@ -2,6 +2,8 @@
 
 `create_app` builds the app's services (services.py) and serves the pages of web/routes/."""
 
+import io
+
 from fastapi import FastAPI, Request
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
@@ -9,6 +11,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from adawork import __version__, services
 from adawork.config import Settings
+from adawork.desktop.icon import make_icon_image
 from adawork.web.pages import WEB_DIR
 from adawork.web.routes import ROUTERS
 
@@ -30,6 +33,12 @@ def create_app(settings: Settings | None = None, **options) -> FastAPI:
         if request.method not in ("GET", "HEAD") and origin and origin != own_origin:
             return Response("Cross-origin request blocked", status_code=403)
         return await call_next(request)
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon() -> Response:
+        buf = io.BytesIO()
+        make_icon_image(32).save(buf, format="PNG")
+        return Response(buf.getvalue(), media_type="image/png")
 
     @app.get("/health")
     def health() -> dict[str, str]:

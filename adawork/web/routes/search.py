@@ -1,4 +1,5 @@
-"""The search page: the job list, new finds while a search runs, and starting a search."""
+"""The search page: the job list with its filters, new finds while a search runs, and
+starting a search."""
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -6,9 +7,18 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from adawork.db.models import Job
-from adawork.search.service import fts_query, jobs_found_since, search_jobs
+from adawork.search.service import jobs_found_since, search_jobs
 from adawork.services import Services
-from adawork.web.pages import PAGE_SIZE, Svc, render, status_context
+from adawork.web.pages import (
+    PAGE_SIZE,
+    POSTED_DAYS,
+    SALARY_STEPS,
+    Svc,
+    filters_from_query,
+    query_string,
+    render,
+    status_context,
+)
 
 router = APIRouter()
 
@@ -19,47 +29,53 @@ def newest_id(svc: Services, s: Session) -> int | None:
 
 
 @router.get("/", response_class=HTMLResponse)
-def index(request: Request, svc: Svc, q: str | None = None) -> Response:
-    """Without `q`: the kinds of work from the wizard."""
+def index(request: Request, svc: Svc) -> Response:
     if not svc.settings.wizard_completed:
         return RedirectResponse("/wizard/welcome", status_code=303)
-    if q is None:
-        q = ", ".join(svc.settings.profile.kinds_of_work)
+    f = filters_from_query(request)
     with svc.sessions() as s:
         since = newest_id(svc, s)
-        result = search_jobs(s, q, limit=PAGE_SIZE, up_to_id=since)
+        result = search_jobs(s, f, limit=PAGE_SIZE, up_to_id=since)
     return render(
         request,
         "search.html",
-        q=q,
+        f=f,
+        qs=query_string(request),
         result=result,
         since=since,
         offset=0,
         progress=svc.runner.progress,
+        salary_steps=SALARY_STEPS,
+        posted_days=POSTED_DAYS,
+        view="map" if request.query_params.get("view") == "map" else "list",
         **status_context(svc),
     )
 
 
 @router.get("/results", response_class=HTMLResponse)
-def results(request: Request, svc: Svc, q: str = "", offset: int = 0) -> HTMLResponse:
+def results(request: Request, svc: Svc, offset: int = 0) -> HTMLResponse:
+    f = filters_from_query(request)
     with svc.sessions() as s:
         since = newest_id(svc, s) if offset == 0 else None
-        result = search_jobs(s, q, limit=PAGE_SIZE, offset=offset, up_to_id=since)
-    return render(
+        result = search_jobs(s, f, limit=PAGE_SIZE, offset=offset, up_to_id=since)
+    qs = query_string(request)
+    response = render(
         request,
         "_results.html",
-        q=q,
+        f=f,
+        qs=qs,
         result=result,
         since=since,
         progress=svc.runner.progress,
         offset=offset,
     )
+    if offset == 0:  # keep the filters in the address, so a reload keeps them
+        response.headers["HX-Push-Url"] = f"/?{qs}" if qs else "/"
+    return response
 
 
 @router.get("/results/new", response_class=HTMLResponse)
-def new_results(
-    request: Request, svc: Svc, q: str = "", since: int = 0, cleared: bool = False
-) -> Response:
+def new_results(request: Request, svc: Svc, since: int = 0, cleared: bool = False) -> Response:
     """Jobs found since the list was shown, put on top of it while a search runs. When
     they belong elsewhere in the order, are too many, or the old jobs were deleted
     meanwhile, the whole list reloads."""
@@ -68,15 +84,38 @@ def new_results(
         return HTMLResponse("")  # the finished run reloads the list
     if p.cleared != cleared:
         return HTMLResponse("", headers={"HX-Trigger": "jobs-updated"})
-    on_top = fts_query(q) is None
+    f = filters_from_query(request)
+    on_top = f.newest_found_first()
     with svc.sessions() as s:
         newest = newest_id(svc, s) or 0
         limit = PAGE_SIZE + 1 if on_top else 1
-        jobs, total = jobs_found_since(s, since, newest, limit)
+        jobs, total = jobs_found_since(s, f, since, newest, limit)
     if jobs and (not on_top or len(jobs) > PAGE_SIZE):
         return HTMLResponse("", headers={"HX-Trigger": "jobs-updated"})
     return render(
-        request, "_new_results.html", jobs=jobs, total=total, q=q, since=newest, progress=p
+        request,
+        "_new_results.html",
+        jobs=jobs,
+        total=total,
+        qs=query_string(request),
+        since=newest,
+        progress=p,
+    )
+
+
+@router.get("/facets", response_class=HTMLResponse)
+def facets(request: Request, svc: Svc) -> HTMLResponse:
+    """Filter panel with counts; loaded after the results so they appear first."""
+    f = filters_from_query(request)
+    with svc.sessions() as s:
+        result = search_jobs(s, f, limit=0, facets=True)
+    return render(
+        request,
+        "_facets.html",
+        f=f,
+        facets=result.facets,
+        salary_steps=SALARY_STEPS,
+        posted_days=POSTED_DAYS,
     )
 
 

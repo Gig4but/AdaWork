@@ -4,8 +4,8 @@ import httpx
 import pytest
 
 from adawork.config import Settings
+from adawork.desktop.icon import make_icon_image
 from adawork.desktop.server import BackgroundServer
-from adawork.desktop.tray import make_icon_image
 from adawork.desktop.window import ICON_SIZES, parse_css_color, write_icon_file
 from adawork.web.app import create_app
 

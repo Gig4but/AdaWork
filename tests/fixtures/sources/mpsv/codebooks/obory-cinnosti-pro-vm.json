@@ -1,0 +1,116 @@
+{
+  "polozky": [
+    {
+      "id": "OborCinnostiProVm/1",
+      "kod": "1",
+      "nazev": {
+        "cs": "Administrativa"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/2",
+      "kod": "2",
+      "nazev": {
+        "cs": "Doprava"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/3",
+      "kod": "3",
+      "nazev": {
+        "cs": "Finance"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/4",
+      "kod": "4",
+      "nazev": {
+        "cs": "Informační technologie"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/5",
+      "kod": "5",
+      "nazev": {
+        "cs": "Právo"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/6",
+      "kod": "6",
+      "nazev": {
+        "cs": "Kultura a sport"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/7",
+      "kod": "7",
+      "nazev": {
+        "cs": "Management"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/8",
+      "kod": "8",
+      "nazev": {
+        "cs": "Obchod a cestovní ruch"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/9",
+      "kod": "9",
+      "nazev": {
+        "cs": "Obrana a ochrana"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/10",
+      "kod": "10",
+      "nazev": {
+        "cs": "Stavebnictví"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/11",
+      "kod": "11",
+      "nazev": {
+        "cs": "Věda a výzkum"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/12",
+      "kod": "12",
+      "nazev": {
+        "cs": "Výchova a vzdělávání"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/13",
+      "kod": "13",
+      "nazev": {
+        "cs": "Výroba a provoz"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/14",
+      "kod": "14",
+      "nazev": {
+        "cs": "Služby"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/15",
+      "kod": "15",
+      "nazev": {
+        "cs": "Zdravotnictví"
+      }
+    },
+    {
+      "id": "OborCinnostiProVm/16",
+      "kod": "16",
+      "nazev": {
+        "cs": "Zemědělství a lesnictví"
+      }
+    }
+  ]
+}

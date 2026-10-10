@@ -35,6 +35,22 @@ class Location(Base):
     kraj: Mapped[str | None]
 
 
+class Municipality(Base):
+    """All Czech municipalities with a centre point (median of RÚIAN address points)."""
+
+    __tablename__ = "municipalities"
+
+    code: Mapped[str] = mapped_column(String(12), primary_key=True)
+    name: Mapped[str]
+    name_normalized: Mapped[str] = mapped_column(index=True)  # lowercase, no diacritics
+    okres_code: Mapped[str | None] = mapped_column(String(8), index=True)
+    okres: Mapped[str | None]
+    kraj: Mapped[str | None]
+    lat: Mapped[float]
+    lon: Mapped[float]
+    address_count: Mapped[int] = mapped_column(default=0)
+
+
 class Job(Base):
     __tablename__ = "jobs"
 
@@ -50,12 +66,19 @@ class Job(Base):
     salary_max: Mapped[int | None]
     salary_unit: Mapped[SalaryUnit | None] = mapped_column(String(10))
     salary_currency: Mapped[str] = mapped_column(String(3), default="CZK")
+    # Monthly CZK equivalents, for filtering and sorting across hourly and monthly pay.
+    salary_month_min: Mapped[int | None] = mapped_column(index=True)
+    salary_month_max: Mapped[int | None]
 
+    # Codes from adawork.normalize.vocab
     contract_types: Mapped[list[str]] = mapped_column(default=list)
     shifts: Mapped[list[str]] = mapped_column(default=list)
     education: Mapped[str | None]
+    education_level: Mapped[int | None] = mapped_column(index=True)
+    categories: Mapped[list[str]] = mapped_column(default=list)
+    suitable_for: Mapped[list[str]] = mapped_column(default=list)
+    benefits: Mapped[list[str]] = mapped_column(default=list)
     isco_code: Mapped[str | None] = mapped_column(String(6), index=True)
-    category: Mapped[str | None] = mapped_column(String(40), index=True)
     positions_count: Mapped[int | None]
     start_date: Mapped[date | None]
     posted_at: Mapped[datetime | None] = mapped_column(index=True)

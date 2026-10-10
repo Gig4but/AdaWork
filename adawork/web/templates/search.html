@@ -1,6 +1,13 @@
 {% extends "base.html" %}
+{% block head %}
+  <link rel="stylesheet" href="/static/vendor/maplibre-gl.css">
+  <script src="/static/vendor/maplibre-gl.js" defer></script>
+  <script src="/static/map.js" defer></script>
+  <script src="/static/job.js" defer></script>
+{% endblock %}
 {% block content %}
 {% from "_icons.html" import icon %}
+<script>document.body.dataset.view = "{{ view }}";</script>
 <section class="toolbar">
   <div id="status" hx-get="/status" hx-trigger="jobs-updated from:body">
     {% include "_status.html" %}
@@ -16,18 +23,38 @@
   </div>
 </section>
 
-<form class="search" role="search" onsubmit="return false">
-  <input type="search" name="q" value="{{ q }}" placeholder="{{ t('search.placeholder') }}"
-         aria-label="{{ t('nav.search') }}" autofocus
-         hx-get="/results" hx-target="#results" hx-push-url="false"
-         hx-trigger="input changed delay:250ms, search, jobs-updated from:body">
+<form id="search-form" onsubmit="return false"
+      hx-get="/results" hx-target="#results"
+      hx-trigger="change, input delay:300ms from:#q, jobs-updated from:body">
+  <div class="search-row">
+    <input id="q" type="search" name="q" value="{{ f.q }}" placeholder="{{ t('search.placeholder') }}"
+           aria-label="{{ t('nav.search') }}" autofocus>
+    <div role="group" class="view-toggle">
+      <button type="button" class="outline" data-show-view="list">{{ icon("list") }}{{ t("view.list") }}</button>
+      <button type="button" class="outline" data-show-view="map">{{ icon("map") }}{{ t("view.map") }}</button>
+    </div>
+    <input type="hidden" name="view" value="{{ view }}">
+    <select name="sort" aria-label="{{ t('filters.sort') }}">
+      {% for s in ("relevance", "date", "salary") %}
+        <option value="{{ s }}" {% if f.sort == s %}selected{% endif %}>{{ t("sort." ~ s) }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="layout">
+    <aside id="facets" hx-get="/facets?{{ qs }}" hx-trigger="load" hx-target="this" hx-swap="innerHTML"
+           hx-sync="this:replace">
+      <p aria-busy="true">{{ t("filters.loading") }}</p>
+    </aside>
+    <div>
+      <div id="map" aria-label="{{ t('view.map') }}"><p id="map-empty" class="small" hidden>{{ t("map.empty") }}</p></div>
+      <div id="results">{% include "_results.html" %}</div>
+    </div>
+  </div>
 </form>
-
-<div id="results">{% include "_results.html" %}</div>
+<div id="facets-refresh"></div>
 <dialog id="job-detail" aria-label="{{ t('job.full_text') }}"><article id="job-detail-body"></article></dialog>
 <button type="button" id="to-top" class="secondary" hidden title="{{ t('page.top') }}" aria-label="{{ t('page.top') }}"
         onclick="window.scrollTo({top: 0, behavior: 'smooth'})">{{ icon("up") }}</button>
-<script src="/static/job.js" defer></script>
 <script>
   // Back to the top, once the list is scrolled a screen down.
   const toTop = document.getElementById("to-top");

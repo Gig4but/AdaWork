@@ -99,3 +99,11 @@ def test_empty_query_lists_active_jobs(session):
     add_job(session, "B", status="expired")
     result = search_jobs(session, "")
     assert result.total == 1 and result.jobs[0].title == "A"
+
+
+def test_equal_ranks_page_without_repeats(session):
+    for i in range(12):
+        add_job(session, "Skladník", ext=f"s{i}")
+    pages = [search_jobs(session, "skladnik", limit=5, offset=o).jobs for o in (0, 5, 10)]
+    ids = [j.id for page in pages for j in page]
+    assert ids == sorted(ids, reverse=True) and len(set(ids)) == 12
