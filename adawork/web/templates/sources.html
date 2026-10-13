@@ -2,6 +2,7 @@
 {% block title %}{{ t("sources.title") }} – AdaWork{% endblock %}
 {% block content %}
 <article class="wizard">
+  <a href="/settings" class="back small">← {{ t("settings.title") }}</a>
   <h2>{{ t("sources.title") }}</h2>
   <p>{{ t("sources.text") }}</p>
   {% if saved %}<p class="ok" role="status">{{ t("sources.saved") }}</p>{% endif %}

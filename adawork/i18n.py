@@ -2,8 +2,6 @@
 
 TEXTS: dict[str, dict[str, str]] = {
     "nav.search": {"cs": "Hledat", "en": "Search"},
-    "nav.wizard": {"cs": "Průvodce nastavením", "en": "Setup wizard"},
-    "nav.sources": {"cs": "Zdroje", "en": "Sources"},
     "wizard.title": {"cs": "Průvodce nastavením", "en": "Setup wizard"},
     "wizard.step": {"cs": "Krok {n} ze {total}", "en": "Step {n} of {total}"},
     "wizard.next": {"cs": "Další", "en": "Next"},
@@ -250,7 +248,6 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "Saved. It applies from the next check.",
     },
     "search.indeed": {"cs": "Hledat také na Indeed", "en": "Also search on Indeed"},
-    "nav.ai": {"cs": "Umělá inteligence", "en": "AI"},
     "nav.add": {"cs": "Vložit inzerát", "en": "Add an ad"},
     "add.title": {"cs": "Vložit inzerát", "en": "Add an ad"},
     "add.text": {
@@ -591,7 +588,138 @@ TEXTS: dict[str, dict[str, str]] = {
     "status.jobs": {"cs": "Aktivní nabídky: {n}", "en": "Active jobs: {n}"},
     "status.last_run": {"cs": "poslední aktualizace {when}", "en": "last updated {when}"},
     "status.auto_off": {"cs": "automatické hledání vypnuto", "en": "automatic checks off"},
-    "status.auto_on": {"cs": "automaticky každých {h} h", "en": "automatically every {h} h"},
+    "status.next": {"cs": "další hledání {when}", "en": "next check {when}"},
+    "status.paused": {
+        "cs": "automatické hledání pozastaveno do {when}",
+        "en": "automatic checks paused until {when}",
+    },
+    # Settings, wizard steps 5 and 6 (M7)
+    "nav.settings": {"cs": "Nastavení", "en": "Settings"},
+    "settings.title": {"cs": "Nastavení", "en": "Settings"},
+    "settings.saved": {"cs": "Uloženo.", "en": "Saved."},
+    "settings.data": {"cs": "Data aplikace", "en": "App data"},
+    "settings.data_dir": {"cs": "Složka s daty", "en": "Data folder"},
+    "settings.log_dir": {"cs": "Záznamy (logy)", "en": "Logs"},
+    "settings.save": {"cs": "Uložit", "en": "Save"},
+    "settings.wizard": {"cs": "Spustit průvodce znovu", "en": "Run the setup wizard again"},
+    "settings.wizard.hint": {
+        "cs": "Projde všechna nastavení krok za krokem.",
+        "en": "Goes through all settings step by step.",
+    },
+    "settings.appearance": {"cs": "Jazyk a vzhled", "en": "Language and appearance"},
+    "settings.instant": {"cs": "Změny se ukládají hned.", "en": "Changes are saved at once."},
+    "settings.profile": {"cs": "Dojíždění", "en": "Commute"},
+    "settings.profile.summary": {
+        "cs": "{home} · {mode} · nejvýš {minutes} min",
+        "en": "{home} · {mode} · up to {minutes} min",
+    },
+    "settings.no_home": {"cs": "domov nezadán", "en": "no home set"},
+    "settings.ai.none": {"cs": "model zatím nestažen", "en": "no model downloaded yet"},
+    "settings.sources.summary": {
+        "cs": "zapnuto {on} z {total}",
+        "en": "{on} of {total} switched on",
+    },
+    "settings.keys.none": {"cs": "žádný klíč", "en": "no keys"},
+    "settings.off": {"cs": "vypnuto", "en": "off"},
+    "auto.title": {"cs": "Automatické hledání", "en": "Automatic checks"},
+    "auto.enabled": {
+        "cs": "Automaticky hledat nové nabídky",
+        "en": "Check for new jobs automatically",
+    },
+    "auto.interval": {"cs": "Jak často", "en": "How often"},
+    "auto.every": {"cs": "každých {h} h", "en": "every {h} h"},
+    "auto.start_with_windows": {
+        "cs": "Spouštět se systémem Windows (v oznamovací oblasti)",
+        "en": "Start with Windows (in the notification area)",
+    },
+    "auto.notifications": {
+        "cs": "Upozornit mě na nové nabídky",
+        "en": "Notify me about new jobs",
+    },
+    "auto.hint": {
+        "cs": "Aplikace pak běží i se zavřeným oknem, ikonou vpravo dole u hodin. Sociální sítě "
+        "se čtou nejvýš dvakrát denně. S vypnutým automatickým hledáním hledá aplikace jen po "
+        "kliknutí na „Obnovit nabídky“.",
+        "en": "The app then keeps running with its window closed, as an icon next to the clock. "
+        "Social networks are read twice a day at most. With automatic checks off, the app "
+        "searches only when you click “Refresh jobs”.",
+    },
+    "auto.save": {"cs": "Uložit", "en": "Save"},
+    "auto.pause": {"cs": "Pozastavit na 24 h", "en": "Pause for 24 h"},
+    "auto.resume": {"cs": "Pokračovat", "en": "Resume"},
+    "keys.title": {
+        "cs": "Klíče k dalším službám (volitelné)",
+        "en": "Keys for other services (optional)",
+    },
+    "keys.text": {
+        "cs": "Jooble, Careerjet a Google Maps fungují jen s vlastním klíčem. "
+        "Klíč získáte po registraci na jejich stránkách. Uloží se do Správce pověření Windows, "
+        "ne do nastavení aplikace.",
+        "en": "Jooble, Careerjet and Google Maps work only with your own key. "
+        "You get the key after signing up on their site. It is kept in the Windows Credential "
+        "Manager, not in the app settings.",
+    },
+    "keys.key": {"cs": "Klíč {source}", "en": "{source} key"},
+    "keys.get": {"cs": "Získat zdarma", "en": "Get one for free"},
+    "keys.saved": {"cs": "klíč uložen (…{end})", "en": "key saved (…{end})"},
+    "keys.remove": {"cs": "Smazat klíč", "en": "Delete the key"},
+    "keys.invalid": {
+        "cs": "Klíč {source} vypadá neplatně: 8 až 200 písmen, číslic nebo pomlček.",
+        "en": "The {source} key looks wrong: 8 to 200 letters, digits or dashes.",
+    },
+    "keys.save": {"cs": "Uložit klíče", "en": "Save the keys"},
+    "sources.kind.api": {"cs": "S vlastním klíčem", "en": "With your own key"},
+    "sources.no_key": {
+        "cs": "chybí klíč – zadejte ho v Nastavení",
+        "en": "no key – enter it in Settings",
+    },
+    "wizard.auto_on": {
+        "cs": "Automatické hledání je zapnuté: každých {h} h.",
+        "en": "Automatic checks are on: every {h} h.",
+    },
+    "tray.open": {"cs": "Otevřít", "en": "Open"},
+    "tray.auto": {"cs": "Automatické hledání", "en": "Automatic checks"},
+    "tray.pause": {"cs": "Pozastavit na 24 h", "en": "Pause for 24 h"},
+    "tray.resume": {"cs": "Pokračovat v automatickém hledání", "en": "Resume automatic checks"},
+    "tray.quit": {"cs": "Ukončit", "en": "Quit"},
+    "notify.new": {"cs": "Nové nabídky: {n}", "en": "New jobs: {n}"},
+    "notify.saved": {"cs": "{name}: nové nabídky {n}", "en": "{name}: {n} new"},
+    "notify.social": {"cs": "{source}: {reason}", "en": "{source}: {reason}"},
+    # Saved searches and export
+    "saved.title": {"cs": "Uložená hledání", "en": "Saved searches"},
+    "saved.save": {"cs": "Uložit hledání", "en": "Save search"},
+    "saved.prompt": {"cs": "Název hledání", "en": "Name of the search"},
+    "saved.default_name": {"cs": "Moje hledání", "en": "My search"},
+    "saved.new": {"cs": "nové: {n}", "en": "new: {n}"},
+    "saved.none": {
+        "cs": "Zatím žádná. Nastavte filtry a klikněte na „Uložit hledání“.",
+        "en": "None yet. Set the filters and click “Save search”.",
+    },
+    "saved.notify_on": {
+        "cs": "Upozorňovat na nové nabídky (zapnuto)",
+        "en": "Notify about new jobs (on)",
+    },
+    "saved.notify_off": {
+        "cs": "Upozorňovat na nové nabídky (vypnuto)",
+        "en": "Notify about new jobs (off)",
+    },
+    "saved.delete": {"cs": "Smazat", "en": "Delete"},
+    "saved.full": {
+        "cs": "Uložit lze nejvýš {n} hledání.",
+        "en": "At most {n} searches can be saved.",
+    },
+    "export.label": {"cs": "Stáhnout seznam", "en": "Download the list"},
+    "export.title": {"cs": "Pozice", "en": "Position"},
+    "export.employer": {"cs": "Zaměstnavatel", "en": "Employer"},
+    "export.place": {"cs": "Místo", "en": "Place"},
+    "export.kraj": {"cs": "Kraj", "en": "Region"},
+    "export.salary": {"cs": "Mzda", "en": "Salary"},
+    "export.contract": {"cs": "Úvazek", "en": "Contract"},
+    "export.shifts": {"cs": "Směny", "en": "Shifts"},
+    "export.education": {"cs": "Vzdělání", "en": "Education"},
+    "export.posted": {"cs": "Vloženo", "en": "Posted"},
+    "export.sources": {"cs": "Zdroje", "en": "Sources"},
+    "export.link": {"cs": "Odkaz", "en": "Link"},
 }
 
 

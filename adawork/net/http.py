@@ -7,6 +7,7 @@ import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import Path
 from typing import BinaryIO, cast
 
@@ -111,3 +112,16 @@ def open_maybe_gzip(path: Path) -> BinaryIO:
     with path.open("rb") as f:
         compressed = f.read(2) == b"\x1f\x8b"
     return cast(BinaryIO, gzip.open(path, "rb")) if compressed else path.open("rb")
+
+
+@dataclass(frozen=True)
+class Refresh:
+    """A file downloaded again every `every`; `run` raises when the download failed."""
+
+    name: str
+    every: timedelta
+    run: Callable[[httpx.Client], object]
+
+    @property
+    def state_id(self) -> str:
+        return f"data:{self.name}"

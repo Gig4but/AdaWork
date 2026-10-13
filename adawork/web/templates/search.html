@@ -3,15 +3,17 @@
   <link rel="stylesheet" href="/static/vendor/maplibre-gl.css">
   <script src="/static/vendor/maplibre-gl.js" defer></script>
   <script src="/static/map.js" defer></script>
+  <script src="/static/nav.js" defer></script>
   <script src="/static/job.js" defer></script>
 {% endblock %}
 {% block content %}
 {% from "_icons.html" import icon %}
 <script>document.body.dataset.view = "{{ view }}";</script>
+<div id="status" hx-get="/status" hx-trigger="jobs-updated from:body">
+  {% include "_status.html" %}
+</div>
 <section class="toolbar">
-  <div id="status" hx-get="/status" hx-trigger="jobs-updated from:body">
-    {% include "_status.html" %}
-  </div>
+  <div id="saved" hx-get="/saved" hx-trigger="load, jobs-updated from:body"></div>
   {# Kept out of #progress, which is replaced every second while a search runs. #}
   <div class="refresh">
     <div class="scrape-buttons">
@@ -63,6 +65,12 @@
 <button type="button" id="to-top" class="secondary" hidden title="{{ t('page.top') }}" aria-label="{{ t('page.top') }}"
         onclick="window.scrollTo({top: 0, behavior: 'smooth'})">{{ icon("up") }}</button>
 <script>
+  // An open menu closes on a click elsewhere, so it never covers the list.
+  document.addEventListener("click", (event) => {
+    for (const menu of document.querySelectorAll("details.dropdown[open]")) {
+      if (!menu.contains(event.target)) menu.open = false;
+    }
+  });
   // A hidden ad goes at once; the server's answer (the count) follows. Back if it fails.
   document.body.addEventListener("htmx:beforeRequest", (event) => {
     if (event.detail.elt.matches(".job .hide")) event.detail.elt.closest(".job").classList.add("hiding");
@@ -86,4 +94,9 @@
   window.addEventListener("scroll", () => { toTop.hidden = window.scrollY < window.innerHeight; },
                           { passive: true });
 </script>
+{% endblock %}
+{% block after_page %}
+{# Settings and adding an ad open here, beside the search (static/nav.js). #}
+<main class="container" id="other" hidden hx-boost="true" hx-target="this" hx-swap="innerHTML"
+      hx-select="#page > *" hx-push-url="false"></main>
 {% endblock %}

@@ -204,6 +204,19 @@ class Run(Base):
     error: Mapped[str | None]
 
 
+class SavedSearch(Base):
+    """Filters the user saved by name; new matches are counted and can be notified."""
+
+    __tablename__ = "saved_searches"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    query: Mapped[str]  # the search page's query string
+    notify: Mapped[bool] = mapped_column(default=True)
+    seen_up_to: Mapped[int] = mapped_column(default=0)  # jobs after this id are new to the user
+    created_at: Mapped[datetime]
+
+
 class LlmCache(Base):
     """Model answers by input, so an unchanged ad (or one seen on several portals) is read by
     the model only once. The key covers the model, the prompt version and the input."""

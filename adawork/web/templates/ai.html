@@ -2,6 +2,7 @@
 {% block title %}{{ t("ai.title") }} – AdaWork{% endblock %}
 {% block content %}
 <article class="wizard">
+  <a href="/settings" class="back small">← {{ t("settings.title") }}</a>
   <h2>{{ t("ai.title") }}</h2>
   <p>{{ t("ai.text") }}</p>
   {% if saved %}<p class="ok" role="status">{{ t("ai.saved") }}</p>{% endif %}
@@ -52,9 +53,10 @@
           <td>
             {% if d.active %}<small class="muted">{{ t("ai.in_use") }}</small>
             {% else %}
-              <form method="post" action="/ai/delete" onsubmit='return confirm({{ t("ai.delete_confirm")|tojson }})'>
+              {# On the button: a boosted form (static/nav.js) would ignore an onsubmit "no". #}
+              <form method="post" action="/ai/delete">
                 <input type="hidden" name="model_id" value="{{ d.id }}">
-                <button type="submit" class="outline secondary small">{{ t("ai.delete") }}</button>
+                <button type="submit" class="outline secondary small" onclick='return confirm({{ t("ai.delete_confirm")|tojson }})'>{{ t("ai.delete") }}</button>
               </form>
             {% endif %}
           </td>

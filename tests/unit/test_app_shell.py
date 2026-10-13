@@ -1,16 +1,21 @@
 import logging
+import sys
 import time
 import webbrowser
 from logging.handlers import RotatingFileHandler
 
+import pystray
 import pytest
 import uvicorn
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from adawork import cli, logs, paths
+from adawork.desktop import autostart
 from adawork.desktop.instance import TOKEN_HEADER, SingleInstance
 from adawork.desktop.server import BackgroundServer, ServerStartError
+from adawork.desktop.tray import TrayControls, create_tray
+from adawork.secrets import WindowsSecrets
 
 
 @pytest.fixture
@@ -118,3 +123,87 @@ def test_logging_goes_to_a_rotating_file(tmp_path):
                 root.removeHandler(handler)
                 handler.close()
         root.setLevel(level)
+
+
+# --- M7: keys, start with Windows, tray -------------------------------------------------------
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows Credential Manager")
+def test_keys_round_trip_through_the_credential_manager():
+    store = WindowsSecrets(prefix="AdaWork-test")
+    try:
+        assert store.get("jooble") is None
+        store.set("jooble", "klíč-1234")
+        assert store.get("jooble") == "klíč-1234"
+        store.set("jooble", "other")  # replaced, not added
+        assert store.get("jooble") == "other"
+    finally:
+        store.delete("jooble")
+    assert store.get("jooble") is None
+    store.delete("jooble")  # deleting a missing key is fine
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows registry")
+def test_start_with_windows_adds_and_removes_the_run_value(monkeypatch):
+    import winreg
+
+    key = r"Software\AdaWork-test\Run"
+    winreg.CreateKey(winreg.HKEY_CURRENT_USER, key).Close()
+    monkeypatch.setattr(autostart, "RUN_KEY", key)
+    try:
+        autostart.sync(True)
+        command = autostart.registered()
+        assert command.endswith("-m adawork --minimized") and "pythonw.exe" in command
+        autostart.sync(False)
+        assert autostart.registered() is None
+        autostart.sync(False)  # nothing to remove
+    finally:
+        winreg.DeleteKey(winreg.HKEY_CURRENT_USER, key)
+        winreg.DeleteKey(winreg.HKEY_CURRENT_USER, r"Software\AdaWork-test")
+
+
+def test_tray_menu_follows_the_automatic_checks():
+    state = {"auto": False, "paused": False}
+    calls = []
+    controls = TrayControls(
+        text=lambda key: {"tray.auto": "Automatické hledání"}.get(key, key),
+        search=lambda: calls.append("search"),
+        auto_on=lambda: state["auto"],
+        set_auto=lambda on: state.update(auto=on),
+        paused=lambda: state["paused"],
+        pause=lambda: state.update(paused=True),
+        resume=lambda: state.update(paused=False),
+    )
+    icon = create_tray(lambda: None, lambda: None, controls)
+
+    real = [i for i in icon.menu.items if i is not pystray.Menu.SEPARATOR]
+
+    def shown():
+        return [(i.text, i.checked) for i in real if i.visible]
+
+    assert shown() == [
+        ("tray.open", None),
+        ("scrape.button", None),
+        ("Automatické hledání", False),
+        ("tray.quit", None),
+    ]
+    items = {i.text: i for i in real}
+    items["Automatické hledání"](icon)
+    assert state["auto"] and ("tray.pause", None) in shown()
+    items["tray.pause"](icon)
+    assert ("tray.resume", None) in shown() and ("tray.pause", None) not in shown()
+    items["scrape.button"](icon)
+    assert calls == ["search"]
+
+
+def test_minimized_start_stays_in_the_tray_only_while_checks_are_on(data_dir, monkeypatch):
+    from adawork.desktop import window
+
+    started = {}
+    monkeypatch.setattr(window, "run_desktop", lambda *a, **kw: started.update(kw))
+    monkeypatch.setattr(BackgroundServer, "start", lambda self, timeout=10.0: None)
+    monkeypatch.setattr(BackgroundServer, "stop", lambda self: None)
+    monkeypatch.setattr(autostart, "sync", lambda wanted: None)
+    assert cli.main(["--minimized"]) == 0
+    assert started["hidden"] is False  # checks off: the window shows
+    assert isinstance(started["controls"], TrayControls)

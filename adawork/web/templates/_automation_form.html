@@ -1,0 +1,13 @@
+{# Automatic checks; shared by the wizard and Settings. #}
+{% set a = settings.automation %}
+<label><input type="checkbox" role="switch" name="enabled" {% if a.enabled %}checked{% endif %}>
+  <strong>{{ t("auto.enabled") }}</strong></label>
+<fieldset>
+  <legend>{{ t("auto.interval") }}</legend>
+  {% for h in (6, 12, 24, 48) %}
+    <label><input type="radio" name="interval_hours" value="{{ h }}" {% if a.interval_hours == h %}checked{% endif %}> {{ t("auto.every", h=h) }}</label>
+  {% endfor %}
+</fieldset>
+<label><input type="checkbox" role="switch" name="start_with_windows" {% if a.start_with_windows %}checked{% endif %}> {{ t("auto.start_with_windows") }}</label>
+<label><input type="checkbox" role="switch" name="notifications" {% if a.notifications %}checked{% endif %}> {{ t("auto.notifications") }}</label>
+<p class="muted small">{{ t("auto.hint") }}</p>

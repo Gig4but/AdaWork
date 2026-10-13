@@ -1,11 +1,13 @@
 {# Source switches; shared by the wizard and the Sources page. #}
 {% if consent_missing %}<p class="error" role="alert">{{ t("sources.consent_missing", source=consent_missing) }}</p>{% endif %}
-{% for kind in ("portal", "classifieds") %}
+{# The wizard asks for the keys in its next step. #}
+{% for kind in (("portal", "classifieds") if path.startswith("/wizard") else ("portal", "classifieds", "api")) %}
 <fieldset>
   <legend>{{ t("sources.kind." ~ kind) }}</legend>
   {% if kind == "classifieds" %}<small class="muted">{{ t("sources.classifieds.hint") }}</small>{% endif %}
   {% for s in sources if not s.consent and s.kind == kind %}
-    <label><input type="checkbox" role="switch" name="source_{{ s.id }}" {% if s.on %}checked{% endif %}> {{ s.label }}</label>
+    <label><input type="checkbox" role="switch" name="source_{{ s.id }}" {% if s.on %}checked{% endif %}> {{ s.label }}
+      {% if s.no_key %}<small class="muted">(<a href="/settings/keys">{{ t("sources.no_key") }}</a>)</small>{% endif %}</label>
   {% endfor %}
 </fieldset>
 {% endfor %}

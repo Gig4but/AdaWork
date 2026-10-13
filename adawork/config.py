@@ -7,6 +7,7 @@ import sys
 import tempfile
 import threading
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
@@ -26,8 +27,12 @@ log = logging.getLogger(__name__)
 class AutomationSettings(BaseModel):
     enabled: bool = False  # automatic checks are off until the user switches them on
     interval_hours: IntervalHours = 12
+    paused_until: datetime | None = None  # UTC; no automatic checks until then
     start_with_windows: bool = True
     notifications: bool = True
+
+    def paused(self, now: datetime) -> bool:
+        return self.paused_until is not None and self.paused_until > now
 
 
 class Profile(BaseModel):

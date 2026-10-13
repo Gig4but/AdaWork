@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ t(title) }} – AdaWork{% endblock %}
+{% block content %}
+<article class="wizard">
+  <a href="/settings" class="back small">← {{ t("settings.title") }}</a>
+  <h2>{{ t(title) }}</h2>
+  {% if saved %}<p class="ok" role="status">{{ t("settings.saved") }}</p>{% endif %}
+
+  {% if section == "appearance" %}
+    <form method="post" action="/settings/appearance">
+      {% include "_appearance_form.html" %}
+    </form>
+    <p class="muted small">{{ t("settings.instant") }}</p>
+
+  {% elif section == "profile" %}
+    <form method="post" action="/settings/profile">
+      {% include "_profile_form.html" %}
+      <button type="submit">{{ t("settings.save") }}</button>
+    </form>
+
+  {% elif section == "keys" %}
+    <form method="post" action="/settings/keys">
+      {% include "_keys_form.html" %}
+      <button type="submit">{{ t("keys.save") }}</button>
+    </form>
+
+  {% elif section == "automation" %}
+    {% if settings.automation.enabled %}
+      <p class="small">
+        {% if paused_until %}{{ t("status.paused", when=paused_until | datetime) }}
+        {% elif next_check %}{{ t("status.next", when=next_check | datetime) }}{% endif %}
+      </p>
+      <form method="post" action="/settings/{{ 'resume' if paused_until else 'pause' }}">
+        <button type="submit" class="secondary outline">{{ t("auto.resume") if paused_until else t("auto.pause") }}</button>
+      </form>
+    {% endif %}
+    <form method="post" action="/settings/automation">
+      {% include "_automation_form.html" %}
+      <button type="submit">{{ t("auto.save") }}</button>
+    </form>
+  {% endif %}
+</article>
+{% endblock %}

@@ -13,25 +13,26 @@
 <body>
   {% from "_icons.html" import icon %}
   {% macro nav_item(href, name, text, current, kind="") %}
-    <li><a href="{{ href }}" class="nav-button{% if kind %} {{ kind }}{% endif %}"{% if current %} aria-current="page"{% endif %}>{{ icon(name) }}<span>{{ text }}</span></a></li>
+    <li><a href="{{ href }}" class="nav-button{% if kind %} {{ kind }}{% endif %}"{% if current %} aria-current="page"{% endif %}
+           {%- if kind == "icon-only" %} title="{{ text }}" aria-label="{{ text }}">{{ icon(name) }}{% else %}>{{ icon(name) }}<span>{{ text }}</span>{% endif %}</a></li>
   {% endmacro %}
   <header class="container app-header">
     <nav>
       <ul><li><span class="brand">Ad<span class="sparked">a<svg class="spark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg></span>Work</span></li></ul>
       <ul>
+        {# The wizard opens by itself on first start; later from Settings. #}
         {% if settings.wizard_completed %}
         {{ nav_item("/", "search", t("nav.search"), path == "/") }}
         {{ nav_item("/add", "add", t("nav.add"), path == "/add") }}
-        {{ nav_item("/sources", "sources", t("nav.sources"), path == "/sources") }}
-        {{ nav_item("/ai", "ai", t("nav.ai"), path == "/ai") }}
+        {{ nav_item("/settings", "settings", t("nav.settings"), path == "/settings", "icon-only") }}
         {% endif %}
-        {{ nav_item("/wizard/welcome", "wizard", t("nav.wizard"), path.startswith("/wizard"), "secondary") }}
       </ul>
     </nav>
   </header>
-  <main class="container">
+  <main class="container" id="page">
     {% block content %}{% endblock %}
   </main>
+  {% block after_page %}{% endblock %}
   <footer class="container muted small">AdaWork {{ version }}</footer>
 </body>
 </html>

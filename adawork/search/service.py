@@ -3,9 +3,11 @@
 import itertools
 import re
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass, field, replace
 from datetime import timedelta
 from typing import Literal, cast
+from urllib.parse import urlencode
 
 from sqlalchemy import (
     ColumnElement,
@@ -110,6 +112,43 @@ class Filters:
         """The last search's finds are listed above the jobs found before: in the order
         found, or by rank when there are words to rank by."""
         return self.sort == "relevance"
+
+
+def filters_from(qp) -> Filters:
+    """Filters from query or form fields (anything with get and getlist); unknown or
+    malformed values are ignored."""
+
+    def number(name: str, maximum: int) -> int | None:
+        value = qp.get(name, "")
+        if re.fullmatch(r"[0-9]{1,9}", value) and int(value) <= maximum:
+            return int(value)
+        return None
+
+    sort = qp.get("sort", "relevance")
+    return Filters(
+        q=qp.get("q", ""),
+        **{name: [v for v in qp.getlist(name) if v] for name in (*LIST_FIELDS, "kraj")},
+        sources_off=[v for v in qp.getlist("source_off") if v],
+        education=qp.get("education") or None,
+        salary_min=number("salary_min", 1_000_000),
+        with_salary=qp.get("with_salary") == "1",
+        posted_days=number("posted_days", 3650),
+        flagged=qp.get("flagged") == "1",
+        sort=sort if sort in ("relevance", "date", "salary") else "relevance",
+    )
+
+
+def filters_to_query(f: Filters) -> str:
+    pairs: list[tuple[str, object]] = [("q", f.q)]  # even empty: none = the profile's kinds
+    for name in (*LIST_FIELDS, "kraj"):
+        pairs += [(name, v) for v in getattr(f, name)]
+    pairs += [("source_off", v) for v in f.sources_off]
+    for name in ("education", "salary_min", "posted_days"):
+        if getattr(f, name):
+            pairs.append((name, getattr(f, name)))
+    if f.flagged:
+        pairs.append(("flagged", 1))
+    return urlencode(pairs)
 
 
 @dataclass
@@ -418,8 +457,8 @@ def search_jobs(
 
 def _sorted(session: Session, f: Filters, match: TextMatch) -> Select:
     """The matching jobs in the order the list shows them."""
-    newest = (Job.posted_at.desc().nulls_last(), Job.id.desc())
     stmt, hits = _base(f, match, [Job])
+    newest = (Job.posted_at.desc().nulls_last(), Job.id.desc())
     if f.sort == "salary":
         salary = func.coalesce(Job.salary_month_max, Job.salary_month_min)
         return stmt.order_by(salary.desc().nulls_last(), *newest)
@@ -428,6 +467,14 @@ def _sorted(session: Session, f: Filters, match: TextMatch) -> Select:
     if f.sort == "relevance":
         return stmt.order_by(*_batch_order(session), Job.id)
     return stmt.order_by(*newest)
+
+
+def all_jobs(session: Session, f: Filters, columns, batch: int = 1000) -> Iterator[Row]:
+    """Every matching job in list order as plain rows of `columns` (Job and Location columns),
+    read in batches: for exporting tens of thousands of jobs, objects would be too slow."""
+    match = text_match(session, f.q)
+    stmt = _sorted(session, f, match).with_only_columns(*columns)
+    yield from session.execute(stmt.execution_options(yield_per=batch), match.params)
 
 
 def in_list_order(
@@ -443,6 +490,19 @@ def in_list_order(
         .limit(limit)
     )
     return list(session.execute(stmt, match.params))
+
+
+def sources_of_all(session: Session, f: Filters) -> dict[int, list[Row]]:
+    """Job id -> its sources (source_id, status, is_primary, url) for every matching job."""
+    match = text_match(session, f.q)
+    ids, _ = _base(f, match, [Job.id])
+    stmt = select(
+        JobSource.job_id, JobSource.source_id, JobSource.status, JobSource.is_primary, JobSource.url
+    ).where(JobSource.job_id.in_(ids))
+    found: dict[int, list[Row]] = {}
+    for row in session.execute(stmt, match.params):
+        found.setdefault(row.job_id, []).append(row)
+    return found
 
 
 def jobs_found_since(

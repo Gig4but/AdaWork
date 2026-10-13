@@ -1,7 +1,6 @@
 """What every page of the web interface shares: the templates and their helpers, and `Svc`,
 the app's services in a route (`def page(request: Request, svc: Svc)`)."""
 
-import re
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated
@@ -10,7 +9,7 @@ from urllib.parse import urlencode
 from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import func, select
+from sqlalchemy import Row, func, select
 from starlette.datastructures import QueryParams
 
 from adawork import __version__
@@ -18,7 +17,7 @@ from adawork.db.models import Job, Run
 from adawork.i18n import translate
 from adawork.normalize.vocab import VOCABULARIES, label
 from adawork.scraper.sources import LABELS as SOURCE_LABELS
-from adawork.search.service import LIST_FIELDS, Filters
+from adawork.search.service import Filters, filters_from
 from adawork.services import Services
 
 WEB_DIR = Path(__file__).parent
@@ -46,7 +45,7 @@ def services_of(request: Request) -> Services:
 Svc = Annotated[Services, Depends(services_of)]
 
 
-def format_salary(job: Job, lang: str) -> str | None:
+def format_salary(job: Job | Row, lang: str) -> str | None:
     if not job.salary_min and not job.salary_max:
         return None
 
@@ -113,42 +112,6 @@ def filters_from_query(request: Request) -> Filters:
     return filters_from(qp)
 
 
-def filters_from(qp) -> Filters:
-    """Filters from query or form fields."""
-
-    def number(name: str, maximum: int) -> int | None:
-        value = qp.get(name, "")
-        if re.fullmatch(r"[0-9]{1,9}", value) and int(value) <= maximum:
-            return int(value)
-        return None
-
-    sort = qp.get("sort", "relevance")
-    return Filters(
-        q=qp.get("q", ""),
-        **{name: [v for v in qp.getlist(name) if v] for name in (*LIST_FIELDS, "kraj")},
-        sources_off=[v for v in qp.getlist("source_off") if v],
-        education=qp.get("education") or None,
-        salary_min=number("salary_min", 1_000_000),
-        with_salary=qp.get("with_salary") == "1",
-        posted_days=number("posted_days", 3650),
-        flagged=qp.get("flagged") == "1",
-        sort=sort if sort in ("relevance", "date", "salary") else "relevance",
-    )
-
-
-def filters_to_query(f: Filters) -> str:
-    pairs: list[tuple[str, object]] = [("q", f.q)]  # even empty: none = the profile's kinds
-    for name in (*LIST_FIELDS, "kraj"):
-        pairs += [(name, v) for v in getattr(f, name)]
-    pairs += [("source_off", v) for v in f.sources_off]
-    for name in ("education", "salary_min", "posted_days"):
-        if getattr(f, name):
-            pairs.append((name, getattr(f, name)))
-    if f.flagged:
-        pairs.append(("flagged", 1))
-    return urlencode(pairs)
-
-
 def query_string(request: Request) -> str:
     """The current filters as a query string, without paging."""
     paging = ("offset", "since", "cleared")
@@ -156,7 +119,7 @@ def query_string(request: Request) -> str:
 
 
 def status_context(svc: Services) -> dict:
-    """The status line: jobs, the last search."""
+    """The status line: jobs, the last and the next search."""
     with svc.sessions() as s:
         active = s.scalar(select(func.count(Job.id)).where(Job.status == "active")) or 0
         last = s.scalar(
@@ -165,4 +128,11 @@ def status_context(svc: Services) -> dict:
             .order_by(Run.id.desc())
             .limit(1)
         )
-    return {"active_jobs": active, "last_run": local_time(last) if last else None}
+    next_check = svc.scheduler.next_check()
+    paused = svc.settings.automation.paused_until if svc.scheduler.paused() else None
+    return {
+        "active_jobs": active,
+        "last_run": local_time(last) if last else None,
+        "next_check": local_time(next_check) if next_check else None,
+        "paused_until": local_time(paused) if paused else None,
+    }

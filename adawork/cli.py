@@ -11,7 +11,9 @@ import webbrowser
 from adawork import __version__
 from adawork.desktop.instance import SingleInstance
 from adawork.desktop.server import BackgroundServer, ServerStartError
+from adawork.i18n import translate
 from adawork.logs import report_error, setup_logging
+from adawork.services import Services
 from adawork.web.app import create_app
 
 
@@ -31,6 +33,9 @@ def main(argv: list[str] | None = None) -> int:
         "--browser", action="store_true", help="open the UI in the default browser, no window"
     )
     parser.add_argument("--port", type=int, help="fixed port for the local web server")
+    parser.add_argument(
+        "--minimized", action="store_true", help="start in the tray (start with Windows)"
+    )
     args = parser.parse_args(argv)
 
     log_file = setup_logging()
@@ -41,7 +46,13 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         report_error("AdaWork už běží, ale neodpovídá. Zkuste to za chvíli znovu.", gui)
         return 1
-    app = create_app()
+    try:
+        app = create_app()  # settings, database (migrated), services
+    except Exception:
+        logging.getLogger(__name__).exception("start-up failed")
+        instance.release()
+        report_error(f"AdaWork se nepodařilo spustit. Podrobnosti: {log_file}", gui)
+        return 1
     instance.add_show_route(app)
     server = BackgroundServer(app, port=args.port)
     try:
@@ -60,8 +71,22 @@ def main(argv: list[str] | None = None) -> int:
         else:
             from adawork.desktop.window import run_desktop
 
+            svc = app.state.services
+            automation = svc.settings.automation
+
+            def on_tray(icon) -> None:
+                svc.scheduler.notify = lambda title, text: icon.notify(text, title)
+                svc.scheduler.on_change = icon.update_menu
+
             # The tray is only needed while automatic searches are on.
-            run_desktop(server, instance, lambda: app.state.services.settings.automation.enabled)
+            run_desktop(
+                server,
+                controls=tray_controls(svc),
+                instance=instance,
+                keep_in_tray=lambda: automation.enabled,
+                on_tray=on_tray,
+                hidden=args.minimized and automation.enabled,
+            )
     except KeyboardInterrupt:
         pass
     finally:
@@ -69,6 +94,21 @@ def main(argv: list[str] | None = None) -> int:
         instance.release()
     leave_search(app)
     return 0
+
+
+def tray_controls(svc: Services):
+    from adawork.desktop.tray import TrayControls
+
+    settings, scheduler = svc.settings, svc.scheduler
+    return TrayControls(
+        text=lambda key: translate(settings.language, key),
+        search=svc.runner.start,
+        auto_on=lambda: settings.automation.enabled,
+        set_auto=svc.set_automation,
+        paused=scheduler.paused,
+        pause=scheduler.pause,
+        resume=scheduler.resume,
+    )
 
 
 def leave_search(app) -> None:

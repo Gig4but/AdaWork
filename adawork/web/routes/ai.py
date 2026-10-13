@@ -14,9 +14,10 @@ from adawork.ai.manager import Busy
 from adawork.ai.runtime import ServerFailed
 from adawork.config import Settings
 from adawork.i18n import translate
+from adawork.search.service import filters_to_query
 from adawork.services import Services
 from adawork.system.resources import Priority
-from adawork.web.pages import Svc, filters_to_query, render
+from adawork.web.pages import Svc, render
 
 router = APIRouter()
 

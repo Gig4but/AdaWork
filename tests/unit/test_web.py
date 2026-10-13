@@ -1,20 +1,23 @@
+import io
 import json
 import re
 import threading
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import openpyxl
 import pytest
 from conftest import make_ai
 from fastapi.testclient import TestClient
-from sqlalchemy import update
+from sqlalchemy import select, update
 
 from adawork.config import Settings
-from adawork.db.models import Job, JobSource
+from adawork.db.models import Job, JobSource, SavedSearch
 from adawork.scraper.runner import Progress
 from adawork.scraper.sources import SWITCHABLE, mpsv
 from adawork.scraper.store import JobStore
 from adawork.search.service import start_batch
+from adawork.secrets import MemorySecrets
 from adawork.social import browser as social_browser
 from adawork.web.app import create_app
 from adawork.web.routes import maps, search
@@ -29,6 +32,8 @@ class FakeRunner:
         self.starts = 0
         self.restarts = 0
         self.fresh = False
+        self.started_at = None
+        self.api_key = kwargs.get("api_key")
         self.focus = None
 
     def start(self, fresh: bool = False) -> bool:
@@ -37,6 +42,7 @@ class FakeRunner:
         self.starts += 1
         self.fresh = fresh
         self.progress = Progress(running=True, phase="download")
+        self.started_at = datetime(2026, 10, 13, 8, 0)
         return True
 
     def start_over(self) -> None:
@@ -44,18 +50,27 @@ class FakeRunner:
         self.progress = Progress()
         self.start(fresh=True)
 
+    def last_start(self):
+        return self.started_at
+
 
 @pytest.fixture
 def app(tmp_path):
     settings = Settings.load(tmp_path / "config.json")
-    return create_app(
+    autostart = []
+    app = create_app(
         settings,
         db_path=tmp_path / "t.db",
         cache_dir=tmp_path / "cache",
         runner_factory=FakeRunner,
         ai_factory=lambda st, sessions, cache: make_ai(tmp_path, st, sessions),
         data_dir=tmp_path / "data",
+        secrets=MemorySecrets(),
+        autostart_sync=autostart.append,
+        refreshes=(),
     )
+    app.state.autostart = autostart  # what the Run value was set to, in order
+    return app
 
 
 @pytest.fixture
@@ -78,14 +93,14 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
     assert "Vítejte" in welcome and re.search(r'value="system"[^>]*checked', welcome)
     assert welcome.count('name="theme"') == 8
 
-    r = client.post(
-        "/wizard/welcome", data={"language": "cs", "theme": "forest"}, follow_redirects=False
-    )
-    assert r.headers["location"] == "/wizard/profile"
+    assert 'href="/wizard/profile"' in welcome
+    # In a form: htmx sends the picked language and scheme only from one.
+    assert re.search(r'<form>\s*<div hx-post="/settings/appearance"', welcome)
+    client.post("/settings/appearance", data={"language": "cs", "theme": "forest"})
     assert app.state.services.settings.theme == "forest"
     page = client.get("/wizard/profile").text
     assert "Odkud dojíždíte" in page and 'data-theme="light" data-scheme="forest"' in page
-    assert 'href="/wizard/welcome" class="nav-button secondary" aria-current="page"' in page
+    assert "nav-button" not in page  # only the wizard until it is done
 
     form = {
         "home_address": " Kolín ",
@@ -118,13 +133,27 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
         data=portals | {"source_linkedin": "on", "consent_linkedin": "on"},
         follow_redirects=False,
     )
+    assert r.headers["location"] == "/wizard/keys"
+    page = client.get("/wizard/keys").text
+    assert "Klíč Jooble" in page and "https://jooble.org/api/about" in page
+    r = client.post("/wizard/keys", data={"key_jooble": ""}, follow_redirects=False)
+    assert r.headers["location"] == "/wizard/automation"  # no key: nothing changes
+    page = client.get("/wizard/automation").text
+    assert 'name="enabled" >' in page or 'name="enabled">' in page  # off by default
+    assert 'value="12" checked' in page
+    form = {"interval_hours": "12", "start_with_windows": "on", "notifications": "on"}
+    r = client.post("/wizard/automation", data=form, follow_redirects=False)
     assert r.headers["location"] == "/wizard/done"
     done = client.get("/wizard/done").text
     assert "Automatické hledání je vypnuté" in done
 
     r = client.post("/wizard/done", follow_redirects=False)
     assert r.headers["location"] == "/"
+    page = client.get("/").text
+    assert 'href="/settings" class="nav-button icon-only"' in page
+    assert 'href="/wizard/welcome"' not in page  # opened again from Settings only
     assert app.state.services.runner.starts == 1  # Start kicks off the MPSV download
+    assert app.state.autostart == [False]  # no start with Windows while checks are off
 
     saved = Settings.load(tmp_path / "config.json")
     assert saved.wizard_completed
@@ -231,7 +260,7 @@ def test_linkedin_needs_consent_ticked_by_the_user(app, client):
 def test_wizard_rejects_bad_input(client):
     r = client.post("/wizard/profile", data={"max_minutes": "999"})
     assert r.status_code == 422
-    r = client.post("/wizard/welcome", data={"language": "cs", "theme": "neon"})
+    r = client.post("/settings/appearance", data={"language": "cs", "theme": "neon"})
     assert r.status_code == 422
 
 
@@ -258,7 +287,7 @@ def test_only_local_same_origin_requests(app, client):
 
 
 def test_english_ui(app, client):
-    client.post("/wizard/welcome", data={"language": "en"})
+    client.post("/settings/appearance", data={"language": "en"})
     assert "Where you commute from" in client.get("/wizard/profile").text
 
 
@@ -673,3 +702,144 @@ def test_manual_import_of_text_and_of_a_photo(app, client):
         image_id = pictured.images[0].id
     assert client.get(f"/images/{image_id}").headers["content-type"] == "image/jpeg"
     assert client.get("/images/999").status_code == 404
+
+
+# --- M7: settings, keys, saved searches, export ---------------------------------------------
+
+
+def test_automatic_checks_are_switched_in_settings_without_a_restart(app, client):
+    app.state.services.settings.wizard_completed = True
+    page = client.get("/settings/automation").text
+    assert "Automaticky hledat nové nabídky" in page and 'value="12" checked' in page
+    assert "automatické hledání vypnuto" in client.get("/status").text
+
+    form = {"enabled": "on", "interval_hours": "6", "start_with_windows": "on"}
+    r = client.post("/settings/automation", data=form, follow_redirects=False)
+    assert r.headers["location"] == "/settings/automation?saved=1"
+    auto = app.state.services.settings.automation
+    assert auto.enabled and auto.interval_hours == 6
+    assert app.state.autostart == [True]  # starts with Windows while the checks are on
+    # Never searched: due now (the scheduler thread starts it).
+    assert app.state.services.scheduler.next_check() is not None
+    app.state.services.runner.start()
+    started = app.state.services.runner.started_at
+    assert app.state.services.scheduler.next_check() == started + timedelta(hours=6)
+
+    client.post("/settings/pause")
+    assert "pozastaveno do" in client.get("/status").text
+    assert "Pokračovat" in client.get("/settings/automation").text
+    client.post("/settings/resume")
+    assert "další hledání" in client.get("/status").text
+
+    form = {"interval_hours": "24"}  # switched off: no start with Windows
+    client.post("/settings/automation", data=form)
+    assert not auto.enabled and app.state.autostart[-1] is False
+    assert app.state.services.scheduler.next_check() is None
+
+
+def test_settings_list_the_wizard_steps_in_order(app, client):
+    app.state.services.settings.wizard_completed = True
+    page = client.get("/settings").text
+    assert 'href="/wizard/welcome"' in page and "Spustit průvodce znovu" in page
+    catalog = page.split('class="catalog"')[1].split("</ul>")[0]
+    pages = re.findall(r'<li><a href="([^"]+)"', catalog)
+    assert pages == [
+        "/settings/appearance",
+        "/settings/profile",
+        "/ai",
+        "/sources",
+        "/settings/keys",
+        "/settings/automation",
+    ]
+    assert "Čeština · Podle Windows" in page and "domov nezadán" in page
+    for href in pages:
+        assert 'href="/settings" class="back' in client.get(href).text
+    assert client.get("/settings/nothing", follow_redirects=False).status_code == 303
+
+    assert 'hx-post="/settings/appearance"' in client.get("/settings/appearance").text
+    profile = app.state.services.settings.profile
+    profile.kinds_of_work = ["skladník"]  # asked by the wizard only
+    assert 'name="kinds_of_work"' not in client.get("/settings/profile").text
+    form = {"home_address": "Kolín", "travel_mode": "car", "max_minutes": "30"}
+    r = client.post("/settings/profile", data=form, follow_redirects=False)
+    assert r.headers["location"] == "/settings/profile?saved=1"
+    assert (profile.home_address, profile.travel_mode, profile.max_minutes) == ("Kolín", "car", 30)
+    assert profile.kinds_of_work == ["skladník"]
+    assert "Kolín · Auto · nejvýš 30 min" in client.get("/settings").text
+    assert client.post("/settings/profile", data={"max_minutes": "999"}).status_code == 422
+
+
+def test_api_keys_go_to_the_credential_store_and_switch_their_source(app, client):
+    app.state.services.settings.wizard_completed = True
+    assert "chybí klíč" in client.get("/sources").text
+    r = client.post("/settings/keys", data={"key_jooble": "bad key!"})
+    assert "Klíč Jooble vypadá neplatně" in r.text
+    assert app.state.services.secrets.get("jooble") is None
+
+    r = client.post(
+        "/settings/keys", data={"key_jooble": " 1234-abcd-5678 "}, follow_redirects=False
+    )
+    assert r.headers["location"] == "/settings/keys?saved=1"
+    assert app.state.services.secrets.get("jooble") == "1234-abcd-5678"
+    assert app.state.services.settings.sources["jooble"] is True
+    assert "1234-abcd-5678" not in Path(app.state.services.settings._path).read_text(
+        encoding="utf-8"
+    )
+    assert app.state.services.runner.api_key("jooble") == "1234-abcd-5678"
+    page = client.get("/settings/keys").text
+    assert "klíč uložen (…5678)" in page and "1234-abcd-5678" not in page
+    assert "Jooble" in client.get("/settings").text  # listed as saved in the catalog
+
+    client.post("/settings/keys", data={"key_jooble": "", "remove_jooble": "on"})
+    assert app.state.services.secrets.get("jooble") is None
+    assert app.state.services.settings.sources["jooble"] is False
+
+
+def test_saved_searches_count_new_matches_until_opened(app, client):
+    app.state.services.settings.wizard_completed = True
+    jobs = fixture_jobs()
+    store_jobs(app, jobs[:10])
+    assert "Zatím žádná" in client.get("/saved").text
+
+    form = {"q": "", "sort": "date", "view": "list", "saved_name": "Všechno"}
+    r = client.post("/saved", data=form)
+    assert "Všechno" in r.text and "nové:" not in r.text
+    with app.state.services.sessions() as s:
+        saved = s.scalar(select(SavedSearch))
+        assert saved.query == "q=&sort=date" and saved.notify
+    store_jobs(app, jobs[10:13])
+    assert "nové: 3" in client.get("/saved").text
+
+    r = client.get(f"/saved/{saved.id}", follow_redirects=False)
+    assert r.headers["location"] == "/?q=&sort=date"
+    assert "nové:" not in client.get("/saved").text  # opened: seen
+
+    r = client.post(f"/saved/{saved.id}/notify")
+    assert "(vypnuto)" in r.text
+    client.post(f"/saved/{saved.id}/delete")
+    assert "Zatím žádná" in client.get("/saved").text
+
+    r = client.post("/saved", data={"q": "pokojská"})  # no name typed: the words
+    assert "pokojská" in r.text
+
+
+def test_the_list_downloads_as_csv_and_excel(app, client):
+    app.state.services.settings.wizard_completed = True
+    load_fixture_jobs(app)
+    with app.state.services.sessions() as s:
+        s.execute(update(Job).where(Job.id == 1).values(title="=HYPERLINK(1)"))
+        s.execute(update(Job).where(Job.id == 2).values(employer_name="\t=1+1"))
+        s.commit()
+    r = client.get("/export.csv")
+    assert r.headers["content-disposition"].startswith('attachment; filename="adawork-')
+    text = r.content.decode("utf-8-sig")
+    lines = text.splitlines()
+    assert lines[0].startswith("Pozice;Zaměstnavatel;Místo;Kraj;Mzda")
+    assert len(lines) == 31 and "'=HYPERLINK(1)" in text and "'\t=1+1" in text
+    assert "up.gov.cz/volna-mista-v-cr" in text
+
+    r = client.get("/export.xlsx", params={"q": "pokojska"})
+    sheet = openpyxl.load_workbook(io.BytesIO(r.content)).active
+    rows = list(sheet.iter_rows(values_only=True))
+    assert rows[0][0] == "Pozice" and len(rows) == 2 and rows[1][0] == "POKOJSKÁ/-Ý"
+    assert client.get("/export.pdf").status_code == 404

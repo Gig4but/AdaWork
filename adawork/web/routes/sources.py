@@ -1,5 +1,5 @@
-"""The Sources page: which sources are read, consent for the risky ones, and Facebook and
-Instagram logins."""
+"""The Sources page: which sources are read, consent for the risky ones, Facebook and
+Instagram logins, and the API keys some sources need."""
 
 import re
 from datetime import datetime
@@ -9,7 +9,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from adawork.config import Settings
 from adawork.db.models import SourceState
-from adawork.scraper.sources import KINDS, LABELS, NEEDS_CONSENT, SOCIAL, SWITCHABLE
+from adawork.scraper.sources import KINDS, LABELS, NEEDS_CONSENT, NEEDS_KEY, SOCIAL, SWITCHABLE
+from adawork.secrets import Secrets
 from adawork.services import Services
 from adawork.social import browser
 from adawork.social.reader import SocialState
@@ -17,6 +18,7 @@ from adawork.web.pages import Svc, render
 
 router = APIRouter()
 
+API_KEY = re.compile(r"[\w.:-]{8,200}")
 FACEBOOK_GROUP = r"https://(?:www\.|m\.)?facebook\.com/groups/[\w.-]+"
 
 
@@ -46,6 +48,37 @@ def apply_source_choices(settings: Settings, form) -> str | None:
         social.instagram_tags = list(dict.fromkeys(tags))[:20]
     settings.save()
     return None
+
+
+def apply_keys(settings: Settings, keys: Secrets, form) -> str | None:
+    """Saves the API keys typed in: a new key switches its source on, a deleted one off.
+    Returns the label of a source whose key looks wrong (nothing is saved then)."""
+    typed = {sid: str(form.get(f"key_{sid}") or "").strip() for sid in NEEDS_KEY}
+    for source_id, key in typed.items():
+        if key and not API_KEY.fullmatch(key):
+            return LABELS[source_id]
+    for source_id, key in typed.items():
+        if form.get(f"remove_{source_id}") == "on":
+            keys.delete(source_id)
+            settings.sources[source_id] = False
+        elif key:
+            keys.set(source_id, key)
+            settings.sources[source_id] = True
+    settings.save()
+    return None
+
+
+def key_rows(svc: Services) -> list[dict]:
+    """The key-based sources; `end`: the last characters of a saved key."""
+    return [
+        {
+            "id": source_id,
+            "label": LABELS[source_id],
+            "url": url,
+            "end": (svc.secrets.get(source_id) or "")[-4:],
+        }
+        for source_id, url in NEEDS_KEY.items()
+    ]
 
 
 def social_status(svc: Services, platform: str) -> dict:
@@ -80,6 +113,7 @@ def source_rows(svc: Services, form=None) -> list[dict]:
             "consent": source_id in NEEDS_CONSENT,
             "kind": KINDS[source_id],
             "social": social_status(svc, source_id) if source_id in SOCIAL else None,
+            "no_key": source_id in NEEDS_KEY and not svc.secrets.get(source_id),
         }
         for source_id, default in SWITCHABLE
     ]

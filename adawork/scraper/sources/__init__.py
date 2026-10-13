@@ -3,6 +3,7 @@
 from adawork.core import Source
 from adawork.scraper.sources import (
     bazos,
+    careerjet,
     classifieds,
     dobraprace,
     easy_prace,
@@ -11,6 +12,7 @@ from adawork.scraper.sources import (
     inwork,
     jenprace,
     jobs_cz,
+    jooble,
     linkedin,
     mpsv,
     personalka,
@@ -38,8 +40,10 @@ CRAWL_SOURCES = (
     *classifieds.SOURCES,
     linkedin.SOURCE,
 )
+# Search APIs that need the user's own key (scraper/api.py).
+API_SOURCES = (jooble.SOURCE, careerjet.SOURCE)
 # All of them, in the order the Sources page lists them.
-SOURCES: tuple[Source, ...] = (mpsv.SOURCE, *CRAWL_SOURCES, *social.SOURCES)
+SOURCES: tuple[Source, ...] = (mpsv.SOURCE, *CRAWL_SOURCES, *API_SOURCES, *social.SOURCES)
 
 MANUAL = "manual"  # source id of ads the user pasted or dropped in
 LABELS = {MANUAL: "Vloženo ručně", **{s.id: s.label for s in SOURCES}}
@@ -48,3 +52,4 @@ SWITCHABLE = tuple((s.id, s.default_enabled) for s in SOURCES)
 KINDS = {s.id: s.kind for s in SOURCES}
 NEEDS_CONSENT = frozenset(s.id for s in SOURCES if s.needs_consent)
 SOCIAL = tuple(s.id for s in social.SOURCES)
+NEEDS_KEY = {s.id: s.key_url for s in API_SOURCES}  # source id -> where to get a key

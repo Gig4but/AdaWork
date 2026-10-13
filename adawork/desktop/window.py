@@ -13,7 +13,7 @@ from adawork import APP_NAME, paths
 from adawork.desktop.icon import make_icon_image
 from adawork.desktop.instance import SingleInstance
 from adawork.desktop.server import BackgroundServer
-from adawork.desktop.tray import create_tray
+from adawork.desktop.tray import TrayControls, TrayIcon, create_tray
 
 # DwmSetWindowAttribute attributes (Windows 11; older Windows ignores them).
 DWMWA_USE_IMMERSIVE_DARK_MODE = 20
@@ -87,20 +87,27 @@ class FrameApi:
 
 def run_desktop(
     server: BackgroundServer,
+    controls: TrayControls,
     instance: SingleInstance | None = None,
     keep_in_tray: Callable[[], bool] = lambda: True,
+    on_tray: Callable[[TrayIcon], None] = lambda icon: None,
+    hidden: bool = False,
 ) -> None:
+    """`hidden`: starts in the tray only (start with Windows); `on_tray` gets the tray icon,
+    e.g. to show notifications through it."""
     quitting = False
     if sys.platform == "win32":
         import ctypes
 
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
+    webview.settings["ALLOW_DOWNLOADS"] = True  # exported job lists
     window = webview.create_window(
         APP_NAME,
         server.url,
         width=1280,
         height=820,
         min_size=(900, 600),
+        hidden=hidden,
         js_api=FrameApi(lambda: window),
     )
     assert window is not None
@@ -124,8 +131,9 @@ def run_desktop(
     window.events.closing += on_closing
     if instance:
         instance.on_show = show  # a second launch brings this window up
-    tray = create_tray(on_open=show, on_quit=quit_app)
+    tray = create_tray(on_open=show, on_quit=quit_app, controls=controls)
     tray.run_detached()
+    on_tray(tray)
     try:
         # Blocks on the main thread until the window is destroyed.
         webview.start(

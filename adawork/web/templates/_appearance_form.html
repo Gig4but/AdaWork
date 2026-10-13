@@ -1,0 +1,34 @@
+{# Language and colour scheme; shared by the wizard and Settings. Inside a form: saved as
+   soon as picked. #}
+<div hx-post="/settings/appearance" hx-trigger="change" hx-swap="none">
+<fieldset>
+  <legend>{{ t("wizard.language") }}</legend>
+  <label><input type="radio" name="language" value="cs" {% if lang == "cs" %}checked{% endif %}> Čeština</label>
+  <label><input type="radio" name="language" value="en" {% if lang == "en" %}checked{% endif %}> English</label>
+</fieldset>
+<fieldset>
+  <legend>{{ t("wizard.theme") }}</legend>
+  <div class="themes">
+    {% for id, base in themes.items() %}
+      <label>
+        <input type="radio" name="theme" value="{{ id }}" data-base="{{ base or '' }}"
+               {% if settings.theme == id %}checked{% endif %}>
+        <span class="swatch"{% if base %} data-theme="{{ base }}"{% endif %} data-scheme="{{ id }}" aria-hidden="true">Aa<i></i></span>
+        {{ t("theme." ~ id) }}
+      </label>
+    {% endfor %}
+  </div>
+</fieldset>
+</div>
+<script>
+  // Shows the chosen scheme at once.
+  for (const input of document.querySelectorAll("input[name=theme]")) {
+    input.addEventListener("change", () => {
+      const root = document.documentElement;
+      if (input.dataset.base) root.dataset.theme = input.dataset.base;
+      else delete root.dataset.theme;
+      root.dataset.scheme = input.value;
+      if (window.adaworkPaintFrame) window.adaworkPaintFrame();
+    });
+  }
+</script>

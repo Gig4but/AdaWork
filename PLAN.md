@@ -15,7 +15,8 @@ Three main modules:
 Shared services: a small **local AI model** (reads messy ads and posters, summarizes
 reviews) and a **local routing engine** (travel times and routes, offline maps).
 
-Status: **M0–M6b done** (2026-10-09); next is M7. Spike results: `docs/spikes.md`.
+Status: **M0–M7 done** (2026-10-13; M7's 3-day unattended run is still to do); next is M8.
+Spike results: `docs/spikes.md`.
 
 ---
 
@@ -161,7 +162,7 @@ Verified in the M0 spike (`docs/spikes/routing.md`): **GO for MOTIS**, with the 
 | OCR | The vision model transcribes images (M5: ~30 s per poster with the 2B model); **RapidOCR** (ONNX) only if slow PCs need it. |
 | Embeddings | `multilingual-e5-small` (int8 ONNX, 118 MB) run directly with onnxruntime + tokenizers (no fastembed). |
 | Web search | **ddgs** (metasearch, no key). |
-| Secrets | **keyring** → Windows Credential Manager. |
+| Secrets | Windows Credential Manager through the Windows API (`adawork/secrets.py`). |
 
 ### 3.2 Hardware: dynamic adaptation, 8 GB as the minimum
 
@@ -241,7 +242,8 @@ at the same time**. A `ResourceManager` lets only one heavy job run at a time, i
 Python 3.12, uv, httpx, selectolax, parsel, extruct, trafilatura, ijson,
 SQLite + SQLAlchemy 2/SQLModel + Alembic (auto-migrate), FTS5, sqlite-vec, Pillow,
 imagehash, rapidfuzz, FastAPI + Jinja2, HTMX + Alpine.js + Pico.css (vendored), SSE,
-APScheduler, pydantic v2; ruff, pytest, pytest-asyncio, respx.
+pydantic v2; ruff, pytest, pytest-asyncio, respx. The scheduler is one thread that looks at
+the clock every minute (`adawork/scheduler.py`).
 
 Why not Scrapy or crawl4ai: the volume is moderate and the sources are very different from
 each other; a thin async plugin layer is simpler and shares the app's event loop.
@@ -717,9 +719,11 @@ Every step has defaults; optional steps have "Skip"; downloads run in the backgr
    (rating, warnings) with "Více o zaměstnavateli".
 4. **Jak se tam dostanu** (commute window) — §4.6.
 5. **Zaměstnavatel** (employer card) — §4.5; also lists all current jobs of this employer.
-6. **Zdroje / Sources**, **Vložit inzerát**, **Nastavení / Settings** (reopen wizard, profile,
-   accounts, API keys + Google quota counter, automatic checks on/off + interval 6/12/24/48 h, social limits, AI model
-   list with icons, map data status/refresh, data folder, logs).
+6. **Vložit inzerát**, and **Nastavení / Settings** behind the gear at top right: the wizard opens
+   by itself only on first start and again from a button at the top of Settings; below it one
+   page per wizard step in wizard order (language and look, profile, AI model list, sources +
+   social limits and accounts, API keys + Google quota counter, automatic checks), then map
+   data status/refresh, data folder, logs.
 
 ---
 
@@ -729,11 +733,11 @@ Every step has defaults; optional steps have "Skip"; downloads run in the backgr
 AdaWork/
 ├─ pyproject.toml / uv.lock / README.md / PLAN.md
 ├─ adawork/
-│  ├─ __main__.py, cli.py, config.py, secrets.py, paths.py
-│  ├─ desktop/  window.py, tray.py, notify.py, autostart.py
+│  ├─ __main__.py, cli.py, config.py, secrets.py, paths.py, scheduler.py
+│  ├─ desktop/  window.py, tray.py (menu, notifications), autostart.py
 │  ├─ db/  models.py, session.py, fts.py, vec.py, migrations/
 │  ├─ scraper/                      # MODULE 1
-│  │  ├─ base.py, registry.py, query_builder.py, http.py, browser.py, pipeline.py, scheduler.py
+│  │  ├─ base.py, registry.py, query_builder.py, http.py, browser.py, pipeline.py, api.py
 │  │  ├─ extract/  jsonld.py, nextdata.py, text.py, forum_blocks.py
 │  │  ├─ images.py (pictures), reposts.py, crawl.py, polite.py, store.py, runner.py
 │  │  └─ sources/  mpsv, linkedin, indeed (link), prace_cz, jenprace, profesia,
@@ -742,7 +746,7 @@ AdaWork/
 │  │               classifieds (+ classifieds.yaml), jooble, careerjet
 │  ├─ social/  browser.py (Edge via Playwright), posts.py (page parsing), reader.py
 │  ├─ employers/                    # MODULE 3
-│  │  ├─ resolver.py (name → IČO), service.py, summary.py, scoring.py
+│  │  ├─ downloads.py (official lists), resolver.py (name → IČO), service.py, summary.py
 │  │  └─ sources/  ares, isir, vat_register, agency_register, atmoskop, indeed_reviews,
 │  │               google_places, facebook_page, web_mentions (ddgs)
 │  ├─ routing/                      # commute
@@ -754,9 +758,9 @@ AdaWork/
 │  │       winjob, manager (Auto mode), benchmark, client, grammar, embeddings, isco,
 │  │       extract, enrich (queue), ask (sentence -> filters), vision, evaluate
 │  ├─ system/resources.py  ResourceManager (heavy-job slots, priorities, "PC is busy")
-│  ├─ search/  service, filters, facets
+│  ├─ search/  service, saved (saved searches)
 │  └─ web/                          # MODULE 2
-│     ├─ app.py, routes/ (wizard, search, job, commute, employer, sources, settings, manual)
+│     ├─ app.py, export.py (CSV/XLSX), i18n.py
 │     └─ templates/, static/ (htmx, alpine, pico, maplibre — vendored)
 ├─ resources/  codebooks/, categories.yaml
 ├─ vendor/  llama.cpp/, motis/      # fetched by the build script
@@ -831,17 +835,23 @@ AdaWork/
   list at once (a running search stops for it) and finds everything again.
 - Complete first run: 54.5 min, 61.7k jobs.
 
-### M7 — Automation (2–3 days)
-- Scheduler: automatic checks **off by default**, **6/12/24/48 h** intervals, pause/resume, manual "Hledat nové nabídky" button, start with Windows,
-  notifications, saved searches, export; Jooble/Careerjet keys.
-- Background data refresh jobs that run regardless of the automatic-checks switch (small,
-  conditional downloads): unreliable VAT payer list and MPSV agency register daily, Atmoskop
-  sitemap weekly.
+### M7 — Automation — done
+- Scheduler (`adawork/scheduler.py`): automatic checks **off by default**, 6/12/24/48 h counted
+  from the last search (manual ones too), pause for 24 h / resume, retry after an hour when a
+  check failed everywhere. Tray menu: search now, checks on/off, pause/resume. Start with
+  Windows (HKCU Run value, `--minimized`) while checks are on.
+- Notifications after an automatic check: new matches per saved search (or all new jobs when
+  none is saved), and a social reader that stopped.
+- Saved searches with a "new" count until opened; CSV/XLSX export of the filtered list.
+- Jooble and Careerjet with the user's key (wizard step 5, Settings), kept in the Windows
+  Credential Manager. Not tried live: no key.
+- Background downloads, also with checks off: unreliable VAT payers (as DIČ → date) and the
+  agency register daily, the Atmoskop sitemap weekly; a failure is retried after an hour.
 - **Done when:**
-  - Automatic checks are off after a fresh install, and the manual "Hledat nové nabídky" button
-    works.
-  - Once switched on, the app runs 3 days unattended from the tray.
-  - Changing the interval or switching automation on/off reschedules without a restart.
+  - Automatic checks are off after a fresh install, and the manual "Obnovit nabídky" button
+    works. ✓
+  - Once switched on, the app runs 3 days unattended from the tray. **Not run yet.**
+  - Changing the interval or switching automation on/off reschedules without a restart. ✓
 
 ### M8 — Commute module (7–9 days)
 - MOTIS + osmium-tool bundling, background download (OSM, Spojenka GTFS), GTFS sanitizing,

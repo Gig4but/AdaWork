@@ -1,0 +1,19 @@
+{# Home and commute; shared by the wizard and Settings. #}
+{% set p = settings.profile %}
+<label>{{ t("wizard.home") }}
+  <input name="home_address" value="{{ p.home_address }}" autocomplete="street-address"
+         aria-describedby="home-hint">
+  <small id="home-hint">{{ t("wizard.home.hint") }}</small>
+</label>
+
+<fieldset>
+  <legend>{{ t("wizard.mode") }}</legend>
+  {% for m in modes %}
+    <label><input type="radio" name="travel_mode" value="{{ m }}" {% if p.travel_mode == m %}checked{% endif %}> {{ t("mode." ~ m) }}</label>
+  {% endfor %}
+</fieldset>
+
+<label>{{ t("wizard.max_minutes") }}: <output id="max-out">{{ p.max_minutes }}</output> {{ t("minutes") }}
+  <input type="range" name="max_minutes" min="5" max="120" step="5" value="{{ p.max_minutes }}"
+         oninput="document.getElementById('max-out').value = this.value">
+</label>

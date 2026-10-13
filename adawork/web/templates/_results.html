@@ -1,7 +1,13 @@
+{% from "_icons.html" import icon %}
 {% if offset == 0 %}
 <div class="list-head">
   {% if result.total %}
-    <p id="found-count" class="muted small">{{ t("search.found", n=result.total) }} · {{ "%.0f" | format(result.took_ms) }} ms</p>
+    <p id="found-count" class="muted small">{{ t("search.found", n=result.total) }}</p>
+    {# The name goes as a form field: a header cannot carry "š". #}
+    <button type="button" class="secondary outline list-action" data-prompt="{{ t('saved.prompt') }}"
+            onclick="const name = prompt(this.dataset.prompt); if (name !== null) htmx.ajax('POST', '/saved', {source: this, target: '#saved', values: {saved_name: name}})">{{ icon("bookmark") }}{{ t("saved.save") }}</button>
+    <span class="small list-action">{{ icon("download") }}{{ t("export.label") }}:
+      <a href="/export.csv?{{ qs }}" download>CSV</a> · <a href="/export.xlsx?{{ qs }}" download>Excel</a></span>
   {% else %}
     <p id="found-count" class="muted">{{ t("search.empty_filtered") if f.is_filtered() else t("search.empty") }}</p>
   {% endif %}

@@ -19,4 +19,4 @@ uv run ruff check .
 uv run adawork eval --model qwen3-vl-2b --db <crawled adawork.db>  # AI accuracy and speed
 ```
 
-The AI model itself is downloaded by the app (wizard step "Umělá inteligence" or the AI page).
+The AI model itself is downloaded by the app (wizard step "Umělá inteligence" or Settings → AI).

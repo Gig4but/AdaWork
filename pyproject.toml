@@ -38,6 +38,7 @@ adaworkw = "adawork.cli:main"  # the window app without a console window
 dev = [
     "httpx2>=2.13.1",
     "import-linter>=2.15",
+    "openpyxl>=3.1.5",
     "pyright>=1.1.414",
     "pytest>=8.3",
     "ruff>=0.6",
@@ -80,13 +81,13 @@ layers = [
     "cli",
     "web",
     "services",
-    "desktop",
+    "desktop | scheduler | employers",
     "scraper",
     "social | ai",
     "search",
     "geo",
     "db",
     "normalize",
-    "config | core | i18n | net | system | logs",
+    "config | core | i18n | net | system | secrets | logs | worker",
     "paths",
 ]

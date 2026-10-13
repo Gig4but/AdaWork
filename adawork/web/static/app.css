@@ -17,12 +17,7 @@
 .app-header nav li a.nav-button[aria-current="page"] { pointer-events: none;
          background: color-mix(in srgb, var(--pico-primary-background) 15%, transparent);
          border-color: var(--pico-primary-background); color: var(--pico-primary); }
-.app-header nav li a.nav-button.secondary { color: var(--pico-muted-color); }
-.app-header nav li a.nav-button.secondary:hover { background: var(--pico-secondary-background);
-         border-color: var(--pico-secondary-background); color: var(--pico-secondary-inverse); }
-.app-header nav li a.nav-button.secondary[aria-current="page"] {
-         background: color-mix(in srgb, var(--pico-muted-color) 15%, transparent);
-         border-color: var(--pico-muted-color); color: var(--pico-color); }
+.app-header nav li a.nav-button.icon-only { padding-inline: .5rem; }
 .icon { width: 1.1em; height: 1.1em; flex: none; }
 button .icon { margin-right: .45rem; vertical-align: -.18em; }
 
@@ -33,14 +28,23 @@ button .icon { margin-right: .45rem; vertical-align: -.18em; }
 .small { font-size: .875rem; }
 .error { color: var(--pico-del-color); }
 
-.toolbar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
-           justify-content: space-between; margin-bottom: 1rem; }
+/* The search page's rows, one spacing apart. */
+#status, .toolbar, .ask-row, .search-row { margin-bottom: 1rem; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start;
+           justify-content: space-between; }
 .toolbar button { margin: 0; }
 .refresh { display: flex; flex-direction: column; gap: .4rem; align-items: flex-end; }
 .scrape-buttons { display: flex; flex-direction: column; gap: .4rem; align-items: flex-end; }
 .toolbar .fresh { padding: .2rem .6rem; font-size: .8rem; }
 /* A refresh runs: another one would not start. */
 .refresh:has(#progress [aria-busy="true"]) .soft { opacity: .5; pointer-events: none; }
+/* The saved searches fill the row beside the refresh button, at the same height. */
+#saved { flex: 1; min-width: 14rem; }
+#saved .saved { width: 100%; }
+.toolbar .soft { display: inline-flex; align-items: center;
+                 height: calc(1rem * var(--pico-line-height)
+                              + var(--pico-form-element-spacing-vertical) * 2
+                              + var(--pico-border-width) * 2); }
 
 .job { margin-block: .75rem; padding-block: 1rem; border: 1px solid var(--pico-muted-border-color); }
 #job-list { counter-reset: job; }
@@ -66,6 +70,17 @@ button .icon { margin-right: .45rem; vertical-align: -.18em; }
 .list-head p { margin: 0; }
 .hidden-bar { display: flex; gap: .5rem; align-items: baseline; }
 .hidden-bar button { margin: 0; padding: .1rem .6rem; font-size: .8rem; }
+.list-head button.list-action { margin: 0; padding: .1rem .6rem; font-size: .8rem; }
+.list-action .icon { margin-right: .3rem; vertical-align: -.18em; }
+.saved { margin: 0; }
+.saved summary .icon { margin-right: .4rem; vertical-align: -.18em; }
+.saved ul { min-width: 20rem; }
+.saved-row { display: flex; gap: .5rem; align-items: center; }
+.saved-row a { flex: 1; }
+.saved-row button { margin: 0; padding: .1rem .4rem; }
+.saved-row button .icon { margin: 0; }
+.key-row { margin-bottom: 1rem; }
+.key-row input { margin-bottom: .25rem; }
 .job header { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: baseline;
               justify-content: space-between; margin-bottom: .5rem; padding-block: .5rem; }
 .job h3 { margin: 0; font-size: 1.15rem; }
@@ -91,6 +106,22 @@ button .icon { margin-right: .45rem; vertical-align: -.18em; }
 .wizard { max-width: 42rem; margin-inline: auto; }
 .wizard fieldset label { display: inline-flex; gap: .35rem; margin-right: 1.25rem; }
 .wizard .grid > * { margin-bottom: 0; }
+.back { display: inline-block; margin-bottom: .5rem; }
+
+/* Settings: the wizard again, then one row per wizard step. */
+.rerun { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
+.rerun [role="button"] { display: inline-flex; align-items: center; gap: .45rem; }
+.catalog { padding: 0; }
+.catalog li { list-style: none; margin-bottom: .5rem; }
+.catalog a { display: flex; gap: .9rem; align-items: center; padding: .75rem 1rem;
+             border: 1px solid var(--pico-muted-border-color); border-radius: .6rem;
+             color: var(--pico-color); text-decoration: none; transition: border-color .15s; }
+.catalog a:hover { border-color: var(--pico-primary-background); }
+.catalog a::after { content: "›"; color: var(--pico-muted-color); font-size: 1.4rem; }
+.catalog .icon { width: 1.4em; height: 1.4em; color: var(--pico-primary); }
+.catalog span { flex: 1; }
+.catalog strong { display: block; }
+.catalog small { color: var(--pico-muted-color); }
 
 .search-row { display: grid; grid-template-columns: 1fr auto auto; gap: .75rem; }
 .search-row select { width: auto; }
@@ -142,9 +173,10 @@ body[data-view="map"] #results { display: none; }
 #ai-status small { display: block; }
 .layout #ai-status:has(small) { margin-bottom: .5rem; }
 #ai-status progress { margin: .25rem 0 0; }
-.ask-row { display: grid; grid-template-columns: 1fr auto; gap: .75rem; margin-bottom: .5rem; }
+.ask-row { display: grid; grid-template-columns: 1fr auto; gap: .75rem; }
 .ask-row input, .ask-row button { margin: 0; }  /* same height: no input margin */
 .ask-row small { grid-column: 1 / -1; }
+.ask-row small:empty { display: none; }  /* no gap below the row without an error */
 .models form, .models button { margin: 0; }
 .models button { padding: .2rem .6rem; }
 .ai-mark { font-size: .7rem; color: var(--pico-muted-color); }

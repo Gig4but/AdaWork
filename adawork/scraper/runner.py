@@ -26,6 +26,7 @@ from adawork.geo.places import PlaceResolver
 from adawork.geo.scope import build_query
 from adawork.net.http import make_client
 from adawork.net.polite import MAX_DELAY, PoliteFetcher, Stopped
+from adawork.scraper.api import ApiSource
 from adawork.scraper.check import RECENT, AdCheck
 from adawork.scraper.crawl import MAX_DETAILS, CrawlSource, crawl
 from adawork.scraper.dedup import DedupIndex
@@ -34,7 +35,8 @@ from adawork.scraper.reposts import merge_text_reposts
 from adawork.scraper.sources import LABELS, SOURCES, bazos, mpsv
 from adawork.scraper.store import JobStore
 from adawork.search import kinds
-from adawork.search.service import Filters, start_batch
+from adawork.search.saved import mark_all_seen
+from adawork.search.service import Filters, batch_starts, start_batch
 from adawork.social import browser as social_browser
 from adawork.social import reader as social
 from adawork.system.resources import Priority, ResourceManager
@@ -59,6 +61,7 @@ class Progress:
     # | failed
     phase: str = ""
     cleared: bool = False  # this run deleted the jobs found before
+    after_id: int = 0  # the jobs this run stores get higher ids
     # A run that keeps the jobs found before checks their pages (scraper/check.py): those of
     # `checking` sources not seen since `checked_since` are not checked yet.
     checked_since: datetime | None = None
@@ -111,6 +114,7 @@ class ScrapeRunner:
         resources: ResourceManager | None = None,
         clock: Callable[[], datetime] = datetime.now,  # local time: social sessions by day
         kept_sources: Collection[str] = (),  # their jobs stay when the found ones are cleared
+        api_key: Callable[[str], str | None] = lambda source_id: None,
     ) -> None:
         self.sessions = sessions
         self.cache_dir = cache_dir
@@ -131,6 +135,7 @@ class ScrapeRunner:
         self.resources = resources  # the browser waits for a free heavy-job slot
         self.clock = clock
         self.kept_sources = tuple(kept_sources)
+        self.api_key = api_key  # source id -> the user's key for it
         self.progress = Progress()
         self._lock = threading.Lock()
         self._writes = threading.RLock()  # one database writer at a time (parallel sources)
@@ -153,16 +158,18 @@ class ScrapeRunner:
             with self.sessions() as session:
                 state = self._state(session, SCOPE_ID)
                 before = (state.state or {}).get("scope")
-                state.state = {"scope": scope}
+                state.state = {"scope": scope, "started_at": utcnow().isoformat()}
                 session.commit()
                 clear = fresh or (before is not None and before != scope)
                 kept = select(func.max(JobSource.job_id)).where(
                     JobSource.source_id.in_(self.kept_sources)
                 )
                 start_batch(session, (session.scalar(kept) or 0) if clear else None)
+                after_id = batch_starts(session)[-1]
             self.progress = Progress(
                 running=True,
                 phase="clear" if clear else "start",
+                after_id=after_id,
                 checked_since=None if clear else utcnow() - RECENT,
             )
             self._stopping.clear()
@@ -188,6 +195,16 @@ class ScrapeRunner:
             "profile": profile.model_dump() if profile else None,
             "sources": dict(self.source_choices()),
         }
+
+    def last_start(self) -> datetime | None:
+        """When the last run started (UTC), also one from an earlier session. Runs from
+        before this was kept tell by their first source."""
+        with self.sessions() as session:
+            state = session.get(SourceState, SCOPE_ID)
+            started = ((state and state.state) or {}).get("started_at")
+            if started:
+                return datetime.fromisoformat(started)
+            return session.scalar(select(func.max(Run.started_at)))
 
     def wait(self, timeout: float | None = None) -> None:
         if self._thread:
@@ -216,6 +233,9 @@ class ScrapeRunner:
                 finally:  # what was imported gets its places even when a step failed
                     if self.geocode:
                         self.run_geocode(client)
+            if clear:
+                with self.sessions() as session:
+                    mark_all_seen(session)
             failed_all = bool(ran) and all(s in p.errors for s in ran)
             p.phase = "failed" if failed_all else "done"
             if failed_all:
@@ -245,7 +265,8 @@ class ScrapeRunner:
             self._guard(dump.id, partial(self.run_mpsv, dump, client))
         sources = self._enabled_of(CrawlSource)
         readers = self._enabled_of(social.SocialSource)
-        if sources or readers:
+        apis = [s for s in self._enabled_of(ApiSource) if self.api_key(s.id)]
+        if sources or readers or apis:
             if self.geocode:
                 # What is imported so far (Úřad práce) gets its places now, not after the
                 # crawl (an hour on a first run): the place filters and the map need them.
@@ -260,13 +281,16 @@ class ScrapeRunner:
                 profile = self.profile()
                 searches = kinds.searches(session, profile.kinds_of_work if profile else [])
             query = build_query(places, profile, searches)
-            ran += [s.id for s in sources]
+            ran += [s.id for s in (*sources, *apis)]
             groups, slow = self.schedule(sources, query, fetcher)
             args = (fetcher, places, dedup, query)
             with (
-                ThreadPoolExecutor(max(1, len(slow)), thread_name_prefix="slow") as beside,
+                ThreadPoolExecutor(len(slow) + len(apis) or 1, thread_name_prefix="slow") as beside,
                 ThreadPoolExecutor(PARALLEL_SOURCES, thread_name_prefix="crawl") as pool,
             ):
+                for api in apis:  # a few requests each
+                    run = partial(self.run_api, api, client, places, dedup, query)
+                    beside.submit(self._guard, api.id, run)
                 for group in slow:
                     beside.submit(self._run_group, group, *args)
                 for group in groups:
@@ -436,6 +460,41 @@ class ScrapeRunner:
                     until = (utcnow() + BLOCKED_PAUSE).isoformat()
                     state.state = (state.state or {}) | {"blocked_until": until}
                     p.errors[source.id] = result.blocked
+            return run
+
+    def run_api(
+        self,
+        source: ApiSource,
+        client: httpx.Client,
+        places: PlaceResolver,
+        dedup: DedupIndex,
+        query: ScrapeQuery,
+    ) -> Run:
+        """A search API with the user's key: what it returns is stored, ads it has not
+        returned for a while are gone."""
+        p = self.progress
+        p.active[source.id] = ("listing", 0)
+
+        def make_store() -> JobStore:
+            return JobStore(session, source.id, dedup=dedup, write_lock=self._writes)
+
+        with (
+            self.sessions() as session,
+            self._record(session, source.id, make_store) as (run, store),
+        ):
+            key = self.api_key(source.id) or ""
+            # All pages first: a store write holds the database until its commit.
+            jobs = []
+            for job in source.search(client, key, query, places):
+                jobs.append(job)
+                p.active[source.id] = ("listing", len(jobs))
+            with self._writes:
+                for job in jobs:
+                    store.add(job, detail=False)  # an excerpt: a portal's full text wins
+                store.commit()
+                store.expire_unseen(source.expire_after_days)
+                self._state(session, source.id).last_run_at = utcnow()
+                run.status = "ok"
             return run
 
     def run_social(
