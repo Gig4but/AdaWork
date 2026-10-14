@@ -455,6 +455,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "Automatic checks are off. You can switch them on later in Settings.",
     },
     "wizard.start": {"cs": "Start", "en": "Start"},
+    "wizard.skip": {"cs": "Přeskočit", "en": "Skip"},
     "minutes": {"cs": "min", "en": "min"},
     "search.placeholder": {
         "cs": "Pozice, firma nebo místo – např. skladník Kolín",
@@ -720,6 +721,125 @@ TEXTS: dict[str, dict[str, str]] = {
     "export.posted": {"cs": "Vloženo", "en": "Posted"},
     "export.sources": {"cs": "Zdroje", "en": "Sources"},
     "export.link": {"cs": "Odkaz", "en": "Link"},
+    # Commute (PLAN §4.6)
+    "sort.travel": {"cs": "Nejkratší cesta", "en": "Shortest commute"},
+    "wizard.depart": {"cs": "Obvyklý odjezd do práce", "en": "Usual departure to work"},
+    "wizard.depart.hint": {
+        "cs": "Ve všední den; podle něj se počítají spoje MHD a vlaků.",
+        "en": "On a weekday; public transport connections are computed for this time.",
+    },
+    "commute.title": {"cs": "Jak se tam dostanu", "en": "How to get there"},
+    "commute.open": {"cs": "Jak se tam dostanu", "en": "How to get there"},
+    "commute.close": {"cs": "Zavřít", "en": "Close"},
+    "commute.from": {"cs": "Odkud dojíždíte", "en": "Commuting from"},
+    "commute.mode.any": {"cs": "Čímkoli", "en": "Any way"},
+    "commute.mode.car": {"cs": "Autem", "en": "By car"},
+    "commute.mode.transit": {"cs": "MHD a vlakem", "en": "By public transport"},
+    "commute.mode.walk": {"cs": "Pěšky", "en": "On foot"},
+    "commute.mode.bike": {"cs": "Na kole", "en": "By bike"},
+    "commute.within": {"cs": "do", "en": "within"},
+    "commute.no_limit": {"cs": "bez omezení", "en": "no limit"},
+    "commute.depart": {"cs": "Odjezd", "en": "Departure"},
+    "commute.no_start": {
+        "cs": "Zadejte, odkud dojíždíte, a uvidíte dobu cesty.",
+        "en": "Enter where you commute from to see travel times.",
+    },
+    "commute.estimate": {
+        "cs": "Doba cesty je zatím odhad",
+        "en": "Travel times are estimates for now",
+    },
+    "commute.estimate_short": {"cs": "odhad", "en": "estimate"},
+    "commute.no_map": {
+        "cs": "Doba cesty je odhad vzdušnou čarou; přesné časy a trasy dá offline mapa.",
+        "en": "Travel times are straight-line estimates; the offline map makes them exact.",
+    },
+    "commute.computing": {
+        "cs": "Počítám přesné doby cesty…",
+        "en": "Computing exact travel times…",
+    },
+    "commute.too_far": {"cs": "dál než 2 hodiny", "en": "more than 2 hours"},
+    "commute.unknown": {
+        "cs": "Toto místo neznám. Zkuste název obce.",
+        "en": "Unknown place. Try the name of a town.",
+    },
+    "commute.missing_start": {
+        "cs": "Nejdřív zadejte, odkud dojíždíte (pole nad seznamem).",
+        "en": "First enter where you commute from (the box above the list).",
+    },
+    "commute.missing_place": {
+        "cs": "U této nabídky není známé místo, takže cestu nelze spočítat.",
+        "en": "This ad has no known place, so the route cannot be computed.",
+    },
+    "commute.depart_or_arrive": {"cs": "Odjezd nebo příjezd", "en": "Departure or arrival"},
+    "commute.leave_at": {"cs": "Odjezd v", "en": "Leave at"},
+    "commute.arrive_by": {"cs": "Příjezd do", "en": "Arrive by"},
+    "commute.next_workday": {"cs": "nejbližší pracovní den", "en": "next working day"},
+    "commute.transfers": {"cs": "přestupy: {n}", "en": "transfers: {n}"},
+    "commute.walk_leg": {"cs": "pěšky {m} min", "en": "walk {m} min"},
+    "commute.towards": {"cs": "směr", "en": "towards"},
+    "commute.failed": {
+        "cs": "Trasu se nepodařilo spočítat. Zkuste to za chvíli znovu.",
+        "en": "The route could not be computed. Try again in a moment.",
+    },
+    "commute.no_route": {
+        "cs": "V tuto dobu nenacházím žádné spojení.",
+        "en": "No connection found at this time.",
+    },
+    "commute.estimate_minutes": {"cs": "Odhadem asi {m} min.", "en": "Roughly {m} min."},
+    "commute.estimate_why": {
+        "cs": "Přesné trasy budou k dispozici, až se připraví mapy a jízdní řády.",
+        "en": "Exact routes will be available once the maps and timetables are ready.",
+    },
+    "commute.open_in": {"cs": "Otevřít v:", "en": "Open in:"},
+    "commute.area": {"cs": "Kam se dostanu za", "en": "Where I can get within"},
+    "commute.start_here": {"cs": "Dojíždět odsud", "en": "Commute from here"},
+    "commute.attribution": {
+        "cs": "Jízdní řády: Spojenka (CIS JŘ a další, jen pro nekomerční použití). "
+        "Mapa: © přispěvatelé OpenStreetMap. Výpočet tras: MOTIS.",
+        "en": "Timetables: Spojenka (CIS JŘ and others, non-commercial use only). "
+        "Map: © OpenStreetMap contributors. Routing: MOTIS.",
+    },
+    "routing.title": {"cs": "Mapy a jízdní řády", "en": "Maps and timetables"},
+    "routing.step.download_osm": {"cs": "Stahuji mapu", "en": "Downloading the map"},
+    "routing.step.download_gtfs": {"cs": "Stahuji jízdní řády", "en": "Downloading timetables"},
+    "routing.step.clip": {"cs": "Vyřezávám okolí domova", "en": "Cutting out the home area"},
+    "routing.step.timetable": {"cs": "Připravuji jízdní řády", "en": "Preparing timetables"},
+    "routing.step.import": {"cs": "Připravuji vyhledávání tras", "en": "Preparing route search"},
+    "routing.not_ready": {
+        "cs": "Zatím nejsou připravené; doba cesty bude k dispozici, až budou.",
+        "en": "Not ready yet; travel times will be available once they are.",
+    },
+    "routing.not_downloaded": {"cs": "Nestaženo", "en": "Not downloaded"},
+    "routing.download": {"cs": "Stáhnout mapu", "en": "Download the map"},
+    "routing.download.text": {
+        "cs": "Doba cesty do práce, filtr podle dojezdu a trasy potřebují offline mapu a jízdní "
+        "řády. Stáhne se asi 1 GB a pak se na pozadí několik minut připravují; aplikaci "
+        "můžete mezitím používat. Bez mapy jsou tyto funkce vypnuté.",
+        "en": "Travel times, the commute filter and routes need the offline map and "
+        "timetables. About 1 GB is downloaded, then prepared in the background for a few "
+        "minutes; you can use the app meanwhile. Without the map these features are off.",
+    },
+    "routing.needs_home": {
+        "cs": "Pro okolí domova nejdřív zadejte, odkud dojíždíte (Profil).",
+        "en": "For the home area, first enter where you commute from (Profile).",
+    },
+    "routing.ready": {"cs": "Připraveno", "en": "Ready"},
+    "routing.failed": {"cs": "Poslední aktualizace selhala", "en": "The last update failed"},
+    "routing.area": {"cs": "Oblast", "en": "Area"},
+    "routing.area.auto": {"cs": "Podle počítače", "en": "Depending on this PC"},
+    "routing.area.whole": {"cs": "celá Česká republika", "en": "all of Czechia"},
+    "routing.area.home": {"cs": "okolí domova (150 km)", "en": "home area (150 km)"},
+    "routing.area.home_km": {"cs": "okolí domova ({km} km)", "en": "home area ({km} km)"},
+    "routing.area.hint": {
+        "cs": "Celá republika potřebuje asi 6 GB paměti při přípravě a 5 GB na disku; "
+        "okolí domova jen zlomek.",
+        "en": "All of Czechia needs about 6 GB of memory to prepare and 5 GB of disk; "
+        "the home area only a fraction.",
+    },
+    "routing.update_now": {"cs": "Aktualizovat teď", "en": "Update now"},
+    "routing.osm_at": {"cs": "Mapa stažena", "en": "Map downloaded"},
+    "routing.gtfs_at": {"cs": "Jízdní řády staženy", "en": "Timetables downloaded"},
+    "routing.imported_at": {"cs": "Připraveno", "en": "Prepared"},
 }
 
 

@@ -1,0 +1,18 @@
+{# Map and timetable data: what is in use and what runs now; refreshes itself while busy. #}
+{% set waiting = settings.routing_download and not routing.ready and not routing.error %}
+<div id="routing-status" {% if routing.step or waiting %}hx-get="/settings/map/status" hx-trigger="every 3s" hx-target="this" hx-select="unset" hx-swap="outerHTML"{% endif %}>
+  {% if routing.step %}
+    <p>{{ t("routing.step." ~ routing.step) }} <progress value="{{ routing.percent }}" max="100"></progress></p>
+  {% endif %}
+  {% if routing.ready %}
+    <p>{{ t("routing.ready") }}: {{ t("routing.area.whole") if routing.whole else t("routing.area.home_km", km=routing.km | round | int) }}</p>
+    <ul class="small">
+      <li>{{ t("routing.osm_at") }}: {{ routing.osm_at | date }}</li>
+      <li>{{ t("routing.gtfs_at") }}: {{ routing.gtfs_at | date }}</li>
+      <li>{{ t("routing.imported_at") }}: {{ routing.imported_at | datetime }}</li>
+    </ul>
+  {% elif not routing.step %}
+    <p>{{ t("routing.not_ready") }}</p>
+  {% endif %}
+  {% if routing.error %}<p class="error small">{{ t("routing.failed") }}: {{ routing.error }}</p>{% endif %}
+</div>

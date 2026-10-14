@@ -14,6 +14,7 @@ from adawork.desktop.server import BackgroundServer, ServerStartError
 from adawork.i18n import translate
 from adawork.logs import report_error, setup_logging
 from adawork.services import Services
+from adawork.system.resources import keep_full_speed
 from adawork.web.app import create_app
 
 
@@ -39,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     log_file = setup_logging()
+    keep_full_speed()
     gui = not args.browser
     instance = SingleInstance()
     if not instance.acquire():  # already running: bring that one up instead of a second copy

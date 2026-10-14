@@ -246,3 +246,42 @@ body[data-view="map"] #results { display: none; }
 #map-empty { position: absolute; z-index: 2; inset: 1rem 1rem auto; margin: 0; padding: .5rem .75rem;
              border-radius: .5rem; background: var(--pico-card-background-color);
              color: var(--pico-color); box-shadow: var(--pico-card-box-shadow); }
+
+/* Travel time (PLAN §4.6): the bar above the search, times on the cards, the window. */
+.commute-bar { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center;
+               margin-bottom: 1rem; }
+.commute-bar label { display: inline-flex; align-items: center; gap: .4rem; margin: 0; }
+.commute-bar input, .commute-bar select { margin: 0; }
+.commute-bar .from { flex: 1 1 16rem; }
+.commute-bar select { width: auto; }
+.commute-bar .limit { flex: 1 1 14rem; }
+.commute-bar .limit span { white-space: nowrap; min-width: 7.5rem; }
+.commute-bar input[type="time"] { width: auto; }
+#commute-state { flex-basis: 100%; }
+#commute-state:empty { display: none; }
+.travel { display: flex; flex-wrap: wrap; gap: .3rem .9rem; align-items: center; margin-bottom: .4rem; }
+.travel .tt { display: inline-flex; align-items: center; gap: .25rem; white-space: nowrap; }
+.travel .tt.est { font-style: italic; color: var(--pico-muted-color); }
+.travel .commute-open { margin: 0 0 0 auto; padding: .1rem .6rem; font-size: .8rem; }
+.travel .commute-open .icon, .commute-tabs .icon { margin-right: .3rem; vertical-align: -.18em; }
+#commute article { width: min(64rem, 96vw); max-width: none; }
+#commute header h3 { margin: 0; }
+.commute-tabs { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .5rem; }
+.commute-tabs button { margin: 0; padding: .3rem .7rem; }
+.commute-tabs small { margin-left: .3rem; opacity: .8; }
+.commute-when { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
+.commute-when select, .commute-when input { width: auto; margin: 0; }
+.commute-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 1rem; margin-block: .75rem; }
+@media (max-width: 800px) { .commute-grid { grid-template-columns: 1fr; } }
+#commute-map { height: 26rem; border-radius: .5rem; }
+.commute-routes { max-height: 26rem; overflow-y: auto; font-size: .9rem; }
+.routes { padding-left: 1.2rem; }
+.routes details { margin-bottom: .4rem; }
+.legs { padding-left: .5rem; }
+.legs li { list-style: none; margin-bottom: .35rem; }
+.legs .icon { margin-right: .3rem; vertical-align: -.18em; }
+.area-range { display: flex; align-items: center; gap: .5rem; }
+.area-range input { flex: 1; margin: 0; }
+/* Map pins are role="button" for keyboard users; Pico would draw them as buttons. */
+.maplibregl-marker[role="button"] { padding: 0; border: 0; background: none; box-shadow: none;
+                                    width: auto; }

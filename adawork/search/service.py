@@ -27,17 +27,22 @@ from sqlalchemy import (
 from sqlalchemy.engine import Row
 from sqlalchemy.orm import Session, selectinload
 
+from adawork.config import TIME_OF_DAY
 from adawork.core import utcnow
 from adawork.db.models import Job, JobSource, Location, SourceState
 from adawork.normalize.text import accented_words, fold
 from adawork.normalize.vocab import EDUCATION_LEVEL
+from adawork.routing.commute import travel_table, within
 from adawork.search import kinds
 
 # Column weights for bm25: title, employer_name, place_text, description.
 _BM25 = "bm25(jobs_fts, 10.0, 3.0, 2.0, 1.0)"
 _TOKEN = re.compile(r"\w+", re.UNICODE)
 
-Sort = Literal["relevance", "date", "salary"]
+Sort = Literal["relevance", "date", "salary", "travel"]
+SORTS = ("relevance", "date", "salary", "travel")
+TRAVEL_MODES = ("any", "car", "transit", "walk", "bike")
+MAX_TRAVEL = 120  # minutes; the slider's end
 LIST_FIELDS = ("categories", "contract_types", "shifts", "suitable_for", "benefits")
 FACETS = (*LIST_FIELDS, "kraj", "education", "sources")
 BATCHES = "batches"  # SourceState row: the last job id stored before each search
@@ -103,10 +108,21 @@ class Filters:
     with_salary: bool = False
     posted_days: int | None = None
     flagged: bool = False  # also show offers with red flags (hidden by default)
+    # Travel time (PLAN §4.6): from the start point `origin` ("lat,lon", see geo/home.py) by
+    # `travel_mode` ("any" = the fastest), leaving at `depart` on a weekday.
+    origin: str | None = None
+    origin_label: str = ""
+    travel_mode: str = "any"
+    travel_max: int | None = None  # minutes; None = not filtered by travel time
+    depart: str = "07:00"
     sort: Sort = "relevance"
 
     def is_filtered(self) -> bool:
-        return replace(self, sort="relevance") != Filters()
+        return replace(self, sort="relevance", origin_label="") != Filters()
+
+    @property
+    def travel_modes(self) -> tuple[str, ...]:
+        return TRAVEL_MODES[1:] if self.travel_mode == "any" else (self.travel_mode,)
 
     def new_first(self) -> bool:
         """The last search's finds are listed above the jobs found before: in the order
@@ -114,19 +130,29 @@ class Filters:
         return self.sort == "relevance"
 
 
-def filters_from(qp) -> Filters:
+def filters_from(qp, defaults: dict[str, str] | None = None) -> Filters:
     """Filters from query or form fields (anything with get and getlist); unknown or
-    malformed values are ignored."""
+    malformed values are ignored. `defaults`: values of fields that are missing (the kinds
+    of work and the travel time from the user's profile)."""
+    defaults = defaults or {}
+
+    def get(name: str, default: str = "") -> str:
+        value = qp.get(name)
+        return defaults.get(name, default) if value is None else value
 
     def number(name: str, maximum: int) -> int | None:
-        value = qp.get(name, "")
+        value = get(name)
         if re.fullmatch(r"[0-9]{1,9}", value) and int(value) <= maximum:
             return int(value)
         return None
 
     sort = qp.get("sort", "relevance")
+    origin = re.fullmatch(r"(-?\d{1,2}\.\d{1,6}),(-?\d{1,3}\.\d{1,6})", get("at"))
+    mode = get("mode", "any")
+    depart = get("depart", "07:00")
+    travel_max = number("max_min", MAX_TRAVEL)
     return Filters(
-        q=qp.get("q", ""),
+        q=get("q"),
         **{name: [v for v in qp.getlist(name) if v] for name in (*LIST_FIELDS, "kraj")},
         sources_off=[v for v in qp.getlist("source_off") if v],
         education=qp.get("education") or None,
@@ -134,7 +160,12 @@ def filters_from(qp) -> Filters:
         with_salary=qp.get("with_salary") == "1",
         posted_days=number("posted_days", 3650),
         flagged=qp.get("flagged") == "1",
-        sort=sort if sort in ("relevance", "date", "salary") else "relevance",
+        origin=f"{float(origin[1]):.4f},{float(origin[2]):.4f}" if origin else None,
+        origin_label=get("from")[:200] if origin else "",
+        travel_mode=mode if mode in TRAVEL_MODES else "any",
+        travel_max=travel_max or None,  # 0 = "bez omezení"
+        depart=depart if re.fullmatch(TIME_OF_DAY, depart) else "07:00",
+        sort=sort if sort in SORTS and (sort != "travel" or origin) else "relevance",
     )
 
 
@@ -148,6 +179,9 @@ def filters_to_query(f: Filters) -> str:
             pairs.append((name, getattr(f, name)))
     if f.flagged:
         pairs.append(("flagged", 1))
+    if f.origin:
+        pairs += [("from", f.origin_label), ("at", f.origin), ("mode", f.travel_mode),
+                  ("max_min", f.travel_max or 0), ("depart", f.depart)]  # fmt: skip
     return urlencode(pairs)
 
 
@@ -206,8 +240,15 @@ def _conditions(f: Filters, skip: frozenset[str] = frozenset()) -> list[ColumnEl
     return conds
 
 
-def _base(f: Filters, match: TextMatch, columns, skip: frozenset[str] = frozenset()):
+def _base(f: Filters, match: TextMatch, columns, skip: frozenset[str] = frozenset(), travel=None):
+    """`travel`: the travel-time table to join (for sorting by it); made here when the
+    travel time filters."""
     stmt: Select = select(*columns).select_from(Job).outerjoin(Location)
+    if f.origin and (f.travel_max or travel is not None):
+        travel = travel if travel is not None else travel_table(f.origin, f.depart, f.travel_mode)
+        stmt = stmt.outerjoin(travel, travel.c.location_id == Job.location_id)
+        if f.travel_max:
+            stmt = stmt.where(within(travel, Job.location_id, f.travel_max))
     hits = None
     if match.fts:
         hits = (
@@ -248,7 +289,6 @@ def _accents(match: TextMatch) -> list[ColumnElement[bool]]:
     return [or_(*either)]
 
 
-_FACET_COLUMNS = (*LIST_FIELDS, "kraj", "education", "sources")
 # Per-database cache of every active job's facet values, already decoded from JSON.
 # Rebuilt only when the jobs table changes (after an import), so a facet request needs
 # just the matching ids from SQL plus one Python pass (~10x faster than decoding each time).
@@ -457,8 +497,12 @@ def search_jobs(
 
 def _sorted(session: Session, f: Filters, match: TextMatch) -> Select:
     """The matching jobs in the order the list shows them."""
-    stmt, hits = _base(f, match, [Job])
     newest = (Job.posted_at.desc().nulls_last(), Job.id.desc())
+    if f.sort == "travel" and f.origin:
+        travel = travel_table(f.origin, f.depart, f.travel_mode)
+        stmt, _ = _base(f, match, [Job], travel=travel)
+        return stmt.order_by(travel.c.minutes.asc().nulls_last(), *newest)
+    stmt, hits = _base(f, match, [Job])
     if f.sort == "salary":
         salary = func.coalesce(Job.salary_month_max, Job.salary_month_min)
         return stmt.order_by(salary.desc().nulls_last(), *newest)

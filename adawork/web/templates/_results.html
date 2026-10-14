@@ -17,6 +17,7 @@
     {# Refresh the filter counts after new results, without waiting for them. #}
     <div id="facets-refresh" hx-swap-oob="true" hx-get="/facets?{{ qs }}" hx-trigger="load"
          hx-target="#facets" hx-swap="innerHTML" hx-sync="#facets:replace"></div>
+    {% with oob_state = true %}{% include "_commute_state.html" %}{% endwith %}
   {% endif %}
   {% if since is defined and since is not none %}{% include "_live.html" %}{% endif %}
 <div id="job-list">

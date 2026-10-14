@@ -24,6 +24,19 @@
       <button type="submit">{{ t("keys.save") }}</button>
     </form>
 
+  {% elif section == "map" %}
+    {% if settings.routing_download %}
+      {% include "_routing_status.html" %}
+      <form method="post" action="/settings/map/update">
+        <button type="submit" class="secondary outline" {% if routing.step %}disabled{% endif %}>{{ t("routing.update_now") }}</button>
+      </form>
+    {% endif %}
+    <form method="post" action="/settings/map">
+      {% include "_map_form.html" %}
+      <button type="submit" class="{{ '' if settings.routing_download else 'secondary outline' }}">{{ t("settings.save") }}</button>
+    </form>
+    <p class="muted small">{{ t("commute.attribution") }}</p>
+
   {% elif section == "automation" %}
     {% if settings.automation.enabled %}
       <p class="small">

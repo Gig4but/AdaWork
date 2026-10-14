@@ -15,6 +15,7 @@
     {% if job.place_text %}{% if job.employer_name %} · {% endif %}{{ job.place_text }}{% endif %}
     {% if job.posted_at %}{% if job.employer_name or job.place_text %} · {% endif %}{{ t("job.posted") }} {{ job.posted_at | date }}{% endif %}
   </p>
+  {% include "_travel.html" %}
   {% if job.contract_types or job.shifts or job.benefits %}
     <p class="tags">
       {% for c in job.contract_types %}<span class="tag">{{ label("contract_types", c) }}</span>{% endfor %}

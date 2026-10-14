@@ -39,6 +39,32 @@ class Location(Base):
     kraj: Mapped[str | None]
 
 
+class TravelSet(Base):
+    """Travel times from one start point, leaving at one time, by one mode (or "any": the
+    fastest); the times refer to it by a small number, which keeps the filter fast."""
+
+    __tablename__ = "travel_sets"
+    __table_args__ = (UniqueConstraint("origin", "depart", "mode"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    origin: Mapped[str] = mapped_column(String(24))  # "lat,lon", 4 decimals
+    depart: Mapped[str] = mapped_column(String(5))  # "07:00" on a weekday
+    mode: Mapped[str] = mapped_column(String(8))  # car | transit | walk | bike | any
+
+
+class TravelTime(Base):
+    """Minutes to a location (PLAN §4.6), computed up to two hours ahead, so moving the
+    travel-time slider only filters. Stored by key only (WITHOUT ROWID): one lookup per job."""
+
+    __tablename__ = "travel_times"
+    __table_args__ = {"sqlite_with_rowid": False}
+
+    set_id: Mapped[int] = mapped_column(ForeignKey("travel_sets.id"), primary_key=True)
+    location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"), primary_key=True)
+    minutes: Mapped[int | None]  # None: not within two hours
+    version: Mapped[int] = mapped_column(default=0)  # routing data version; 0 = an estimate
+
+
 class Municipality(Base):
     """All Czech municipalities with a centre point (median of RÚIAN address points)."""
 
@@ -104,7 +130,7 @@ class Job(Base):
     # loans and sales (normalize/offers.py). Kept, so they are not read again, but never listed.
     is_offer: Mapped[bool] = mapped_column(default=True, index=True)
     red_flags: Mapped[list[str]] = mapped_column(default=list)  # vocab.RED_FLAGS codes
-    hidden_at: Mapped[datetime | None]  # the user hid the ad from the list
+    hidden_at: Mapped[datetime | None] = mapped_column(index=True)  # hidden from the list
 
     location: Mapped[Location | None] = relationship()
     sources: Mapped[list["JobSource"]] = relationship(

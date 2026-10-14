@@ -1,8 +1,10 @@
 {# Home and commute; shared by the wizard and Settings. #}
 {% set p = settings.profile %}
 <label>{{ t("wizard.home") }}
-  <input name="home_address" value="{{ p.home_address }}" autocomplete="street-address"
-         aria-describedby="home-hint">
+  <input name="home_address" value="{{ p.home_address }}" autocomplete="off" list="home-list"
+         aria-describedby="home-hint" hx-get="/commute/places" hx-trigger="input changed delay:250ms"
+         hx-target="#home-list" hx-select="unset" hx-swap="innerHTML" hx-sync="this:replace">
+  <datalist id="home-list"></datalist>
   <small id="home-hint">{{ t("wizard.home.hint") }}</small>
 </label>
 
@@ -16,4 +18,9 @@
 <label>{{ t("wizard.max_minutes") }}: <output id="max-out">{{ p.max_minutes }}</output> {{ t("minutes") }}
   <input type="range" name="max_minutes" min="5" max="120" step="5" value="{{ p.max_minutes }}"
          oninput="document.getElementById('max-out').value = this.value">
+</label>
+
+<label>{{ t("wizard.depart") }}
+  <input type="time" name="depart_time" value="{{ p.depart_time }}" aria-describedby="depart-hint">
+  <small id="depart-hint">{{ t("wizard.depart.hint") }}</small>
 </label>

@@ -10,6 +10,7 @@ dist/
 # Large downloaded data and binaries (fetched by scripts, never committed)
 vendor/llama.cpp/
 vendor/motis/
+vendor/osmium/
 data/
 spikes/**/data/
 *.gguf

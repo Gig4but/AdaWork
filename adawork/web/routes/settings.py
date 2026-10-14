@@ -1,14 +1,16 @@
 """Settings: one page per wizard step, and the form handlers the wizard shares."""
 
+import re
 from typing import Annotated
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from adawork import paths
-from adawork.config import IntervalHours, Language, Settings, Theme, TravelMode
+from adawork.config import TIME_OF_DAY, IntervalHours, Language, Settings, Theme, TravelMode
 from adawork.i18n import translate
 from adawork.scraper.sources import LABELS, NEEDS_KEY, SWITCHABLE
+from adawork.search.service import TRAVEL_MODES
 from adawork.services import Services
 from adawork.web.pages import THEMES, Svc, render, status_context
 from adawork.web.routes.sources import apply_keys, key_rows
@@ -21,10 +23,10 @@ SECTIONS = {
     "profile": "settings.profile",
     "keys": "keys.title",
     "automation": "auto.title",
+    "map": "routing.title",
 }
 LANGUAGE_NAMES = {"cs": "Čeština", "en": "English"}
 INTERVALS: dict[str, IntervalHours] = {"6": 6, "12": 12, "24": 24, "48": 48}
-TRAVEL_MODES = ("any", "car", "transit", "walk", "bike")
 
 
 def save_profile(
@@ -33,6 +35,7 @@ def save_profile(
     travel_mode: TravelMode,
     max_minutes: int,
     kinds_of_work: str | None,
+    depart_time: str,
 ) -> None:
     """`kinds_of_work`: None keeps them (only the wizard asks; then the search text)."""
     profile = svc.settings.profile
@@ -41,7 +44,10 @@ def save_profile(
     profile.max_minutes = max_minutes
     if kinds_of_work is not None:
         profile.kinds_of_work = [k.strip() for k in kinds_of_work.split(",") if k.strip()]
+    if re.fullmatch(TIME_OF_DAY, depart_time):
+        profile.depart_time = depart_time
     svc.settings.save()
+    svc.routing.wake()  # a home far away needs a new map area on smaller PCs
 
 
 def apply_automation(settings: Settings, form) -> None:
@@ -54,6 +60,37 @@ def apply_automation(settings: Settings, form) -> None:
     if not auto.enabled:
         auto.paused_until = None
     settings.save()
+
+
+def save_map(svc: Services, form) -> None:
+    """The area, and with "download" the first download of the map and timetables."""
+    settings = svc.settings
+    if form.get("routing_area") in ("auto", "whole", "home"):
+        settings.routing_area = form["routing_area"]
+    if form.get("download"):
+        settings.routing_download = True
+    settings.save()
+    svc.routing.wake()
+
+
+def map_context(svc: Services) -> dict:
+    return {
+        "routing_auto_whole": svc.ai.manager.resources.limits.routing_radius_km is None,
+        "routing_needs_home": svc.routing.wanted_area() is None,  # home area without a home
+    }
+
+
+def routing_summary(svc: Services) -> str:
+    lang, st = svc.settings.language, svc.routing.status()
+    if st["step"]:
+        return translate(lang, "routing.step." + st["step"]) + f" {st['percent']} %"
+    if not svc.settings.routing_download:
+        return translate(lang, "routing.not_downloaded")
+    if not st["ready"]:
+        return translate(lang, "routing.not_ready")
+    if st["whole"]:
+        return translate(lang, "routing.area.whole")
+    return translate(lang, "routing.area.home_km", km=round(st["km"]))
 
 
 def catalog(svc: Services) -> list[dict]:
@@ -109,6 +146,7 @@ def catalog(svc: Services) -> list[dict]:
             "auto.title",
             tr("auto.every", h=auto.interval_hours) if auto.enabled else tr("settings.off"),
         ),
+        ("/settings/map", "map", "routing.title", routing_summary(svc)),
     ]
     return [{"href": h, "icon": i, "title": t, "summary": x} for h, i, t, x in rows]
 
@@ -116,6 +154,8 @@ def catalog(svc: Services) -> list[dict]:
 def render_section(request: Request, svc: Services, section: str, **context) -> HTMLResponse:
     if section == "keys":
         context.setdefault("keys", key_rows(svc))
+    if section == "map":
+        context |= map_context(svc)
     return render(
         request,
         "settings_section.html",
@@ -164,8 +204,9 @@ def profile_save(
     home_address: Annotated[str, Form()] = "",
     travel_mode: Annotated[TravelMode, Form()] = "any",
     max_minutes: Annotated[int, Form(ge=5, le=180)] = 45,
+    depart_time: Annotated[str, Form()] = "07:00",
 ) -> RedirectResponse:
-    save_profile(svc, home_address, travel_mode, max_minutes, None)
+    save_profile(svc, home_address, travel_mode, max_minutes, None, depart_time)
     return RedirectResponse("/settings/profile?saved=1", status_code=303)
 
 
@@ -186,6 +227,25 @@ def automation_pause(svc: Svc) -> RedirectResponse:
 def automation_resume(svc: Svc) -> RedirectResponse:
     svc.scheduler.resume()
     return RedirectResponse("/settings/automation", status_code=303)
+
+
+@router.post("/settings/map")
+async def map_save(request: Request, svc: Svc) -> RedirectResponse:
+    save_map(svc, await request.form())
+    return RedirectResponse("/settings/map?saved=1", status_code=303)
+
+
+@router.post("/settings/map/update")
+def map_update(svc: Svc) -> RedirectResponse:
+    """Downloads and imports the newest map and timetables now."""
+    if svc.settings.routing_download:
+        svc.routing.update_in_background()
+    return RedirectResponse("/settings/map", status_code=303)
+
+
+@router.get("/settings/map/status", response_class=HTMLResponse)
+def map_status(request: Request, svc: Svc) -> HTMLResponse:
+    return render(request, "_routing_status.html", **status_context(svc))
 
 
 @router.post("/settings/keys", response_class=HTMLResponse)

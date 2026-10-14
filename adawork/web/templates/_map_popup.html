@@ -4,6 +4,7 @@
       {{ jobs[0].location.address_text or jobs[0].place_text or "" }}
       {% if jobs[0].location.precision != "address" %} · {{ t("map.approx") }}{% endif %}
     </p>
+    {% set job = jobs[0] %}{% include "_travel.html" %}
   {% endif %}
   <ul>
     {% for job in jobs %}

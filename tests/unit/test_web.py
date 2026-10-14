@@ -68,6 +68,7 @@ def app(tmp_path):
         secrets=MemorySecrets(),
         autostart_sync=autostart.append,
         refreshes=(),
+        routing_updates=False,
     )
     app.state.autostart = autostart  # what the Run value was set to, in order
     return app
@@ -143,7 +144,17 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
     assert 'value="12" checked' in page
     form = {"interval_hours": "12", "start_with_windows": "on", "notifications": "on"}
     r = client.post("/wizard/automation", data=form, follow_redirects=False)
+    assert r.headers["location"] == "/wizard/map"
+    page = client.get("/wizard/map").text
+    assert "Stáhnout mapu" in page and "Přeskočit" in page  # nothing downloads unasked
+    r = client.post("/wizard/map", data={"routing_area": "auto"}, follow_redirects=False)
     assert r.headers["location"] == "/wizard/done"
+    assert not app.state.services.settings.routing_download
+    r = client.post("/wizard/map", data={"routing_area": "home", "download": "1"},
+                    follow_redirects=False)  # fmt: skip
+    assert r.headers["location"] == "/wizard/map"  # stays to show the progress
+    page = client.get("/wizard/map").text
+    assert "Stáhnout mapu" not in page and 'id="routing-status"' in page
     done = client.get("/wizard/done").text
     assert "Automatické hledání je vypnuté" in done
 
@@ -163,6 +174,7 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
     chosen = {"mpsv", "prace_cz", "jenprace", "linkedin"}  # ticked in the form above
     assert saved.sources == {source_id: source_id in chosen for source_id, _ in SWITCHABLE}
     assert saved.automation.enabled is False
+    assert saved.routing_download and saved.routing_area == "home"
 
 
 def test_facebook_and_instagram_need_consent_then_offer_a_login(app, client):
@@ -335,13 +347,6 @@ def test_search_page_and_results(app, client):
         s.execute(update(Job).values(contract_types=[], shifts=[], benefits=["strav"]))
         s.commit()
     assert "Podnikové stravování" in client.get("/results").text
-
-
-def test_the_kinds_of_work_fill_the_search(app, client):
-    app.state.services.settings.wizard_completed = True
-    app.state.services.settings.profile.kinds_of_work = ["skladník", "řidič"]
-    assert 'name="q" value="skladník, řidič"' in client.get("/").text
-    assert 'name="q" value=""' in client.get("/?q=").text  # cleared by the user
 
 
 def fixture_jobs():
@@ -750,6 +755,7 @@ def test_settings_list_the_wizard_steps_in_order(app, client):
         "/sources",
         "/settings/keys",
         "/settings/automation",
+        "/settings/map",
     ]
     assert "Čeština · Podle Windows" in page and "domov nezadán" in page
     for href in pages:
@@ -795,6 +801,15 @@ def test_api_keys_go_to_the_credential_store_and_switch_their_source(app, client
     assert app.state.services.settings.sources["jooble"] is False
 
 
+def test_the_kinds_of_work_fill_the_search(app, client):
+    app.state.services.settings.wizard_completed = True
+    store_jobs(app, fixture_jobs()[:10])
+    app.state.services.settings.profile.kinds_of_work = ["skladník", "řidič"]
+    page = client.get("/").text
+    assert 'name="q" value="skladník, řidič"' in page
+    assert 'name="q" value=""' in client.get("/?q=").text  # cleared by the user
+
+
 def test_saved_searches_count_new_matches_until_opened(app, client):
     app.state.services.settings.wizard_completed = True
     jobs = fixture_jobs()
@@ -811,7 +826,7 @@ def test_saved_searches_count_new_matches_until_opened(app, client):
     assert "nové: 3" in client.get("/saved").text
 
     r = client.get(f"/saved/{saved.id}", follow_redirects=False)
-    assert r.headers["location"] == "/?q=&sort=date"
+    assert r.headers["location"] == "/?q=&sort=date&at="  # as counted: no start point
     assert "nové:" not in client.get("/saved").text  # opened: seen
 
     r = client.post(f"/saved/{saved.id}/notify")
@@ -843,3 +858,188 @@ def test_the_list_downloads_as_csv_and_excel(app, client):
     rows = list(sheet.iter_rows(values_only=True))
     assert rows[0][0] == "Pozice" and len(rows) == 2 and rows[1][0] == "POKOJSKÁ/-Ý"
     assert client.get("/export.pdf").status_code == 404
+
+
+# --- Commute (M8) --------------------------------------------------------------------------------
+
+
+def commute_jobs(app, municipalities) -> dict[str, int]:
+    """Jobs in Kolín (home), Pardubice (~41 km) and Praha (~55 km); title -> id."""
+    from adawork.core import ParsedJob, ParsedLocation
+
+    places = {"Kolín": (50.031, 15.201), "Pardubice": (50.04, 15.78), "Praha": (50.08, 14.43)}
+    with app.state.services.sessions() as s:
+        municipalities(s)
+        store = JobStore(s, "x")
+        for name, (lat, lon) in places.items():
+            location = ParsedLocation(
+                key=f"t:{name}", precision="address", lat=lat, lon=lon, municipality=name
+            )
+            store.add(ParsedJob(external_id=name, title=f"Skladník {name}", location=location))
+        store.commit()
+        return {j.title: j.id for j in s.scalars(select(Job))}
+
+
+def map_imported_once(app) -> None:
+    """The map was imported, but the data is being imported again: times are estimates."""
+    app.state.services.settings.routing_download = True
+    app.state.services.routing.state.update(version=1, usable=False)
+
+
+def test_travel_times_are_estimates_until_the_map_is_downloaded(app, client, municipalities):
+    settings = app.state.services.settings
+    settings.wizard_completed = True
+    settings.profile.home_address, settings.profile.max_minutes = "Kolín", 45
+    ids = commute_jobs(app, municipalities)
+    page = client.get("/").text
+    assert "odhad vzdušnou čarou" in page and 'href="/settings/map">Stáhnout mapu' in page
+    assert 'name="at" value="50.0300,15.2000"' in page and 'value="travel"' in page
+    assert "Skladník Kolín" in page and "Skladník Praha" not in page  # ~55 km: over 45 min
+    assert 'class="tt est"' in page
+    wide = client.get("/results", params={"at": "50.0300,15.2000", "max_min": "120"}).text
+    assert "Skladník Praha" in wide
+    params = {"at": "50.0300,15.2000", "from": "Kolín", "mode": "car"}
+    window = client.get(f"/commute/job/{ids['Skladník Pardubice']}", params=params).text
+    assert "Odhadem asi" in window and 'href="/settings/map">Stáhnout mapu' in window
+
+    assert "Nestaženo" in client.get("/settings").text
+    page = client.get("/settings/map").text
+    assert "Stáhnout mapu" in page and "Aktualizovat teď" not in page
+    r = client.post("/settings/map/update", follow_redirects=False)
+    assert r.headers["location"] == "/settings/map" and not settings.routing_download
+    r = client.post("/settings/map", data={"routing_area": "auto", "download": "1"},
+                    follow_redirects=False)  # fmt: skip
+    assert settings.routing_download and r.headers["location"] == "/settings/map?saved=1"
+    page = client.get("/settings/map").text
+    assert "Stáhnout mapu" not in page and "Aktualizovat teď" in page
+    assert "Zatím nejsou připravené" in page and 'hx-trigger="every 3s"' in page
+    assert "odhad vzdušnou čarou" in client.get("/").text  # until the import is done
+
+
+def test_travel_time_from_home_before_the_map_data_is_ready(app, client, municipalities):
+    settings = app.state.services.settings
+    settings.wizard_completed = True
+    settings.profile.home_address, settings.profile.max_minutes = "Kolín", 45
+    ids = commute_jobs(app, municipalities)
+    map_imported_once(app)
+    page = client.get("/").text
+    # The bar starts from the profile; times are estimates until the import is done.
+    assert 'name="at" value="50.0300,15.2000"' in page and 'value="Kolín"' in page
+    assert "Doba cesty je zatím odhad" in page
+    assert "Skladník Kolín" in page and "Skladník Praha" not in page  # ~55 km: over 45 min
+    assert 'class="tt est"' in page and "odhad" in page
+    wide = client.get("/results", params={"at": "50.0300,15.2000", "max_min": "120"}).text
+    assert "Skladník Praha" in wide
+    off = client.get("/results", params={"at": "50.0300,15.2000", "max_min": "0"}).text
+    assert "Skladník Praha" in off  # no limit
+    params = {"at": "50.0300,15.2000", "sort": "travel", "max_min": "120"}
+    by_time = client.get("/results", params=params).text
+    assert order(by_time, [ids["Skladník Kolín"], ids["Skladník Pardubice"]]) == [
+        ids["Skladník Kolín"], ids["Skladník Pardubice"]
+    ]  # fmt: skip
+
+    window = client.get(f"/commute/job/{ids['Skladník Pardubice']}",
+                        params={"at": "50.0300,15.2000", "from": "Kolín", "mode": "car",
+                                "arrive": ""}).text  # fmt: skip
+    assert "Jak se tam dostanu" in window and "Odhadem asi" in window
+    assert "mapy.com" in window and "google.com/maps" in window
+    assert "Spojenka" in window  # timetable licence and map attribution
+    no_start = client.get(f"/commute/job/{ids['Skladník Praha']}", params={"at": ""}).text
+    assert "Nejdřív zadejte, odkud dojíždíte" in no_start and "Odhadem" not in no_start
+
+    area = client.get("/commute/area", params={"at": "50.0300,15.2000", "mode": "car",
+                                               "max_min": "20"}).json()  # fmt: skip
+    assert area["estimate"] and area["bucket"] == 30 and area["features"]
+    assert client.get("/commute/locate", params={"text": "Kolín"}).json()["at"] == "50.0300,15.2000"
+    assert client.get("/commute/locate", params={"text": "Nikde"}).status_code == 404
+    assert "Kolín" in client.get("/commute/places", params={"from": "Kol"}).text
+    style = client.get("/map/style.json", follow_redirects=False)
+    assert style.status_code == 307 and "openfreemap" in style.headers["location"]  # online map
+
+    assert "Zatím nejsou připravené" in client.get("/settings/map").text
+    r = client.post("/settings/map", data={"routing_area": "home"}, follow_redirects=False)
+    assert r.headers["location"] == "/settings/map?saved=1" and settings.routing_area == "home"
+
+
+def test_the_bar_takes_a_saved_profile(app, client, municipalities):
+    app.state.services.settings.wizard_completed = True
+    commute_jobs(app, municipalities)
+    form = {"home_address": "Kolín", "travel_mode": "car", "max_minutes": "60",
+            "depart_time": "06:30"}  # fmt: skip
+    client.post("/settings/profile", data=form)
+    assert client.get("/commute/defaults").json() == {
+        "from": "Kolín", "at": "50.0300,15.2000", "mode": "car", "max_min": "60",
+        "depart": "06:30",
+    }  # fmt: skip
+    client.post("/settings/profile", data=form | {"home_address": "Nikde"})
+    assert client.get("/commute/defaults").json()["at"] == ""  # not found: no start point
+    assert "/commute/defaults" in client.get("/static/commute.js").text
+
+
+def test_profile_keeps_the_departure_time(app, client):
+    app.state.services.settings.wizard_completed = True
+    client.post("/settings/profile", data={"home_address": "Kolín", "depart_time": "06:15"})
+    assert app.state.services.settings.profile.depart_time == "06:15"
+    client.post("/settings/profile", data={"home_address": "Kolín", "depart_time": "25:00"})
+    assert app.state.services.settings.profile.depart_time == "06:15"  # invalid: kept
+    assert 'name="depart_time" value="06:15"' in client.get("/settings/profile").text
+
+
+def test_the_travel_note_and_saved_searches_follow_the_start_point(app, client, municipalities):
+    app.state.services.settings.wizard_completed = True
+    commute_jobs(app, municipalities)
+    map_imported_once(app)
+    page = client.get("/").text
+    assert "Zadejte, odkud dojíždíte" in page and 'value="travel" selected' not in page
+    near = {"at": "50.0300,15.2000", "from": "Kolín", "max_min": "30", "sort": "date"}
+    results = client.get("/results", params=near, headers={"HX-Request": "true"}).text
+    assert 'id="commute-state" class="muted" hx-swap-oob="true"' in results
+    assert "Doba cesty je zatím odhad" in results
+
+    from adawork.core import ParsedJob, ParsedLocation
+
+    client.post("/saved", data={**near, "view": "list", "saved_name": "Kolín"})
+    with app.state.services.sessions() as s:  # a new place near the start, found later
+        store = JobStore(s, "x")
+        location = ParsedLocation(key="t:Velim", precision="address", lat=50.06,
+                                  lon=15.15, municipality="Velim")  # fmt: skip
+        store.add(ParsedJob(external_id="Velim", title="Skladník Velim", location=location))
+        store.commit()
+    assert "nové: 1" in client.get("/saved").text
+
+    # Saved without a start point: counted and opened without the one from the profile.
+    app.state.services.settings.profile.home_address = "Kolín"
+    client.post("/saved", data={**near, "at": "", "from": "", "saved_name": "Všude"})
+    with app.state.services.sessions() as s:
+        saved = s.scalar(select(SavedSearch).where(SavedSearch.name == "Všude"))
+    assert "at=&" in saved.query or saved.query.endswith("at=")
+    page = client.get(f"/saved/{saved.id}").text
+    assert 'name="at" value=""' in page
+
+
+def test_times_of_saved_start_points_are_kept(app, client, municipalities, monkeypatch):
+    monkeypatch.setattr("adawork.routing.commute.IN_USE", 0)  # all asked for long ago
+    from adawork.db.models import TravelSet
+    from adawork.routing.commute import KEEP_STARTS
+
+    app.state.services.settings.wizard_completed = True
+    commute_jobs(app, municipalities)
+    map_imported_once(app)
+    client.post("/saved", data={"at": "50.0300,15.2000", "max_min": "30", "saved_name": "Kolín"})
+    for i in range(KEEP_STARTS + 2):  # other start points tried since
+        client.get("/results", params={"at": f"50.{i + 10:02d}00,15.0000", "max_min": "30"})
+    with app.state.services.sessions() as s:
+        origins = set(s.scalars(select(TravelSet.origin)))
+    assert "50.0300,15.2000" in origins and len(origins) == KEEP_STARTS + 1
+
+
+def test_other_sites_cannot_start_work_through_the_app(app, client):
+    app.state.services.settings.wizard_completed = True
+    cross = {"Sec-Fetch-Site": "cross-site"}
+    assert (
+        client.get("/commute/area", params={"at": "50.0300,15.2000"}, headers=cross).status_code
+        == 403
+    )
+    assert client.get("/", headers=cross).status_code == 403
+    assert client.get("/static/app.css", headers=cross).status_code == 200
+    assert client.get("/", headers={"Sec-Fetch-Site": "none"}).status_code == 200  # typed in

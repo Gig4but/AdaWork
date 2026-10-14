@@ -10,14 +10,14 @@ from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import Row, func, select
-from starlette.datastructures import QueryParams
 
 from adawork import __version__
 from adawork.db.models import Job, Run
 from adawork.i18n import translate
 from adawork.normalize.vocab import VOCABULARIES, label
+from adawork.routing.commute import MODES
 from adawork.scraper.sources import LABELS as SOURCE_LABELS
-from adawork.search.service import Filters, filters_from
+from adawork.search.service import TRAVEL_MODES
 from adawork.services import Services
 
 WEB_DIR = Path(__file__).parent
@@ -86,7 +86,8 @@ TEMPLATES.env.filters["source_label"] = lambda source_id: SOURCE_LABELS.get(sour
 
 
 def render(request: Request, name: str, **context) -> HTMLResponse:
-    settings = services_of(request).settings
+    svc = services_of(request)
+    settings = svc.settings
     lang = settings.language
     context |= {
         "settings": settings,
@@ -98,18 +99,12 @@ def render(request: Request, name: str, **context) -> HTMLResponse:
         "salary": lambda job: format_salary(job, lang),
         "label": lambda vocab, code: label(vocab, code, lang),
         "vocab": VOCABULARIES,
+        "commute_modes": MODES,
+        "travel_modes": TRAVEL_MODES,
+        "commute_on": svc.travel.on(),
     }
+    context.setdefault("times", {})  # travel times of the listed jobs
     return TEMPLATES.TemplateResponse(request, name, context)
-
-
-def filters_from_query(request: Request) -> Filters:
-    """Filters from the query string; unknown or malformed values are ignored. Without
-    `q`: the kinds of work from the wizard."""
-    qp = request.query_params
-    if "q" not in qp:
-        kinds = ", ".join(services_of(request).settings.profile.kinds_of_work)
-        qp = QueryParams([*qp.multi_items(), ("q", kinds)])
-    return filters_from(qp)
 
 
 def query_string(request: Request) -> str:
@@ -119,7 +114,7 @@ def query_string(request: Request) -> str:
 
 
 def status_context(svc: Services) -> dict:
-    """The status line: jobs, the last and the next search."""
+    """The status line: jobs, the last and the next search, the map."""
     with svc.sessions() as s:
         active = s.scalar(select(func.count(Job.id)).where(Job.status == "active")) or 0
         last = s.scalar(
@@ -131,6 +126,7 @@ def status_context(svc: Services) -> dict:
     next_check = svc.scheduler.next_check()
     paused = svc.settings.automation.paused_until if svc.scheduler.paused() else None
     return {
+        "routing": svc.routing.status(),
         "active_jobs": active,
         "last_run": local_time(last) if last else None,
         "next_check": local_time(next_check) if next_check else None,

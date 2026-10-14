@@ -42,6 +42,13 @@ def create_app(settings: Settings | None = None, **options) -> FastAPI:
         own_origin = f"{request.url.scheme}://{request.headers.get('host')}"
         if request.method not in ("GET", "HEAD") and origin and origin != own_origin:
             return Response("Cross-origin request blocked", status_code=403)
+        # Reading pages starts work too (travel times, routing): only the app's own pages ask
+        # (or the user typed the address); browsers say which in Sec-Fetch-Site.
+        fetch_site = request.headers.get("sec-fetch-site", "same-origin")
+        if fetch_site not in ("same-origin", "none") and not request.url.path.startswith(
+            "/static/"
+        ):
+            return Response("Cross-origin request blocked", status_code=403)
         return await call_next(request)
 
     @app.get("/favicon.ico", include_in_schema=False)

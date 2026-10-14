@@ -1,0 +1,17 @@
+{# Travel times to the job's place from the search's start point, and the commute window.
+   "~": the place is only a town or district; italics: an estimate. #}
+{% from "_icons.html" import icon %}
+{% set tt = times.get(job.location_id) if job.location_id else None %}
+{% if tt %}
+  {% set approx = job.location and job.location.precision not in ("address", "street") %}
+  <p class="travel small">
+    {% set ns = namespace(any=false, estimate=false) %}
+    {% for m in commute_modes if tt.get(m) and tt[m][0] is not none %}
+      {% set ns.any = true %}{% if not tt[m][1] %}{% set ns.estimate = true %}{% endif %}
+      <span class="tt{% if not tt[m][1] %} est{% endif %}" title="{{ t('mode.' ~ m) }}">{{ icon("mode-" ~ m) }}{% if approx %}~{% endif %}{{ tt[m][0] }} {{ t("minutes") }}</span>
+    {% endfor %}
+    {% if not ns.any %}<span class="muted">{{ t("commute.too_far") }}</span>{% endif %}
+    {% if ns.estimate %}<span class="muted">· {{ t("commute.estimate_short") }}</span>{% endif %}
+    <button type="button" class="secondary outline commute-open" data-job="{{ job.id }}">{{ icon("route") }}{{ t("commute.open") }}</button>
+  </p>
+{% endif %}

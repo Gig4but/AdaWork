@@ -4,6 +4,7 @@
   <script src="/static/vendor/maplibre-gl.js" defer></script>
   <script src="/static/map.js" defer></script>
   <script src="/static/nav.js" defer></script>
+  <script src="/static/commute.js" defer></script>
   <script src="/static/job.js" defer></script>
 {% endblock %}
 {% block content %}
@@ -29,7 +30,31 @@
 
 <form id="search-form" onsubmit="return false"
       hx-get="/results" hx-target="#results"
-      hx-trigger="change, input delay:300ms from:#q, jobs-updated from:body">
+      hx-trigger="change[target.name !== 'depart'], change delay:800ms from:input[name=depart], input delay:300ms from:#q, jobs-updated from:body">
+  {# Travel time (PLAN §4.6): the start point, mode, limit and departure; static/commute.js.
+     Without the map the times are straight-line estimates. #}
+  <div class="commute-bar">
+    <label class="from" title="{{ t('commute.from') }}">{{ icon("pin") }}
+      <input name="from" list="from-list" value="{{ f.origin_label }}" placeholder="{{ t('commute.from') }}"
+             aria-label="{{ t('commute.from') }}" autocomplete="off" data-unknown="{{ t('commute.unknown') }}"
+             hx-get="/commute/places" hx-trigger="input changed delay:250ms" hx-target="#from-list"
+             hx-swap="innerHTML" hx-sync="this:replace">
+      <datalist id="from-list"></datalist>
+    </label>
+    <input type="hidden" name="at" value="{{ f.origin or '' }}">
+    <select name="mode" aria-label="{{ t('wizard.mode') }}">
+      {% for m in travel_modes %}<option value="{{ m }}" {% if f.travel_mode == m %}selected{% endif %}>{{ t("commute.mode." ~ m) }}</option>{% endfor %}
+    </select>
+    <label class="limit">
+      <span>{{ t("commute.within") }} <output id="max-label" data-none="{{ t('commute.no_limit') }}">{% if f.travel_max %}{{ f.travel_max }} {{ t("minutes") }}{% else %}{{ t("commute.no_limit") }}{% endif %}</output></span>
+      <input type="range" name="max_min" min="0" max="120" step="5" value="{{ f.travel_max or 0 }}"
+             aria-label="{{ t('wizard.max_minutes') }}" data-minutes="{{ t('minutes') }}">
+    </label>
+    <label class="depart" title="{{ t('commute.depart') }}">{{ icon("clock") }}
+      <input type="time" name="depart" value="{{ f.depart }}" aria-label="{{ t('commute.depart') }}">
+    </label>
+    {% include "_commute_state.html" %}
+  </div>
   <div class="search-row">
     <input id="q" type="search" name="q" value="{{ f.q }}" placeholder="{{ t('search.placeholder') }}"
            aria-label="{{ t('nav.search') }}" autofocus>
@@ -39,8 +64,8 @@
     </div>
     <input type="hidden" name="view" value="{{ view }}">
     <select name="sort" aria-label="{{ t('filters.sort') }}">
-      {% for s in ("relevance", "date", "salary") %}
-        <option value="{{ s }}" {% if f.sort == s %}selected{% endif %}>{{ t("sort." ~ s) }}</option>
+      {% for s in ("relevance", "date", "salary", "travel") %}
+        <option value="{{ s }}" {% if f.sort == s %}selected{% endif %}{% if s == "travel" and not f.origin %} disabled{% endif %}>{{ t("sort." ~ s) }}</option>
       {% endfor %}
     </select>
   </div>
@@ -55,12 +80,13 @@
            hx-boost="false" onclick="this.href='/out/indeed?q=' + encodeURIComponent(document.getElementById('q').value)">{{ t("search.indeed") }} ↗</a>
       </p>
       {% include "_ai_status.html" %}
-      <div id="map" aria-label="{{ t('view.map') }}"><p id="map-empty" class="small" hidden>{{ t("map.empty") }}</p></div>
+      <div id="map" aria-label="{{ t('view.map') }}" data-start-here="{{ t('commute.start_here') }}"><p id="map-empty" class="small" hidden>{{ t("map.empty") }}</p></div>
       <div id="results">{% include "_results.html" %}</div>
     </div>
   </div>
 </form>
 <div id="facets-refresh"></div>
+<dialog id="commute" aria-label="{{ t('commute.title') }}"><article id="commute-body"></article></dialog>
 <dialog id="job-detail" aria-label="{{ t('job.full_text') }}"><article id="job-detail-body"></article></dialog>
 <button type="button" id="to-top" class="secondary" hidden title="{{ t('page.top') }}" aria-label="{{ t('page.top') }}"
         onclick="window.scrollTo({top: 0, behavior: 'smooth'})">{{ icon("up") }}</button>

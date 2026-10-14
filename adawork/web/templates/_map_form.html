@@ -1,0 +1,14 @@
+{# Map and timetables: the area and the first download; shared by the wizard and Settings. #}
+{% if not settings.routing_download %}
+  <p>{{ t("routing.download.text") }}</p>
+  <button type="submit" name="download" value="1">{{ t("routing.download") }}</button>
+{% endif %}
+{% if routing_needs_home %}<p class="small muted">{{ t("routing.needs_home") }}</p>{% endif %}
+<fieldset>
+  <legend>{{ t("routing.area") }}</legend>
+  {% for choice in ("auto", "whole", "home") %}
+    <label><input type="radio" name="routing_area" value="{{ choice }}" {% if settings.routing_area == choice %}checked{% endif %}>
+      {{ t("routing.area." ~ choice) }}{% if choice == "auto" %} ({{ t("routing.area.whole") if routing_auto_whole else t("routing.area.home") }}){% endif %}</label><br>
+  {% endfor %}
+  <small class="muted">{{ t("routing.area.hint") }}</small>
+</fieldset>

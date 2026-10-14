@@ -28,7 +28,6 @@ from adawork.web.pages import (
     POSTED_DAYS,
     SALARY_STEPS,
     Svc,
-    filters_from_query,
     query_string,
     render,
     status_context,
@@ -66,19 +65,22 @@ def unchecked_of(svc: Services, s: Session, job_ids) -> set[int]:
 def index(request: Request, svc: Svc) -> Response:
     if not svc.settings.wizard_completed:
         return RedirectResponse("/wizard/welcome", status_code=303)
-    f = filters_from_query(request)
+    f = svc.travel.filters(request.query_params)
     svc.runner.focus = f  # a refresh checks the ads of this list first
     with svc.sessions() as s:
         since = newest_id(svc, s)
         result = search_jobs(s, f, limit=PAGE_SIZE, up_to_id=since)
         hidden = hidden_count(s)
+        times = svc.travel.times(s, f, result.jobs)
         marks = unchecked_of(svc, s, [j.id for j in result.jobs])
         fresh_from = new_after(s)
     return render(
         request,
         "search.html",
+        times=times,
         unchecked=marks,
         new_after=fresh_from,
+        commute=svc.travel.state(f),
         hidden=hidden,
         f=f,
         qs=query_string(request),
@@ -96,20 +98,23 @@ def index(request: Request, svc: Svc) -> Response:
 
 @router.get("/results", response_class=HTMLResponse)
 def results(request: Request, svc: Svc, offset: int = 0) -> HTMLResponse:
-    f = filters_from_query(request)
+    f = svc.travel.filters(request.query_params)
     svc.runner.focus = f
     with svc.sessions() as s:
         since = newest_id(svc, s) if offset == 0 else None
         result = search_jobs(s, f, limit=PAGE_SIZE, offset=offset, up_to_id=since)
         hidden = hidden_count(s)
+        times = svc.travel.times(s, f, result.jobs)
         marks = unchecked_of(svc, s, [j.id for j in result.jobs])
         fresh_from = new_after(s)
     qs = query_string(request)
     response = render(
         request,
         "_results.html",
+        times=times,
         unchecked=marks,
         new_after=fresh_from,
+        commute=svc.travel.state(f),
         hidden=hidden,
         f=f,
         qs=qs,
@@ -142,13 +147,14 @@ async def new_results(
     has_more = form.get("more") == "1"
 
     def found(since: int) -> Response:  # off the event loop: a hide is not held up
-        f = filters_from_query(request)
+        f = svc.travel.filters(request.query_params)  # may store travel times
         with svc.sessions() as s:
             newest = newest_id(svc, s) or 0
             still = still_matching(s, f, shown) if shown else set()
             listed = [i for i in shown if i in still]
             marks = unchecked_of(svc, s, listed)
             jobs, total = jobs_found_since(s, f, since, newest, PAGE_SIZE + 1, skip=listed)
+            times = svc.travel.times(s, f, jobs)
             if jobs and not f.new_first():
                 return HTMLResponse("", headers={"HX-Trigger": "jobs-updated"})
             batch = (batch_starts(s) or [0])[-1]
@@ -172,6 +178,7 @@ async def new_results(
         return render(
             request,
             "_new_results.html",
+            times=times,
             jobs=jobs,
             gone=[i for i in shown if i not in still],
             where=where,
@@ -228,14 +235,15 @@ def restore_hidden(request: Request, svc: Svc, every: bool = False) -> HTMLRespo
 @router.get("/facets", response_class=HTMLResponse)
 def facets(request: Request, svc: Svc) -> HTMLResponse:
     """Filter panel with counts; loaded after the results so they appear first."""
-    f = filters_from_query(request)
+    f = svc.travel.filters(request.query_params)
     with svc.sessions() as s:
         counts, flagged = facet_counts(s, f)
+    settings = svc.settings
     return render(
         request,
         "_facets.html",
         f=f,
-        sources_on=[sid for sid, on in SWITCHABLE if svc.settings.sources.get(sid, on)],
+        sources_on=[sid for sid, on in SWITCHABLE if settings.sources.get(sid, on)],
         facets=counts,
         flagged=flagged,
         salary_steps=SALARY_STEPS,

@@ -5,4 +5,5 @@
   {% if paused_until %}{{ t("status.paused", when=paused_until | datetime) }}
   {% elif next_check %}{{ t("status.next", when=next_check | datetime) }}
   {% else %}{{ t("status.auto_off") }}{% endif %}
+  {% if routing.step %} · {{ t("routing.title") }}: {{ t("routing.step." ~ routing.step) }} {{ routing.percent }} %{% endif %}
 </small>

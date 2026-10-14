@@ -18,6 +18,10 @@ from adawork import paths
 Language = Literal["cs", "en"]
 IntervalHours = Literal[6, 12, 24, 48]
 TravelMode = Literal["any", "car", "transit", "walk", "bike"]
+# "auto": decided by the hardware (PLAN §3.2.1); "whole": all of Czechia; "home": ~150 km
+# around home (less RAM and disk).
+RoutingArea = Literal["auto", "whole", "home"]
+TIME_OF_DAY = r"([01]\d|2[0-3]):[0-5]\d"  # "07:00": when the commute starts
 # "system" follows Windows light/dark; the rest are fixed colour schemes (web/static/app.css).
 Theme = Literal["system", "light", "dark", "ocean", "forest", "sunset", "plum", "midnight"]
 
@@ -42,6 +46,7 @@ class Profile(BaseModel):
     travel_mode: TravelMode = "any"
     max_minutes: int = Field(default=45, ge=5, le=180)
     kinds_of_work: list[str] = Field(default_factory=list)  # empty = everything
+    depart_time: str = Field(default="07:00", pattern=f"^{TIME_OF_DAY}$")  # on weekdays
 
 
 class AiSettings(BaseModel):
@@ -75,6 +80,10 @@ class Settings(BaseModel):
     automation: AutomationSettings = Field(default_factory=AutomationSettings)
     ai: AiSettings = Field(default_factory=AiSettings)
     social: SocialSettings = Field(default_factory=SocialSettings)
+    routing_area: RoutingArea = "auto"
+    # The map and timetables are downloaded only once the user asks (wizard or Settings →
+    # Mapy); until imported, travel times and routes are off.
+    routing_download: bool = False
     # Source id -> on/off as the user chose; sources not listed use their default.
     sources: dict[str, bool] = Field(default_factory=dict)
 

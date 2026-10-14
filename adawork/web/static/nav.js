@@ -7,6 +7,7 @@
   const searchTitle = document.title;
   let scrollY = 0;
   let saved = false; // a setting was saved, which may change what the search shows
+  let profileSaved = false; // the travel-time bar takes the profile's values
 
   // As the server marks a page: only the page itself (a Settings sub-page marks nothing).
   function mark(path) {
@@ -26,8 +27,9 @@
     mark("/");
     window.scrollTo(0, scrollY);
     if (saved) {
-      saved = false;
-      htmx.trigger(document.body, "jobs-updated");
+      const bar = profileSaved && window.adaworkProfileBar;
+      saved = profileSaved = false;
+      Promise.resolve(bar && bar()).finally(() => htmx.trigger(document.body, "jobs-updated"));
     }
   }
 
@@ -42,7 +44,11 @@
 
   document.body.addEventListener("htmx:afterSwap", (event) => {
     if (event.detail.target !== other) return;
-    if (event.detail.requestConfig.verb !== "get") saved = true;
+    const request = event.detail.requestConfig;
+    if (request.verb !== "get") {
+      saved = true;
+      if (request.path.startsWith("/settings/profile")) profileSaved = true;
+    }
     if (other.hidden) {
       scrollY = window.scrollY;
       page.hidden = true;

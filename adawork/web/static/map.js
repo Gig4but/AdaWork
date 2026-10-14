@@ -1,12 +1,17 @@
-// Job map: clustered points for the current filters. Tiles: OpenFreeMap (online) until the
-// offline MOTIS tiles arrive with the commute module.
+// Job map: clustered points for the current filters, the area reachable within the travel
+// time limit, and the start point. The map is offline from the imported routing data
+// (/map/style.json), online (OpenFreeMap) until that is ready.
 (() => {
   const form = document.getElementById("search-form");
   const container = document.getElementById("map");
   if (!form || !container) return;
 
   const dark = getComputedStyle(document.documentElement).colorScheme === "dark";
-  const style = `https://tiles.openfreemap.org/styles/${dark ? "dark" : "positron"}`;
+  const style = `/map/style.json?dark=${dark ? 1 : 0}`;
+  let start = null; // marker of the start point
+  let area = null; // reachable cells (GeoJSON) and the query they are for
+  let asked = null; // the area being loaded: { key, minutes }
+  let refreshes = 0; // the points asked last win over slower earlier answers
   let map = null;
 
   const empty = document.getElementById("map-empty");
@@ -22,6 +27,9 @@
     window.adaworkMap = map; // for debugging and UI tests
     map.addControl(new maplibregl.NavigationControl(), "top-right");
     map.on("load", () => {
+      map.addSource("area", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addLayer({ id: "area", type: "fill", source: "area",
+                     paint: { "fill-color": "#2e9e5b", "fill-opacity": 0.15 } });
       map.addSource("jobs", {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
@@ -66,6 +74,19 @@
         new maplibregl.Popup({ maxWidth: "360px" })
           .setLngLat(feature.geometry.coordinates).setHTML(html).addTo(map);
       });
+      // Right click: commute from here (once the map for travel times is downloaded).
+      map.on("contextmenu", (e) => {
+        if (!window.adaworkSetStart) return;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "secondary small";
+        button.textContent = container.dataset.startHere;
+        const popup = new maplibregl.Popup().setLngLat(e.lngLat).setDOMContent(button).addTo(map);
+        button.addEventListener("click", () => {
+          popup.remove();
+          window.adaworkSetStart(e.lngLat.lat, e.lngLat.lng);
+        });
+      });
       for (const layer of ["clusters", "points"]) {
         map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
         map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
@@ -86,7 +107,51 @@
     // Jobs match but none has a place yet (geocoding runs at the end of a search): say so,
     // instead of an empty map.
     empty.hidden = points.features.length > 0 || !document.querySelector("#job-list > .job");
+    showStart();
   }
+
+  // Cells reachable within `minutes`; none for 0.
+  const areaFilter = (minutes) => (minutes ? ["<=", ["get", "m"], minutes] : ["==", 1, 0]);
+
+  // The start point and the area reachable from it within the limit (cells with "m" minutes;
+  // moving the slider only filters them, unless it leaves the range they were made for).
+  async function showStart() {
+    const params = new URLSearchParams(new FormData(form));
+    const at = params.get("at");
+    const minutes = Number(params.get("max_min") || 0);
+    if (start) start.remove();
+    start = null;
+    if (!at) {
+      map.getSource("area").setData({ type: "FeatureCollection", features: [] });
+      return;
+    }
+    const [lat, lon] = at.split(",").map(Number);
+    start = new maplibregl.Marker({ color: "#2e9e5b" }).setLngLat([lon, lat]).addTo(map);
+    const key = ["at", "mode", "depart"].map((k) => params.get(k)).join("|");
+    if (!minutes) {
+      map.setFilter("area", areaFilter(0));
+      return;
+    }
+    if (!area || area.key !== key || minutes > area.data.bucket) {
+      if (asked && asked.key === key && minutes <= asked.minutes) return; // on its way
+      const request = (asked = { key, minutes });
+      const query = new URLSearchParams({ at, from: params.get("from") || "", mode: params.get("mode"),
+                                          depart: params.get("depart"), max_min: minutes });
+      const response = await fetch("/commute/area?" + query);
+      if (asked !== request) return; // another start point or limit asked since: that one wins
+      asked = null;
+      if (!response.ok) return;
+      area = { key, data: await response.json() };
+      map.getSource("area").setData(area.data);
+    }
+    const limit = Number(new FormData(form).get("max_min") || 0); // the slider may have moved
+    map.setFilter("area", areaFilter(limit));
+  }
+  document.addEventListener("adawork:limit", (e) => {
+    if (!map || !map.getLayer("area") || !area) return;
+    if (e.detail > area.data.bucket) showStart();
+    else map.setFilter("area", areaFilter(e.detail));
+  });
 
   function show(view) {
     form.querySelector("input[name=view]").value = view;

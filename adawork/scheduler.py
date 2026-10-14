@@ -50,6 +50,7 @@ class Scheduler(Worker):
         sessions: sessionmaker[Session],
         refreshes: Sequence[Refresh] = (),
         notify: Callable[[str, str], None] = lambda title, text: None,
+        prepare: Callable[[Filters], None] = lambda f: None,
         client_factory: Callable[[], httpx.Client] = make_client,
         clock: Callable[[], datetime] = utcnow,
     ) -> None:
@@ -63,6 +64,7 @@ class Scheduler(Worker):
         self.clock = clock
         # The tray icon, made after the services, sets `notify` and this.
         self.on_change: Callable[[], None] = lambda: None  # e.g. redraw the tray menu
+        self.prepare = prepare  # what saved searches need before counting: travel times
         self._watching: Progress | None = None  # the running automatic check
         self._failed_at: datetime | None = None  # when the last automatic check failed
         self._was_paused = False
@@ -150,7 +152,9 @@ class Scheduler(Worker):
                 saved = list(session.scalars(select(SavedSearch).where(SavedSearch.notify)))
                 if saved:
                     for s in saved:
-                        n = matches_after(session, filters_of(s), p.after_id)
+                        f = filters_of(s)
+                        self.prepare(f)
+                        n = matches_after(session, f, p.after_id)
                         if n:
                             lines.append(translate(lang, "notify.saved", name=s.name, n=n))
                     lines = lines[:MAX_LINES]

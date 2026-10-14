@@ -1,6 +1,8 @@
 """Saved searches (PLAN §7.2): named filters whose new matches are counted on the search page
 and announced after an automatic check."""
 
+from collections.abc import Callable
+
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 from starlette.datastructures import QueryParams
@@ -32,7 +34,15 @@ def matches_after(session: Session, f: Filters, after: int) -> int:
     return count_between(session, f, after, newest) if newest > after else 0
 
 
-def with_new_counts(session: Session) -> list[tuple[SavedSearch, int]]:
-    """Every saved search with its matches the user has not opened it for yet."""
+def with_new_counts(
+    session: Session, prepare: Callable[[Filters], None] = lambda f: None
+) -> list[tuple[SavedSearch, int]]:
+    """Every saved search with its matches the user has not opened it for yet. `prepare`:
+    what the filters need first (travel times from their start point)."""
     saved = session.scalars(select(SavedSearch).order_by(SavedSearch.name, SavedSearch.id))
-    return [(s, matches_after(session, filters_of(s), s.seen_up_to)) for s in saved]
+    counts = []
+    for s in saved:
+        f = filters_of(s)
+        prepare(f)
+        counts.append((s, matches_after(session, f, s.seen_up_to)))
+    return counts

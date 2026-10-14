@@ -59,6 +59,31 @@ def user_idle_seconds() -> float:
     return ((ticks - info.dwTime) & 0xFFFFFFFF) / 1000.0
 
 
+class _PowerThrottling(ctypes.Structure):
+    _fields_ = [("Version", ctypes.c_ulong), ("ControlMask", ctypes.c_ulong),
+                ("StateMask", ctypes.c_ulong)]  # fmt: skip
+
+
+def keep_full_speed() -> bool:
+    """Keeps Windows from throttling this process as a background one (EcoQoS). Without a
+    visible window (tray, --browser) it otherwise slows down after ~2 s of work: the search
+    took 3x longer on a hybrid Intel laptop (M8). The heavy programs (AI model, routing
+    import) are separate processes and keep their below-normal priority."""
+    if sys.platform != "win32":
+        return False
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.GetCurrentProcess.restype = ctypes.c_void_p
+    kernel32.SetProcessInformation.argtypes = [
+        ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_ulong
+    ]  # fmt: skip
+    # ProcessPowerThrottling (4): execution speed decided here (mask 1), not throttled (0).
+    state = _PowerThrottling(1, 1, 0)
+    process = kernel32.GetCurrentProcess()
+    return bool(
+        kernel32.SetProcessInformation(process, 4, ctypes.byref(state), ctypes.sizeof(state))
+    )
+
+
 class ResourceManager:
     def __init__(
         self,

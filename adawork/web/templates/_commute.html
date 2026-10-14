@@ -1,0 +1,92 @@
+{# "Jak se tam dostanu" (PLAN §4.6), shown in the search page's dialog; static/commute.js
+   draws the map. #}
+{% from "_icons.html" import icon %}
+<header>
+  <button type="button" aria-label="{{ t('commute.close') }}" rel="prev" onclick="this.closest('dialog').close()"></button>
+  <h3>{{ icon("route") }} {{ t("commute.title") }}</h3>
+  <p class="muted small">{{ job.title }}{% if place %} · {{ place }}{% endif %}</p>
+</header>
+
+{% if missing %}
+  <p>{{ t("commute.missing_start") if not origin else t("commute.missing_place") }}</p>
+{% else %}
+<form class="commute-form" hx-get="/commute/job/{{ job.id }}" hx-target="#commute-body" hx-trigger="change, submit">
+  <input type="hidden" name="from" value="{{ f.origin_label }}">
+  <input type="hidden" name="at" value="{{ f.origin }}">
+  <input type="hidden" name="depart" value="{{ f.depart }}">
+  <input type="hidden" name="max_min" value="{{ f.travel_max or 0 }}">
+  <input type="hidden" name="mode" value="{{ mode }}">
+  <div role="tablist" class="commute-tabs">
+    {% for m in commute_modes %}
+      {% set tm = times.get(m) %}
+      <button type="button" role="tab" aria-selected="{{ 'true' if m == mode else 'false' }}"
+              class="{{ '' if m == mode else 'secondary outline' }}"
+              onclick="this.form.mode.value='{{ m }}'; htmx.trigger(this.form, 'submit')">
+        {{ icon("mode-" ~ m) }}{{ t("mode." ~ m) }}
+        {% if tm and tm[0] is not none %}<small>{{ tm[0] }} {{ t("minutes") }}</small>{% endif %}
+      </button>
+    {% endfor %}
+  </div>
+  <div class="commute-when">
+    <select name="arrive" aria-label="{{ t('commute.depart_or_arrive') }}">
+      <option value="">{{ t("commute.leave_at") }}</option>
+      <option value="1" {% if arrive %}selected{% endif %}>{{ t("commute.arrive_by") }}</option>
+    </select>
+    <input type="time" name="time" value="{{ depart }}" aria-label="{{ t('commute.depart') }}">
+    <small class="muted">{{ when | date }} ({{ t("commute.next_workday") }})</small>
+  </div>
+</form>
+
+<div class="commute-grid">
+  <div id="commute-map" data-geo='{{ geo }}' data-ends='{{ ends }}'
+       data-area="/commute/area?{{ {'from': f.origin_label, 'at': f.origin, 'mode': mode, 'depart': depart, 'max_min': f.travel_max or 45} | urlencode }}"></div>
+  <div class="commute-routes">
+    {% if routes %}
+      <ol class="routes">
+      {% for r in routes %}
+        <li>
+          <details {% if loop.first %}open{% endif %} data-route="{{ loop.index0 }}">
+            <summary>
+              <strong>{{ r.minutes }} {{ t("minutes") }}</strong>
+              {% if mode == "transit" %}· {{ r.start.strftime("%H:%M") }} → {{ r.end.strftime("%H:%M") }}
+                · {{ t("commute.transfers", n=r.transfers) }}{% endif %}
+              {% if r.km %}· {{ r.km }} km{% endif %}
+            </summary>
+            {% if mode == "transit" %}
+            <ul class="legs">
+              {% for leg in r.legs %}
+                <li class="leg leg-{{ leg.mode | lower }}">
+                  {% if leg.mode in ("WALK", "BIKE", "CAR") %}
+                    {{ icon("mode-walk") }}{{ t("commute.walk_leg", m=leg.minutes) }}{% if leg.to and leg.to not in ("END",) %} → {{ leg.to }}{% endif %}
+                  {% else %}
+                    {{ icon("mode-transit") }}<strong>{{ leg.line or leg.mode }}</strong>{% if leg.headsign %} {{ t("commute.towards") }} {{ leg.headsign }}{% endif %}<br>
+                    <small>{{ leg.start.strftime("%H:%M") }} {{ leg.from }} → {{ leg.end.strftime("%H:%M") }} {{ leg.to }}</small>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </details>
+        </li>
+      {% endfor %}
+      </ol>
+    {% elif error %}
+      <p class="error">{{ t("commute.failed") }}</p>
+    {% elif routable %}
+      <p>{{ t("commute.no_route") if times.get(mode) and times[mode][0] is not none else t("commute.too_far") }}</p>
+    {% else %}
+      <p>{% if estimate %}{{ t("commute.estimate_minutes", m=estimate) }}{% else %}{{ t("commute.too_far") }}{% endif %}</p>
+      <p class="muted small">{{ t("commute.estimate_why") }}{% if not commute_on and not settings.routing_download %}
+        <a href="/settings/map">{{ t("routing.download") }}</a>{% endif %}</p>
+    {% endif %}
+    <p class="links small">{{ t("commute.open_in") }}
+      {% if links.mapy %}<a href="{{ links.mapy }}" target="_blank" rel="noopener">Mapy.com ↗</a> ·{% endif %}
+      {% if mode == "transit" %}<a href="{{ links.idos }}" target="_blank" rel="noopener">IDOS ↗</a> ·{% endif %}
+      <a href="{{ links.google }}" target="_blank" rel="noopener">Google Maps ↗</a></p>
+  </div>
+</div>
+<label class="area-range">{{ t("commute.area") }} <output>{{ f.travel_max or 45 }}</output> {{ t("minutes") }}
+  <input type="range" min="5" max="120" step="5" value="{{ f.travel_max or 45 }}">
+</label>
+<p class="muted small">{{ t("commute.attribution") }}</p>
+{% endif %}

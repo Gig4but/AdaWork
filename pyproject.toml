@@ -85,6 +85,7 @@ layers = [
     "scraper",
     "social | ai",
     "search",
+    "routing",
     "geo",
     "db",
     "normalize",

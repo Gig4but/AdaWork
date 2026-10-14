@@ -15,7 +15,7 @@ Three main modules:
 Shared services: a small **local AI model** (reads messy ads and posters, summarizes
 reviews) and a **local routing engine** (travel times and routes, offline maps).
 
-Status: **M0–M7 done** (2026-10-13; M7's 3-day unattended run is still to do); next is M8.
+Status: **M0–M8 done** (2026-10-14; M7's 3-day unattended run is still to do); next is M9.
 Spike results: `docs/spikes.md`.
 
 ---
@@ -450,16 +450,18 @@ The prompt forbids claims not found in the texts; the summary is labelled as AI-
 
 ### 4.6 Commute module (`CommuteService` + MOTIS)
 
-**Data and updates (automatic):**
-- First run: download the OSM CZ extract (948 MB) and the Spojenka GTFS (85 MB), sanitize the
+**Data and updates (automatic once downloaded):**
+- Nothing downloads until the user clicks "Stáhnout mapu" (wizard step 7 or Settings → Mapy).
+  Then: download the OSM CZ extract (948 MB) and the Spojenka GTFS (85 MB), sanitize the
   GTFS, and import with MOTIS in the background.
 - **Profile by hardware** (measured in M0):
   - ≥ 16 GB RAM: whole Czechia, ~7 min import, peak 5.5 GB, 4 GB data, geocoding on.
   - 8 GB RAM: osmium extract 150 km around home + renumber, clip GTFS, import (~2 min, peak
     1.65 GB, 1.3 GB data), geocoding off, `background` tile profile. A new home address
     re-runs this pipeline. The import reserves ~5 GB of virtual memory, so check the page file.
-- Until the import finishes, travel times are **estimates** (straight-line distance × mode
-  factor), labelled "odhad".
+- Until the first import finishes, and during later ones, travel times are **estimates**
+  (straight-line distance × mode factor), labelled "odhad"; the filter, the sort and the
+  commute window use them (before the first import a note links to the download).
 - Timetables refresh weekly (Spojenka is valid 14 days), OSM monthly; the updated data is
   imported in the background and switched in when ready.
 - No own JDF converter is needed while Spojenka is used; regional GTFS (PID, IDS JMK) is the
@@ -477,8 +479,8 @@ The prompt forbids claims not found in the texts; the summary is labelled as AI-
 - When the start, mode or departure time changes:
   - car/walk/bike: one MOTIS **one-to-many** call from the start to all distinct job
     locations;
-  - public transport: one-to-all from the start, then each job gets the time of the best
-    nearby stop + the walk.
+  - public transport: intermodal one-to-many (walk + transit), the best connection leaving
+    within the hour after the departure time.
   - Results are stored in `travel_times(origin, mode, depart_profile, location_id, minutes)`.
 - **Moving the slider is instant**: it only filters cached times (computed up to 120 min).
 - The map shows the reachable area for the slider value, drawn from one-to-all results
@@ -692,7 +694,9 @@ Every step has defaults; optional steps have "Skip"; downloads run in the backgr
    - With automatic checks off, scraping runs when the user clicks "Hledat nové nabídky" on
      the Dashboard or in the tray menu.
    - Automatic checks can be switched on/off or paused any time from the tray or Settings.
-7. **Hotovo** — summary; "Start" runs MPSV first (fast, all industries).
+7. **Mapy a jízdní řády** — "Stáhnout mapu" (~1 GB) and the area; "Přeskočit" leaves travel
+   times off until downloaded from Settings.
+8. **Hotovo** — summary; "Start" runs MPSV first (fast, all industries).
    - Map/routing data and the model download continue in the background.
    - The dashboard shows their progress ("Mapy a jízdní řády: 60 %").
 
@@ -750,9 +754,9 @@ AdaWork/
 │  │  └─ sources/  ares, isir, vat_register, agency_register, atmoskop, indeed_reviews,
 │  │               google_places, facebook_page, web_mentions (ddgs)
 │  ├─ routing/                      # commute
-│  │  ├─ motis.py (process + API client), data_updater.py (OSM, NeTEx, GTFS),
-│  │  ├─ jdf_to_gtfs.py (only if no OSS converter fits), commute.py (filter, cache),
-│  │  └─ deeplinks.py (Mapy.cz, IDOS, Google)
+│  │  ├─ motis.py (process + API client), data.py (OSM + GTFS download, clip, import),
+│  │  ├─ gtfs.py (sanitize, clip), commute.py (travel times, area, routes),
+│  │  └─ deeplinks.py (Mapy.com, IDOS, Google)
 │  ├─ normalize/  salary, contract, education, location, dedup
 │  ├─ ai/  hardware, catalog, download, advisor (fit icons), runtime (llama-server),
 │  │       winjob, manager (Auto mode), benchmark, client, grammar, embeddings, isco,
@@ -763,7 +767,7 @@ AdaWork/
 │     ├─ app.py, export.py (CSV/XLSX), i18n.py
 │     └─ templates/, static/ (htmx, alpine, pico, maplibre — vendored)
 ├─ resources/  codebooks/, categories.yaml
-├─ vendor/  llama.cpp/, motis/      # fetched by the build script
+├─ vendor/  llama.cpp/, motis/, osmium/   # tools/fetch_llama.py, tools/fetch_motis.py
 ├─ packaging/  adawork.spec, installer.iss, build.ps1
 └─ tests/  fixtures/, golden/, unit/, contract/, integration/
 ```
@@ -853,21 +857,33 @@ AdaWork/
   - Once switched on, the app runs 3 days unattended from the tray. **Not run yet.**
   - Changing the interval or switching automation on/off reschedules without a restart. ✓
 
-### M8 — Commute module (7–9 days)
-- MOTIS + osmium-tool bundling, background download (OSM, Spojenka GTFS), GTFS sanitizing,
-  hardware profile (whole CZ vs. 150 km clip + renumber), import/refresh scheduled by the
-  `ResourceManager`, estimate fallback. MOTIS runs on demand and is stopped when idle.
-- Job coordinates already come from RÚIAN (M2); MOTIS geocoding serves the address box.
-- `travel_times` cache, one-to-many / one-to-all, travel-time filter + slider + isochrone,
-  sort by travel time.
-- Commute window (4 modes, transit legs, time picker, slider, deep links), MapLibre with
-  MOTIS tiles.
-- Wizard step 2 commute fields.
-- **Done when:**
-  - Moving the slider updates results in < 200 ms.
-  - A new start point recomputes ≥ 5 000 job locations in < 30 s.
-  - 10 sample routes match Mapy.cz/IDOS within ±15 %.
-  - Before the import finishes, estimates are shown and labelled.
+### M8 — Commute module — done
+- MOTIS 2.11.3 and osmium-tool in `vendor/` (`tools/fetch_motis.py`). Map (OSM, monthly) and
+  timetables (Spojenka, weekly) download in the background once the user asks, resumable; the
+  GTFS is sanitized (and clipped); one import at a time through the `ResourceManager`. A failed
+  import with new timetables re-imports the previous ones; new downloads stay pending until
+  imported. Area by hardware or Settings: whole CZ (import 161 s, peak 5.7 GB, 4.2 GB data) or
+  150 km around home (252 s, osmium peak 3.9 GB, import 2.3 GB, 1.9 GB data).
+- `travel_sets` + `travel_times` (WITHOUT ROWID): minutes per location for car, transit, walk,
+  bike and "any", up to 120 min. Straight-line estimates at once (labelled "odhad"), MOTIS in
+  the background (parallel one-to-many; transit = best of 07:00/15/30/45). Car times × 1.14
+  (MOTIS was faster than OSRM on all 10 sample trips). Places with no location or only a
+  region always pass. The app process opts out of Windows power throttling (EcoQoS), which
+  made it 3× slower without a visible window.
+- Search: travel bar (start = home or typed address or map right-click, mode, slider 0–120,
+  departure), sort by travel time, times on cards, reachable area on the map (grid cells,
+  slider filters them). Commute window: 4 modes, legs with lines and times, departure/arrival,
+  area slider, Mapy.com / IDOS / Google links. Offline map style for MOTIS tiles (both
+  profiles); OpenFreeMap until the import is ready. Wizard step 2: address suggestions,
+  usual departure time.
+- **Done when** (61.7k jobs, 18.6k locations, Core Ultra 7 255U):
+  - Slider updates the list in < 200 ms: median 179 ms. ✓
+  - New start point ≥ 5 000 locations in < 30 s: 18.6k in 21.8 s (whole CZ), 23.9 s (150 km). ✓
+  - 10 sample routes from Kolín within ±15 %: transit vs IDOS 9/10 (Poděbrady 14 vs 12 min);
+    car vs OSRM 10/10 after the 1.14 factor fitted on the same trips (Mapy.com/Google have no
+    keyless access). Partly ✓
+  - Estimates shown and labelled before the import finishes. ✓
+- Not measured on an 8 GB machine; the 150 km profile ran on 32 GB.
 
 ### M9 — Employer reviews module (6–7 days)
 - Resolver (IČO, alias table + learned cache, ARES search with name variants, RES batch
@@ -967,8 +983,8 @@ next to the model icons.
   no redistribution; every source can be switched off. Firmy.cz/Mapy.cz reviews are not
   scraped (robots.txt).
 - Google ratings only through the official API within its terms.
-- Map tiles: OpenFreeMap (free, no key, attribution "OpenFreeMap © OpenMapTiles, data ©
-  OpenStreetMap" shown by the map) until offline MOTIS tiles replace them in M8.
+- Map tiles: offline from the imported OSM data (MOTIS, "© OpenStreetMap contributors");
+  OpenFreeMap (free, no key, its attribution shown) only until the import is done.
 - LinkedIn: guest endpoints only, no login; off by default because its robots.txt disallows
   them. Indeed: not read at all, only linked.
 - Facebook/Instagram: breaks Meta's terms; runs only after explicit consent, low limits, stops

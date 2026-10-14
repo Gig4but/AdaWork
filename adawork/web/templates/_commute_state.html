@@ -1,0 +1,22 @@
+{# The travel-time bar's note: straight-line estimates and where to get the map, estimates
+   while new map data is prepared, then exact times being computed. While busy it asks again; once done, the list
+   reloads (was=1). hx-target: inside the search form it would otherwise
+   inherit the form's #results and replace the list. #}
+{% set r = commute.routing %}
+{% set busy = f.origin and (commute.computing or (r.step and not r.ready)) %}
+<small id="commute-state" class="muted" {% if oob_state %}hx-swap-oob="true"{% endif %}
+  {% if busy %}hx-get="/commute/state?was=1" hx-target="this" hx-include="#search-form" hx-trigger="every 4s" hx-swap="outerHTML"{% endif %}>
+  {%- if not f.origin -%}
+    {{ t("commute.no_start") }}
+  {%- elif not commute_on -%}
+    {{ t("commute.no_map") }}
+    {%- if r.step %} {{ t("routing.step." ~ r.step) }}…
+    {%- elif not settings.routing_download %} <a href="/settings/map">{{ t("routing.download") }}</a>{% endif -%}
+  {%- elif r.step and not r.ready -%}
+    {{ t("commute.estimate") }} · {{ t("routing.step." ~ r.step) }} {{ r.percent }} %
+  {%- elif not r.ready -%}
+    {{ t("commute.estimate") }}
+  {%- elif commute.computing -%}
+    {{ t("commute.computing") }} {{ commute.progress }} %
+  {%- endif -%}
+</small>
