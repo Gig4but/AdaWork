@@ -2,11 +2,12 @@
 user's Run key starts the app at sign-in, hidden in the tray."""
 
 import logging
+import os
 import sys
 from contextlib import suppress
 from pathlib import Path
 
-from adawork import APP_NAME
+from adawork import APP_NAME, paths
 
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 FLAG = "--minimized"
@@ -25,7 +26,8 @@ def command() -> str:
 
 def sync(wanted: bool) -> None:
     """Adds or removes the Run value; a failure only means no start with Windows."""
-    if sys.platform != "win32":
+    # The value starts the app with the usual data folder: another folder must not change it.
+    if sys.platform != "win32" or os.environ.get(paths.DATA_ENV):
         return
     import winreg
 

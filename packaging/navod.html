@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AdaWork – návod</title>
+<style>
+  :root { --text: #1d232b; --muted: #5b6573; --bg: #ffffff; --accent: #b77900; --line: #dde2e8; }
+  @media (prefers-color-scheme: dark) {
+    :root { --text: #e6e9ee; --muted: #a2abb8; --bg: #161b22; --accent: #ffb300; --line: #2c333d; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.5 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 46rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  h1 { margin: 0 0 .25rem; font-size: 1.7rem; }
+  h2 { margin: 1.6rem 0 .4rem; font-size: 1.15rem; border-bottom: 1px solid var(--line); }
+  p, li { margin: .3rem 0; }
+  .muted { color: var(--muted); }
+  b { color: var(--accent); font-weight: 600; }
+  code { font: .9em Consolas, monospace; }
+  @media print {
+    :root { --text: #000; --muted: #444; --bg: #fff; --accent: #000; --line: #bbb; }
+    main { padding: 0; }
+  }
+</style>
+</head>
+<body>
+<main>
+<h1>AdaWork – návod</h1>
+<p class="muted">Volná místa z úřadu práce a pracovních portálů na jednom místě, s dobou
+dojíždění a hodnocením zaměstnavatelů. Vše běží na vašem počítači.</p>
+
+<h2>1. Instalace</h2>
+<ul>
+  <li>Spusťte <code>AdaWork-Setup.exe</code>. Pokud Windows napíše „Systém Windows
+    ochránil váš počítač“, klikněte na <b>Další informace</b> a potom <b>Přesto spustit</b>.</li>
+  <li>Instalace nepotřebuje heslo správce. Aplikaci pak najdete v nabídce Start jako
+    <b>AdaWork</b>.</li>
+</ul>
+
+<h2>2. První spuštění: průvodce nastavením</h2>
+<p>Průvodce má 9 krátkých kroků. Ve všech je předvyplněné rozumné nastavení, stačí klikat na
+<b>Další</b>; kroky, které tu nejsou popsané, stačí odkliknout. Vše jde později změnit
+v <b>Nastavení</b> (ozubené kolo vpravo nahoře).</p>
+<ul>
+  <li><b>Odkud dojíždíte a co hledáte</b>: napište adresu nebo obec, odkud budete jezdit, a jak
+    dlouho nejvýš chcete cestovat. Druh práce je nepovinný: prázdné pole znamená všechny obory,
+    nebo napište vlastními slovy, třeba „prodavačka, pokladní“. Nabídky tohoto druhu se stáhnou
+    jako první a druh práce se předvyplní do hledání.</li>
+  <li><b>Umělá inteligence</b>: nechte <b>Automaticky</b>. Na pozadí se stáhne model umělé
+    inteligence (1,6–3,4 GB). Z textu inzerátu doplní obor, místo a mzdu.</li>
+  <li><b>Zdroje nabídek</b>: Facebook, Instagram a LinkedIn jsou vypnuté. Zapínejte je, jen pokud
+    rozumíte varování na té stránce.</li>
+  <li><b>Mapy a jízdní řády</b>: klikněte na <b>Stáhnout mapu</b> (asi 1 GB). Potom se mapa
+    několik minut zpracovává a do té doby jsou časy cesty jen odhad.</li>
+  <li><b>Hotovo</b>: tlačítko <b>Start</b> stáhne nabídky z úřadu práce (asi minuta) a potom
+    z portálů. Portály se čtou pomalu, první hledání trvá desítky minut. Nabídky přibývají
+    průběžně a už během hledání s nimi můžete pracovat.</li>
+</ul>
+
+<h2>3. Hledání nabídek</h2>
+<ul>
+  <li>Nahoře napište, co hledáte (více možností oddělte čárkou), a vlevo zúžte výsledky
+    filtry: obor, místo, mzda, směny, vzdělání, zaměstnavatel a další. Čísla u filtrů
+    ukazují, kolik nabídek zbude.</li>
+  <li><b>Doba cesty</b>: posuvníkem nastavte, jak dlouho chcete nejvýš cestovat, a zvolte
+    autem, MHD, pěšky nebo na kole. Seznam se hned upraví. Na mapě uvidíte, kam se
+    v tom čase dostanete.</li>
+  <li><b>Jak se tam dostanu</b> u nabídky ukáže trasu, spoje MHD s přestupy a odkazy do Mapy.cz,
+    IDOS a Google Map.</li>
+  <li>Kliknutím na <b>název zaměstnavatele</b> otevřete kartu zaměstnavatele: oficiální kontroly
+    (insolvence, nespolehlivý plátce DPH, povolení agentury práce), hodnocení zaměstnanců
+    z Atmoskopu a shrnutí zmínek z internetu. Shrnutí píše umělá inteligence a každý bod
+    odkazuje na zdroj.</li>
+  <li>Nabídku, která vás nezajímá, skryjte tlačítkem <b>Skrýt</b>. Hledání si můžete uložit;
+    aplikace pak ukazuje, kolik v něm přibylo nových nabídek.</li>
+  <li>Inzerát z papíru nebo ze sociální sítě vložíte přes <b>Vložit inzerát</b>: text nebo
+    fotku.</li>
+</ul>
+
+<h2>4. Nové nabídky</h2>
+<ul>
+  <li>Nové nabídky stáhnete tlačítkem <b>Obnovit nabídky</b>: aplikace nejdřív ověří, zda
+    nabídky v seznamu stále platí, a nové přidá nad ně. <b>Obnovit od začátku</b> seznam
+    vymaže a najde všechny nabídky znovu.</li>
+  <li>Aby aplikace hledala sama, zapněte <b>Automatické hledání</b> v průvodci nebo
+    v Nastavení (každých 6–48 hodin). Po zavření okna pak aplikace běží dál jako ikona vedle
+    hodin a ohlásí nové nabídky.</li>
+</ul>
+
+<h2>5. Data a odinstalace</h2>
+<ul>
+  <li>Nabídky, modely a mapy jsou ve složce <code>%LOCALAPPDATA%\AdaWork</code> a zabírají
+    6–15 GB.</li>
+  <li>Odinstalujete ve Windows: <b>Nastavení → Aplikace → Nainstalované aplikace →
+    AdaWork</b>. Na konci se odinstalace zeptá, jestli smazat i stažená data.</li>
+</ul>
+
+<h2>6. Když něco nefunguje</h2>
+<ul>
+  <li>Zavřete aplikaci (i ikonu vedle hodin: pravé tlačítko → Ukončit) a spusťte ji znovu.</li>
+  <li>Záznam o chybách je v souboru <code>%LOCALAPPDATA%\AdaWork\Logs\adawork.log</code>.
+    Pošlete ho tomu, kdo vám s aplikací pomáhá.</li>
+</ul>
+</main>
+</body>
+</html>

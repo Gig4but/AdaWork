@@ -750,6 +750,24 @@ def test_automatic_checks_are_switched_in_settings_without_a_restart(app, client
     assert app.state.services.scheduler.next_check() is None
 
 
+def test_settings_end_with_the_license_texts(client, monkeypatch):
+    from adawork import licenses
+
+    files = (
+        licenses.LicenseFile("notices", "THIRD-PARTY-NOTICES.txt", text="all of them"),
+        licenses.LicenseFile("python", "demo-1.0 / LICENSE", text="<b>MIT</b> & co"),
+    )
+    monkeypatch.setattr(licenses, "files", lambda: files)
+    settings = client.get("/settings").text
+    assert settings.index('href="/licenses"') > settings.index("Záznamy (logy)")  # at the end
+    page = client.get("/licenses").text
+    assert "Přehled" in page and "Balíčky Pythonu" in page and "demo-1.0 / LICENSE" in page
+    assert 'hx-get="/licenses/1"' in page
+    assert client.get("/licenses/1").text == "<pre>&lt;b&gt;MIT&lt;/b&gt; &amp; co</pre>"
+    assert client.get("/licenses/2").status_code == 404
+    assert client.get("/licenses/-1").status_code == 422
+
+
 def test_settings_list_the_wizard_steps_in_order(app, client):
     app.state.services.settings.wizard_completed = True
     page = client.get("/settings").text

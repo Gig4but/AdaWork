@@ -1,0 +1,37 @@
+AdaWork itself is under the MIT License (LICENSE). It includes these programs and libraries
+under their own licenses, whose texts are in the folders named; the app shows all of them in
+Nastavení → Zobrazit licence (Settings → Show licenses).
+
+Programs (vendor\, each run as a separate program, unmodified)
+- llama.cpp (llama-server), MIT License, https://github.com/ggml-org/llama.cpp
+  vendor\llama.cpp\cpu\LICENSE*: llama.cpp and what llama-server includes (LLVM OpenMP,
+  nlohmann/json, cpp-httplib, miniaudio, stb_image)
+- MOTIS, MIT License, https://github.com/motis-project/motis
+  vendor\motis\licenses\: MOTIS and the libraries built into it (Boost, protobuf, PROJ, curl,
+  LibreSSL, libosmium and others); the map font Noto Sans, SIL Open Font License 1.1. Also
+  included without a license file of their own: SQLite (public domain) and two small MOTIS
+  projects (openapi-cpp, res).
+- osmium-tool, GNU General Public License v3.0, https://github.com/osmcode/osmium-tool
+  Source code: https://github.com/osmcode/osmium-tool/tree/v1.19.1
+  Built by conda-forge: https://github.com/conda-forge/osmium-tool-feedstock
+  vendor\osmium\licenses\ (also bzip2, zlib, lz4, expat and Boost licenses)
+- Microsoft Visual C++ runtime (msvcp140.dll, vcruntime140*.dll), redistributed under the
+  Microsoft Visual Studio redistribution terms.
+
+Python and Python packages
+- Python 3.12, PSF License Agreement, https://www.python.org
+  licenses\runtime\Python-3.12.*\: Python's license, the software it incorporates (OpenSSL,
+  libffi, zlib, expat, mpdecimal and others), bzip2 and xz. SQLite is in the public domain.
+- Packages bundled with the app: licenses\python\<package-version>\, with the libraries some
+  of them bundle in bundled\ (pyproj: curl, libjpeg-turbo, libtiff, zlib, xz; lxml: zlib,
+  iconv; selectolax: lexbor). LICENSE-METADATA.txt where a package has no license text.
+- pystray, GNU Lesser General Public License v3.0: included as source files
+  (_internal\pystray\), which can be replaced with another version.
+
+Web libraries (in the app's pages)
+- htmx (0BSD), MapLibre GL JS (BSD-3-Clause), Pico CSS (MIT): licenses\web\
+
+Data downloaded by the app (not part of the installer)
+- Job ads and official registers: MPSV, ARES, ISIR, the Ministry of Finance, ČÚZK (RÚIAN).
+- Maps: © OpenStreetMap contributors (ODbL); timetables: Spojenka GTFS (non-commercial use).
+- AI models from Hugging Face under their own licenses (shown in the app).

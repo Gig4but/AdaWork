@@ -11,6 +11,7 @@ dist/
 vendor/llama.cpp/
 vendor/motis/
 vendor/osmium/
+vendor/licenses/
 data/
 spikes/**/data/
 *.gguf

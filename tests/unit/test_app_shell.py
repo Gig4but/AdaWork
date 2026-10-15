@@ -150,6 +150,7 @@ def test_start_with_windows_adds_and_removes_the_run_value(monkeypatch):
     key = r"Software\AdaWork-test\Run"
     winreg.CreateKey(winreg.HKEY_CURRENT_USER, key).Close()
     monkeypatch.setattr(autostart, "RUN_KEY", key)
+    monkeypatch.delenv(paths.DATA_ENV, raising=False)
     try:
         autostart.sync(True)
         command = autostart.registered()
@@ -157,6 +158,9 @@ def test_start_with_windows_adds_and_removes_the_run_value(monkeypatch):
         autostart.sync(False)
         assert autostart.registered() is None
         autostart.sync(False)  # nothing to remove
+        monkeypatch.setenv(paths.DATA_ENV, "C:\\test-data")  # a try-out copy leaves it alone
+        autostart.sync(True)
+        assert autostart.registered() is None
     finally:
         winreg.DeleteKey(winreg.HKEY_CURRENT_USER, key)
         winreg.DeleteKey(winreg.HKEY_CURRENT_USER, r"Software\AdaWork-test")

@@ -122,6 +122,11 @@ button .icon { margin-right: .45rem; vertical-align: -.18em; }
 .catalog span { flex: 1; }
 .catalog strong { display: block; }
 .catalog small { color: var(--pico-muted-color); }
+/* Settings → Licence: one row per text, which loads when opened. */
+.licenses details { margin-bottom: .25rem; }
+.licenses summary { font-size: .9rem; overflow-wrap: anywhere; }
+.licenses pre { max-height: 60vh; overflow: auto; padding: .75rem; font-size: .8rem;
+                white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .search-row { display: grid; grid-template-columns: 1fr auto auto; gap: .75rem; }
 .search-row select { width: auto; }

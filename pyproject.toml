@@ -3,6 +3,8 @@ name = "adawork"
 dynamic = ["version"]
 description = "Hledání volných pracovních míst v Česku ze všech zdrojů na jednom místě."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi>=0.115",
@@ -28,19 +30,18 @@ dependencies = [
     "playwright>=1.63.0",
     "rapidfuzz>=3.9",
     "ddgs>=9.16",
+    "packaging>=24",  # adawork.licenses: which packages the app bundles
 ]
 
-[project.scripts]
-adawork = "adawork.cli:main"
-
 [project.gui-scripts]
-adaworkw = "adawork.cli:main"  # the window app without a console window
+adawork = "adawork.cli:main"
 
 [dependency-groups]
 dev = [
     "httpx2>=2.13.1",
     "import-linter>=2.15",
     "openpyxl>=3.1.5",
+    "pyinstaller>=6.22.3",
     "pyright>=1.1.414",
     "pytest>=8.3",
     "ruff>=0.6",
@@ -71,7 +72,7 @@ testpaths = ["tests"]
 include = ["adawork"]
 pythonVersion = "3.12"
 
-# A package imports only from the layers below it. `uv run lint-imports`
+# A package imports only from the layers below it (ARCHITECTURE.md). `uv run lint-imports`
 [tool.importlinter]
 root_package = "adawork"
 
@@ -91,6 +92,6 @@ layers = [
     "geo",
     "db",
     "normalize",
-    "config | core | i18n | net | system | secrets | logs | worker",
+    "config | core | i18n | net | system | secrets | logs | licenses | worker",
     "paths",
 ]

@@ -23,5 +23,10 @@
     <p class="small">{{ t("settings.data_dir") }}: <code>{{ data_dir }}</code><br>
       {{ t("settings.log_dir") }}: <code>{{ log_dir }}</code></p>
   </section>
+
+  <p class="rerun">
+    <a href="/licenses" role="button" class="secondary outline">{{ icon("license") }}{{ t("licenses.open") }}</a>
+    <small class="muted">{{ t("licenses.hint") }}</small>
+  </p>
 </article>
 {% endblock %}

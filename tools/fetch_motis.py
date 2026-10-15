@@ -9,10 +9,12 @@ Usage: uv run --with zstandard python tools/fetch_motis.py
 
 import hashlib
 import io
+import re
 import shutil
 import sys
 import tarfile
 import zipfile
+from collections import deque
 from pathlib import Path
 
 import httpx
@@ -23,6 +25,22 @@ MOTIS_URL = (
     f"https://github.com/motis-project/motis/releases/download/{MOTIS_VERSION}/motis-windows.zip"
 )
 MOTIS_SHA256 = "34655045ee02b45f32a7f99f86be3195cb5fa44e1b791ca84ffba2eb284a67e3"
+GITHUB = "https://raw.githubusercontent.com/"
+MOTIS_REPO = f"{GITHUB}motis-project/motis/{MOTIS_VERSION}/"
+# The libraries built into motis.exe: its .pkg file and theirs, each pinned to a commit.
+PKG_ENTRY = re.compile(r"\[(.+?)\]\s+url=git@github\.com:(.+?)\.git\s+branch=(.+?)\s+commit=(\w+)")
+NOT_BUNDLED = {"docs", "doctest", "googletest"}  # documentation and test frameworks
+LICENSE_NAMES = (
+    "LICENSE", "LICENSE.txt", "LICENSE.md", "license.txt", "License.txt", "LICENSE_1_0.txt",
+    "LICENSE.MIT", "COPYING", "COPYRIGHT",
+)  # fmt: skip
+# Copies without a license file of their own: upstream's text ({branch} from the .pkg file).
+UPSTREAM_LICENSES = {
+    "boost": GITHUB + "boostorg/boost/{branch}/LICENSE_1_0.txt",
+    "expat": GITHUB + "libexpat/libexpat/R_2_1_0/expat/COPYING",  # expat.h says 2.1.0
+    # the map's font (ui/glyphs): Noto Sans
+    "pbf-sdf-fonts": GITHUB + "notofonts/latin-greek-cyrillic/NotoSans-v2.015/OFL.txt",
+}
 OSMIUM_VERSION = "1.19.1"
 CONDA = "https://conda.anaconda.org/conda-forge/win-64/"
 # osmium-tool and the libraries it loads; the packages hold .exe and .dll files.
@@ -46,9 +64,14 @@ def download(url: str, sha256: str) -> bytes:
     return data
 
 
-def fresh(target: Path, version: str) -> bool:
+def fresh(target: Path, version: str, needed: tuple[str, ...]) -> bool:
     stamp = target / "VERSION"
-    if stamp.exists() and stamp.read_text().strip() == version:
+    # A virus scanner may remove a program it does not know yet: fetched again then.
+    if (
+        stamp.exists()
+        and stamp.read_text().strip() == version
+        and all((target / name).exists() for name in needed)
+    ):
         print(f"{target.name}: {version} already present")
         return False
     if target.exists():
@@ -59,7 +82,8 @@ def fresh(target: Path, version: str) -> bool:
 
 def fetch_motis() -> None:
     target = VENDOR / "motis"
-    if not fresh(target, MOTIS_VERSION):
+    if not fresh(target, MOTIS_VERSION, ("motis.exe",)):
+        motis_licenses(target)
         return
     data = download(MOTIS_URL, MOTIS_SHA256)
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
@@ -71,17 +95,60 @@ def fetch_motis() -> None:
             archive.extract(member, target)
     (target / "VERSION").write_text(MOTIS_VERSION)
     print(f"motis: {len(data) / 1e6:.1f} MB -> {target}")
+    motis_licenses(target)
+
+
+def motis_licenses(target: Path) -> None:
+    """licenses/: MOTIS's license and those of the libraries built into it."""
+    folder, stamp = target / "licenses", target / "LICENSES-VERSION"
+    if stamp.exists() and stamp.read_text().strip() == MOTIS_VERSION:
+        return
+    if folder.exists():
+        shutil.rmtree(folder)
+    folder.mkdir()
+    missing = []
+    with httpx.Client(follow_redirects=True, timeout=60) as client:
+        main = client.get(MOTIS_REPO + "LICENSE").raise_for_status()
+        (folder / "LICENSE-motis.txt").write_bytes(main.content)
+        # Breadth first: MOTIS's own pins win over those of the libraries it uses.
+        queue = deque(PKG_ENTRY.findall(client.get(MOTIS_REPO + ".pkg").raise_for_status().text))
+        seen = set(NOT_BUNDLED)
+        while queue:
+            name, repo, branch, commit = queue.popleft()
+            if name in seen:
+                continue
+            seen.add(name)
+            raw = f"{GITHUB}{repo}/{commit}/"
+            urls = [raw + n for n in LICENSE_NAMES]
+            if name in UPSTREAM_LICENSES:
+                urls = [UPSTREAM_LICENSES[name].format(branch=branch)]
+            for url in urls:
+                response = client.get(url)
+                if response.status_code == 200:
+                    (folder / f"{name}-{url.rsplit('/', 1)[-1]}").write_bytes(response.content)
+                    break
+            else:
+                missing.append(name)
+            pkg = client.get(raw + ".pkg")
+            if pkg.status_code == 200:
+                queue.extend(PKG_ENTRY.findall(pkg.text))
+    stamp.write_text(MOTIS_VERSION)
+    print(f"motis: {len(seen) - len(NOT_BUNDLED) - len(missing)} library licenses -> {folder}")
+    if missing:
+        print(f"motis: no license file in {', '.join(sorted(missing))}")
 
 
 def fetch_osmium() -> None:
     import zstandard  # only needed here: conda packages are zstd-compressed
 
     target = VENDOR / "osmium"
-    if not fresh(target, OSMIUM_VERSION):
+    if not fresh(target, OSMIUM_VERSION, ("licenses", "osmium.exe")):
         return
+    (target / "licenses").mkdir()
     for name, sha256 in OSMIUM_PACKAGES.items():
         data = download(CONDA + name, sha256)
         with zipfile.ZipFile(io.BytesIO(data)) as package:
+            licenses(package, target / "licenses", name.rsplit("-", 2)[0])
             inner = next(n for n in package.namelist() if n.startswith("pkg-"))
             raw = zstandard.ZstdDecompressor().stream_reader(io.BytesIO(package.read(inner)))
             with tarfile.open(fileobj=raw, mode="r|") as tar:
@@ -98,6 +165,19 @@ def fetch_osmium() -> None:
                         (target / file_name).write_bytes(tar.extractfile(member).read())
     (target / "VERSION").write_text(OSMIUM_VERSION)
     print(f"osmium: {sum(f.stat().st_size for f in target.iterdir()) / 1e6:.1f} MB -> {target}")
+
+
+def licenses(package: zipfile.ZipFile, target: Path, project: str) -> None:
+    """The package's license texts (osmium-tool is GPL-3.0: its text ships with it)."""
+    import zstandard
+
+    inner = next(n for n in package.namelist() if n.startswith("info-"))
+    raw = zstandard.ZstdDecompressor().stream_reader(io.BytesIO(package.read(inner)))
+    with tarfile.open(fileobj=raw, mode="r|") as tar:
+        for member in tar:
+            if member.isfile() and member.name.startswith("info/licenses/"):
+                name = f"{project}-{Path(member.name).name}"
+                (target / name).write_bytes(tar.extractfile(member).read())
 
 
 def main() -> int:

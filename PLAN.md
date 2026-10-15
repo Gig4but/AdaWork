@@ -15,8 +15,9 @@ Three main modules:
 Shared services: a small **local AI model** (reads messy ads and posters, summarizes
 reviews) and a **local routing engine** (travel times and routes, offline maps).
 
-Status: **M0–M9 done** (2026-10-14; M7's 3-day unattended run is still to do); next is M10.
-Spike results: `docs/spikes.md`.
+Status: **M0–M10 done**, architecture rework A1–A6 done and folded into them (2026-10-16).
+Still to do: M7's 3-day unattended run, M10's non-technical tester.
+Spike results: `docs/spikes.md`. How the code is organized: [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
@@ -239,14 +240,15 @@ at the same time**. A `ResourceManager` lets only one heavy job run at a time, i
 - **Disk:** a budget 256 GB SSD is enough (§11).
 
 ### 3.3 Inside the app
-Python 3.12, uv, httpx, selectolax, parsel, extruct, trafilatura, ijson,
-SQLite + SQLAlchemy 2/SQLModel + Alembic (auto-migrate), FTS5, sqlite-vec, Pillow,
-imagehash, rapidfuzz, FastAPI + Jinja2, HTMX + Alpine.js + Pico.css (vendored), SSE,
-pydantic v2; ruff, pytest, pytest-asyncio, respx. The scheduler is one thread that looks at
-the clock every minute (`adawork/scheduler.py`).
+Python 3.12, uv, httpx, selectolax, ijson, SQLite + SQLAlchemy 2 + Alembic (auto-migrate,
+backup first), FTS5, onnxruntime + tokenizers (embeddings), numpy, Pillow, pyproj,
+rapidfuzz, ddgs, Playwright (social only), FastAPI + Jinja2, HTMX + Pico.css + MapLibre
+(vendored), pydantic v2; ruff, pyright, import-linter, pytest.
 
-Why not Scrapy or crawl4ai: the volume is moderate and the sources are very different from
-each other; a thin async plugin layer is simpler and shares the app's event loop.
+Background work runs on threads, not asyncio: the database access, the parsers and the helper
+processes are synchronous, and FastAPI runs the synchronous routes in its thread pool. Why not
+Scrapy or crawl4ai: the volume is moderate and the sources are very different from each
+other; a thin plugin layer (`scraper/crawl.py`) is simpler.
 
 ---
 
@@ -258,8 +260,8 @@ each other; a thin async plugin layer is simpler and shares the app's event loop
 │ Employer card │ Sources │ Settings                                                 │
 └──────┬───────────────────────┬──────────────────────────┬──────────────────────────┘
 ┌──────▼───────────────────────▼──────────────────────────▼──────────────────────────┐
-│ Services: Scheduler · RunManager · SearchService · EnrichmentQueue · ModelManager  │
-│           CommuteService · EmployerService · DataUpdater · Secrets                 │
+│ services.py: Scheduler · ScrapeRunner · TravelFilter · Enricher · ModelManager     │
+│              CommuteService · RoutingData · EmployerService · Secrets              │
 └──┬───────────────────┬──────────────────────┬─────────────────────┬────────────────┘
 ┌──▼─────────────┐ ┌───▼──────────────────┐ ┌─▼───────────────────┐ ┌▼───────────────┐
 │ 1. SCRAPER     │ │ 3. EMPLOYER REVIEWS  │ │ AI (llama-server)   │ │ ROUTING (MOTIS)│
@@ -273,7 +275,7 @@ each other; a thin async plugin layer is simpler and shares the app's event loop
 │ discover → fetch → parse → normalize → enrich(AI) → geocode(address) → dedup →   │
 │ index → employer link → expire → notify                                          │
 └──┬────────────────────────────────────────────────────────────────────────────────┘
-┌──▼──── SQLite (%LOCALAPPDATA%\AdaWork\adawork.db) ─────────────────────────┐
+┌──▼──── SQLite (%LOCALAPPDATA%\AdaWork\adawork.db) ─────────────────────────────────┐
 │ jobs · sources · employers · employer_names · employer_reviews · travel_times ·    │
 │ locations · codebooks · saved_searches · llm_cache · settings                      │
 └────────────────────────────────────────────────────────────────────────────────────┘
@@ -283,20 +285,23 @@ each other; a thin async plugin layer is simpler and shares the app's event loop
 ### 4.1 Source plugin contract
 
 ```python
-class Source(Protocol):
+class Source(Protocol):            # adawork/core.py; every source in scraper/sources/__init__.py
     id: str
-    capabilities: SourceCaps   # supports_keyword, supports_region, full_dump, needs_browser, needs_login
-    def config_schema(self) -> type[BaseModel]: ...
-    def discover(self, q: ScrapeQuery) -> AsyncIterator[Lead]: ...
-    async def fetch(self, lead: Lead) -> RawPosting: ...
-    def parse(self, raw: RawPosting) -> PartialJob: ...
+    label: str
+    kind: SourceKind               # portal | classifieds | api | social
+    default_enabled: bool
+    needs_consent: bool            # off until the user accepts a warning (LinkedIn, social)
 ```
+How a source is read depends on its class: `MpsvSource.read` (one daily dump),
+`CrawlSource` (listing and detail pages, `scraper/crawl.py`), `ApiSource.search` (the user's
+key), `SocialSource` (a session in Edge). Every one produces `ParsedJob`s for `JobStore`.
 `ScrapeQuery` is generated from the wizard profile (home, commute limit, optional kinds of
 work). Full-dump sources fetch everything and filter locally.
 
 ### 4.2 Shared HTTP layer
-Per-domain rate limits, robots.txt, honest User-Agent, retries/backoff, pause on 403/429,
-ETag, raw cache.
+`net/`: per-domain pace, robots.txt, honest User-Agent, retries/backoff, pause on 403/429,
+ETag, resumable downloads; a stop the app sets when it closes ends a search at its next
+request.
 
 ### 4.3 LinkedIn, Facebook, Instagram, forums
 - **LinkedIn** (`scraper/sources/linkedin.py`): own small adapter on the public guest pages
@@ -742,41 +747,43 @@ Every step has defaults; optional steps have "Skip"; downloads run in the backgr
 
 ```
 AdaWork/
-├─ pyproject.toml / uv.lock / README.md / PLAN.md
+├─ pyproject.toml / uv.lock / README.md / PLAN.md / ARCHITECTURE.md
 ├─ adawork/
-│  ├─ __main__.py, cli.py, config.py, secrets.py, paths.py, scheduler.py
-│  ├─ desktop/  window.py, tray.py (menu, notifications), autostart.py
-│  ├─ db/  models.py, session.py, fts.py, vec.py, migrations/
+│  ├─ __main__.py, cli.py, services.py (wiring), scheduler.py, worker.py (background loop)
+│  ├─ core.py (ParsedJob, Source, coded values), config.py, i18n.py, secrets.py, paths.py,
+│  │  licenses.py, logs.py
+│  ├─ net/  http.py (client, downloads), polite.py (pace, robots, stop), robots.py
+│  ├─ system/  hardware.py, resources.py (heavy-job slots), winjob.py, ports.py
+│  ├─ desktop/  window.py, tray.py, icon.py, autostart.py, instance.py, server.py
+│  ├─ db/  models.py, session.py (migrate + backup), migrations/
 │  ├─ scraper/                      # MODULE 1
-│  │  ├─ base.py, registry.py, query_builder.py, http.py, browser.py, pipeline.py, api.py
-│  │  ├─ extract/  jsonld.py, nextdata.py, text.py, forum_blocks.py
-│  │  ├─ images.py (pictures), reposts.py, crawl.py, polite.py, store.py, runner.py
-│  │  └─ sources/  mpsv, linkedin, indeed (link), prace_cz, jenprace, profesia,
-│  │               startupjobs, jobs_cz, bazos, hitprace, dobraprace, fajn_brigady,
-│  │               pracezarohem, inwork, easy_prace, personalka,
-│  │               classifieds (+ classifieds.yaml), jooble, careerjet
-│  ├─ social/  browser.py (Edge via Playwright), posts.py (page parsing), reader.py
+│  │  ├─ runner.py (a search), crawl.py (portal plugin), api.py, store.py, dedup.py,
+│  │  ├─ structured.py (JSON-LD, microdata), images.py, reposts.py, probe.py (dev check)
+│  │  └─ sources/  mpsv, prace_cz, jobs_cz, jenprace, pracezarohem, profesia, dobraprace,
+│  │               easy_prace, personalka, inwork, fajn_brigady, startupjobs, hitprace,
+│  │               bazos, classifieds (+ classifieds.yaml), linkedin, indeed (link),
+│  │               jooble, careerjet
+│  ├─ social/  browser.py (Edge via Playwright), posts.py, reader.py, logins.py
 │  ├─ employers/                    # MODULE 3
-│  │  ├─ downloads.py (official lists), names.py, brands.yaml, resolver.py (name → IČO),
-│  │  ├─ official.py (ARES/RES, ISIR, VAT + agency lists), atmoskop.py, google.py,
-│  │  └─ mentions.py (ddgs + pages), summary.py (AI), service.py (background + cards)
-│  ├─ routing/                      # commute
-│  │  ├─ motis.py (process + API client), data.py (OSM + GTFS download, clip, import),
-│  │  ├─ gtfs.py (sanitize, clip), commute.py (travel times, area, routes),
-│  │  └─ deeplinks.py (Mapy.com, IDOS, Google)
-│  ├─ normalize/  salary, contract, education, location, dedup
-│  ├─ ai/  hardware, catalog, download, advisor (fit icons), runtime (llama-server),
-│  │       winjob, manager (Auto mode), benchmark, client, grammar, embeddings, isco,
-│  │       extract, enrich (queue), ask (sentence -> filters), vision, evaluate
-│  ├─ system/resources.py  ResourceManager (heavy-job slots, priorities, "PC is busy")
-│  ├─ search/  service, saved (saved searches)
+│  │  ├─ service.py (background pass, cards), common.py, linking.py (name → employer),
+│  │  ├─ checks.py (registers), reviews.py (reviews, mentions, summaries)
+│  │  └─ official.py, resolver.py, names.py, brands.yaml, atmoskop.py, google.py,
+│  │     mentions.py, summary.py (AI), downloads.py
+│  ├─ routing/  motis.py, data.py (OSM + GTFS, import), gtfs.py, commute.py, deeplinks.py
+│  ├─ geo/  places.py, home.py, scope.py, ruian.py, geocode.py
+│  ├─ normalize/  text.py, vocab.py, offers.py
+│  ├─ ai/  catalog, advisor, download, runtime (llama-server), manager, benchmark, client,
+│  │       grammar, embeddings, isco, extract, enrich (queue), ask, vision, wanted, evaluate
+│  ├─ search/  service.py (filters, facets), saved.py, travel.py (travel-time filter),
+│  │           kinds.py (kinds of work → occupations, stored)
 │  └─ web/                          # MODULE 2
-│     ├─ app.py, export.py (CSV/XLSX), i18n.py
-│     └─ templates/, static/ (htmx, alpine, pico, maplibre — vendored)
-├─ resources/  codebooks/, categories.yaml
-├─ vendor/  llama.cpp/, motis/, osmium/   # tools/fetch_llama.py, tools/fetch_motis.py
-├─ packaging/  adawork.spec, installer.iss, build.ps1
-└─ tests/  fixtures/, golden/, unit/, contract/, integration/
+│     ├─ app.py, pages.py (templates, Svc), routes/ (one router per area), export.py,
+│     │  mapstyle.py (offline map style)
+│     └─ templates/, static/ (htmx, pico, maplibre — vendored)
+├─ vendor/  llama.cpp/, motis/, osmium/   # tools/fetch_*.py
+├─ packaging/  adawork.spec, launch.py, installer.iss, build.ps1, navod.html (Czech guide)
+├─ tools/  fetch_*.py, make_migration.py, make_golden.py, bench_mpsv.py
+└─ tests/  fixtures/, unit/
 ```
 
 ---
@@ -929,11 +936,55 @@ AdaWork/
     (5–46 s each), 14 with points, none invented on a manual check of every point against
     its sources; 7 left empty (nothing could be confirmed). ✓
 
-### M10 — Installer and delivery (3 days)
-- PyInstaller + Inno Setup; bundles llama-server and MOTIS; clean Windows 11 VM test; one-page
-  Czech user guide.
+### M10 — Installer and delivery — done (tester still to do)
+- `packaging/build.ps1`: PyInstaller (one folder, no console, no UPX) + Inno Setup →
+  `dist/AdaWork-Setup.exe`, 134 MB (525 MB installed). Installs for the user, no admin
+  (`%LOCALAPPDATA%\Programs\AdaWork`), Czech/English, Start menu with the guide. An upgrade closes
+  the running app; uninstall closes it, removes the start-with-Windows value and asks (default
+  No) whether to delete the data (`%LOCALAPPDATA%\AdaWork`). Without WebView2 (an older
+  Windows 10) it offers its download.
+- Bundled: llama-server (Vulkan and CPU, only the server's files), MOTIS and osmium, with the
+  Microsoft C++ runtime next to them (a clean Windows may lack it). AdaWork itself is MIT
+  (`LICENSE`). License texts of all of it,
+  down to the libraries built into MOTIS (its `.pkg` files), llama-server and the Python wheels
+  (`THIRD-PARTY-NOTICES.txt`, `licenses/`, `tools/fetch_licenses.py`); Settings ends with
+  "Zobrazit licence", which shows each one. pystray (LGPL) ships as source files. One-page
+  Czech guide (`packaging/navod.html`).
+- `ADAWORK_DATA` points the app at another data folder (testing, a portable copy); such a copy
+  leaves the start-with-Windows value alone.
+- The first-run tests found five faults; each was fixed in the milestone that caused it (M1,
+  M3, M5, M8, M9).
 - **Done when:** a non-technical tester installs and gets results, commute times and employer
   cards without help.
+  - On this PC as a new user (own data folder; the app's own window driven through WebView2's
+    debug port): wizard with defaults → Úřad práce jobs placed 3.5 min after Start (2 of 15.2k
+    places without a point), map ready after 13 min, 2,986 of 42k jobs within 45 min of Kolín,
+    exact times for 17.6k places in 18–57 s while the list stays, the AI on Vulkan, an employer
+    card with official checks and mentions; upgrade and uninstall with the app running. ✓
+  - Clean Windows 11 (Windows Sandbox, 8 GB, no Python, no C++ runtime; `dist/sandbox.wsb`):
+    installed in 33 s; Auto picked Jednoduchý and the 150 km map; Úřad práce jobs a minute after
+    Start, employer cards with official checks after 3 min, map imported (106 s) and exact times
+    for 15.3k places (21.7 s) 9 min after Start, 3,865 jobs within 45 min of Kolín; the AI ran
+    (~8.5 s per ad). ✓
+  - Non-technical tester: not run.
+
+### A1–A6 — Architecture rework — done (2026-10-16)
+Folded into the milestones whose code it changed, so each commit stays green.
+- **A1 Layering and checks:** shared types out of the feature packages (`core.py`, `net/`,
+  `system/`, `i18n.py`), import-linter layers (no cycles), pyright, a test for UI texts in
+  both languages, the database copied before a migration.
+- **A2 Web:** `services.py` builds and connects the services; `create_app` only serves them;
+  one router per area (`web/routes/`), the travel-time filter in `search/travel.py`.
+- **A3 Background work:** one `Worker` loop (scheduler, employers, map data), `RunHooks` for
+  what follows a search, and a stop that ends a search at its sites' next requests.
+- **A4 Sources and data:** one `Source` contract with MPSV as a source, the registry derived
+  from one list, the runs table written in one place, the job columns derived from
+  `ParsedJob`, coded values as types.
+- **A5 Big units:** `EmployerService` split into linking, checks and reviews; `crawl()` into
+  one step per phase.
+- **A6 Tools and docs:** `adawork probe` reads every portal live (one listing, one ad; all 20
+  readable on 2026-10-16, LinkedIn refused with 429); ARCHITECTURE.md; this plan matches the
+  code again.
 
 ### Estimate
 
@@ -951,7 +1002,8 @@ AdaWork/
 | M8 Commute module | 8 |
 | M9 Employer reviews module | 6.5 |
 | M10 Installer and delivery | 3 |
-| **Sum** | **52.5 days ≈ 10.5 weeks** |
+| A1–A6 Architecture rework | 3 |
+| **Sum** | **55.5 days ≈ 11 weeks** |
 | + ~15–20 % buffer (site changes, timetable data surprises, model tuning) | **≈ 12 weeks** |
 
 Weeks are 5 working days of one full-time developer. Milestones are delivered in order and
@@ -967,9 +1019,11 @@ each one is usable:
 ## 10. Testing strategy
 - **Unit:** normalizers, filters, dedup, query builder, hardware-fit rules, employer
   resolver, commute cache.
-- **Contract:** saved pages for every job source and review source.
-- **Integration:** pipeline on an MPSV sample; MOTIS on a small regional extract (e.g., one
-  kraj) in CI-sized tests.
+- **Contract:** saved pages for every job source and review source; `adawork probe` reads
+  the live portals (one listing, one ad each) to catch layout changes the saved pages miss.
+- **Checks on every commit (run by hand, no CI):** ruff, pyright, import-linter (layers),
+  pytest.
+- **Integration:** the first-run tests of M10 (a new data folder, Windows Sandbox).
 - **AI eval:** extraction, images, review summaries (faithfulness).
 - **Installer:** clean VM smoke test.
 
@@ -994,7 +1048,8 @@ and a home-area routing import, about **6–8 GB**. The wizard checks free disk 
 next to the model icons.
 
 **Developer:** `winget install Python.Python.3.12 astral-sh.uv Git.Git`, then `uv sync`;
-`build.ps1` fetches the llama.cpp and MOTIS release binaries.
+`packaging\build.ps1` fetches the pinned programs and builds `dist\AdaWork-Setup.exe`
+(needs Inno Setup: `winget install JRSoftware.InnoSetup --scope user`).
 
 ---
 
@@ -1040,6 +1095,7 @@ next to the model icons.
 | Small model inaccurate / slow | Tiered models with hardware-fit icons, rules first, eval, background queue. |
 | Large first-run downloads | Background, resumable, app usable with MPSV data within minutes. |
 | Unsigned installer warnings | No UPX, submit to Microsoft; code-signing certificate later (paid). |
+| A virus scanner removes a new program (ESET removed the Vulkan llama-server.exe once) | The build stops when a bundled program is missing; the app falls back to the CPU build. |
 
 ---
 

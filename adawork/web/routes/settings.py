@@ -1,13 +1,16 @@
-"""Settings: one page per wizard step, and the form handlers the wizard shares."""
+"""Settings: one page per wizard step, the licenses, and the form handlers the wizard
+shares."""
 
 import re
+from html import escape
 from typing import Annotated
 
 from fastapi import APIRouter, Form, Request
+from fastapi import Path as InPath
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy import func, select
 
-from adawork import paths
+from adawork import licenses, paths
 from adawork.config import TIME_OF_DAY, IntervalHours, Language, Settings, Theme, TravelMode
 from adawork.db.models import Employer
 from adawork.i18n import translate
@@ -228,6 +231,23 @@ def settings_page(request: Request, svc: Svc) -> HTMLResponse:
         data_dir=svc.data_dir,
         log_dir=paths.log_dir(),
     )
+
+
+@router.get("/licenses", response_class=HTMLResponse)
+def licenses_page(request: Request) -> HTMLResponse:
+    groups: dict[str, list] = {}
+    for n, entry in enumerate(licenses.files()):
+        groups.setdefault(entry.group, []).append((n, entry))
+    return render(request, "licenses.html", groups=groups)
+
+
+@router.get("/licenses/{n}", response_class=HTMLResponse)
+def license_text(n: Annotated[int, InPath(ge=0)]) -> HTMLResponse:
+    """One text, opened on the licenses page (numbered as listed there)."""
+    found = licenses.files()
+    if n >= len(found):
+        return HTMLResponse("", status_code=404)
+    return HTMLResponse(f"<pre>{escape(found[n].read())}</pre>")
 
 
 @router.get("/settings/{section}", response_class=HTMLResponse)

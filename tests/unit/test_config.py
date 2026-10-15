@@ -59,3 +59,11 @@ def test_concurrent_saves_do_not_clash(tmp_path):
     assert errors == []
     assert Settings.load(path).language in ("cs", "en")
     assert [p.name for p in tmp_path.iterdir()] == ["config.json"]
+
+
+def test_another_data_folder_holds_the_data_and_the_logs(tmp_path, monkeypatch):
+    from adawork import paths
+
+    monkeypatch.setenv(paths.DATA_ENV, str(tmp_path / "data"))
+    assert paths.data_dir() == tmp_path / "data" and paths.config_file().parent == tmp_path / "data"
+    assert paths.log_dir() == tmp_path / "data" / "Logs" and paths.log_dir().is_dir()
