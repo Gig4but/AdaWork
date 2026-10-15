@@ -93,6 +93,7 @@ class RunHooks:
     """What other parts of the app do around a search (services.py connects them)."""
 
     before_clear: Callable[[], object] = lambda: None  # e.g. stop the AI enrichment
+    after_source: Callable[[], object] = lambda: None  # e.g. link the new jobs to employers
     after_run: Callable[[], object] = lambda: None  # e.g. start the AI enrichment
 
 
@@ -351,6 +352,7 @@ class ScrapeRunner:
         except Exception as exc:  # also recorded in the runs table
             log.exception("%s failed", source_id)
             self.progress.errors[source_id] = str(exc)[:300]
+        self.hooks.after_source()
 
     def _enabled_of[T: Source](self, kind: type[T]) -> list[T]:
         return [s for s in self.sources if isinstance(s, kind) and self._enabled(s)]

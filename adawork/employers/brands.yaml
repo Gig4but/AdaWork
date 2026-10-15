@@ -1,0 +1,125 @@
+# Brand names ads use -> the IČO of the company that hires under them (PLAN §4.5).
+# ARES cannot find a company by its brand ("Albert" = 529 subjects, mostly sole traders).
+# Each IČO was checked in ARES (name, size from RES) on 2026-10-14 (M9). Keys are compared
+# without case, diacritics, punctuation and legal form; one line per spelling.
+albert: "44012373"            # Albert Česká republika, s.r.o.
+ahold: "44012373"
+lidl: "26178541"              # Lidl Česká republika s.r.o.
+kaufland: "25110161"          # Kaufland Česká republika v.o.s.
+penny: "64945880"             # Penny Market s.r.o.
+billa: "00685976"             # BILLA, spol. s r. o.
+tesco: "45308314"             # Tesco Stores ČR a.s.
+globus: "63473291"            # Globus ČR, v.o.s.
+makro: "26450691"             # MAKRO Cash & Carry ČR s.r.o.
+rossmann: "61246093"          # ROSSMANN, spol. s r.o.
+dm: "47239581"                # dm drogerie markt s.r.o.
+dm drogerie: "47239581"
+teta: "26148579"              # Teta drogerie a lékárny ČR s.r.o.
+teta drogerie: "26148579"
+pepco: "24294420"             # PEPCO Czech Republic s.r.o.
+action: "03439747"            # Action Retail Czech s.r.o.
+tedi: "08306095"              # TEDi obchodní s.r.o.
+kik: "27875288"               # KiK textil a Non-Food spol. s r.o.
+hornbach: "47117559"          # HORNBACH BAUMARKT CS spol. s r.o.
+obi: "60470968"               # OBI Česká republika s.r.o.
+bauhaus: "49435388"           # BAUHAUS k.s.
+ikea: "27081052"              # IKEA Česká republika, s.r.o.
+alza: "27082440"              # Alza.cz a.s.
+alza.cz: "27082440"
+rohlik: "03024130"            # VELKÁ PECKA s.r.o.
+rohlik.cz: "03024130"
+kosik: "03023877"             # Košík.cz s.r.o.
+kosik.cz: "03023877"
+zasilkovna: "28408306"        # Zásilkovna s.r.o.
+packeta: "28408306"
+ppl: "25194798"               # PPL CZ s.r.o.
+dpd: "61329266"               # Direct Parcel Distribution CZ s.r.o.
+gls: "26087961"               # General Logistics Systems Czech Republic s.r.o.
+ceska posta: "47114983"       # Česká pošta, s.p.
+balikovna: "47114983"
+mcdonald's: "16191129"        # McDonald`s ČR spol. s r.o.
+mcdonalds: "16191129"
+kfc: "26476215"               # AmRest s.r.o.
+starbucks: "28167694"         # AmRest Coffee s.r.o.
+bageterie boulevard: "43001343"  # Crocodille ČR, spol. s r.o.
+skoda auto: "00177041"        # Škoda Auto a.s.
+skoda: "00177041"
+cez: "45274649"               # ČEZ, a. s.
+skupina cez: "45274649"
+ceske drahy: "70994226"       # České dráhy, a.s.
+dpp: "00005886"               # Dopravní podnik hl. m. Prahy, akciová společnost
+dopravni podnik prahy: "00005886"
+dopravni podnik hl m prahy: "00005886"
+ceska sporitelna: "45244782"  # Česká spořitelna, a.s.
+csob: "00001350"              # Československá obchodní banka, a. s.
+komercni banka: "45317054"    # Komerční banka, a.s.
+raiffeisenbank: "49240901"    # Raiffeisenbank a.s.
+moneta: "25672720"            # MONETA Money Bank, a.s.
+moneta money bank: "25672720"
+air bank: "29045371"          # Air Bank a.s.
+o2: "60193336"                # O2 Czech Republic a.s.
+t-mobile: "64949681"          # T-Mobile Czech Republic a.s.
+vodafone: "25788001"          # Vodafone Czech Republic a.s.
+hyundai: "27773035"           # Hyundai Motor Manufacturing Czech s.r.o.
+toyota: "26513528"            # Toyota Motor Manufacturing Czech Republic, s.r.o.
+amazon: "03418197"            # Amazon Czech Republic Services s.r.o.
+bosch: "46678735"             # Robert Bosch, spol. s r.o.
+siemens: "00268577"           # Siemens, s.r.o.
+manpower: "41194659"          # ManpowerGroup s.r.o.
+randstad: "08025851"          # Randstad HR Solutions s.r.o.
+adecco: "45806403"            # ADECCO spol.s r.o.
+gi group: "24791547"          # Gi Group Czech Republic, s.r.o.
+kooperativa: "47116617"       # Kooperativa pojišťovna, a.s., Vienna Insurance Group
+kooperativa pojistovna: "47116617"
+allianz: "47115971"           # Allianz pojišťovna, a.s.
+generali: "45272956"          # Generali Česká pojišťovna a.s.
+urad prace: "72496991"        # Úřad práce České republiky
+urad prace cr: "72496991"
+armada cr: "60162694"         # Ministerstvo obrany
+armada ceske republiky: "60162694"
+notino: "27609057"            # Notino, s.r.o.
+mountfield: "25620991"        # Mountfield a.s.
+sportisimo: "26194627"        # SPORTISIMO s.r.o.
+benu: "49621173"              # BENU Česká republika s.r.o.
+securitas: "43872026"         # SECURITAS ČR s.r.o.
+g4s: "00175439"               # G4S Secure Solutions (CZ), a.s.
+datart: "49973053"            # HP TRONIC Zlín, spol. s r.o.
+foodora: "24254398"           # Delivery Hero Czech Republic s.r.o.
+wolt: "07030550"              # Wolt Česko s.r.o.
+tchibo: "16190793"            # Tchibo Praha, spol. s r.o.
+deichmann: "26731185"         # DEICHMANN-OBUV s.r.o.
+h&m: "26755475"               # H & M Hennes & Mauritz CZ, s.r.o.
+lagardere: "25099167"         # Lagardere Travel Retail, a.s.
+shell: "15890554"             # Shell Czech Republic a.s.
+mol: "49450301"               # MOL Česká republika, s.r.o.
+omv: "48038687"               # OMV Česká republika, s.r.o.
+plzensky prazdroj: "45357366" # Plzeňský Prazdroj, a. s.
+pilsner urquell: "45357366"
+kofola: "27767680"            # Kofola a.s.
+madeta: "63275635"            # MADETA a. s.
+tesla: "07738315"             # Tesla Czech Republic s.r.o.
+coca-cola: "41189698"         # Coca-Cola HBC Česko a Slovensko, s.r.o.
+siko: "26065801"              # SIKO KOUPELNY a.s.
+jysk: "26760746"              # JYSK s.r.o.
+sephora: "26491788"           # Sephora s.r.o.
+veolia: "49241214"            # VEOLIA ČESKÁ REPUBLIKA, a.s.
+fcc: "45809712"               # FCC Česká republika, s.r.o.
+marius pedersen: "42194920"   # Marius Pedersen a.s.
+metrostav: "00014915"         # Metrostav a.s.
+strabag: "60838744"           # STRABAG a.s.
+eurovia: "45274924"           # EUROVIA CZ a.s.
+skanska: "26271303"           # Skanska a.s.
+hochtief: "46678468"          # HOCHTIEF CZ a. s.
+trinecke zelezarny: "18050646"  # TŘINECKÉ ŽELEZÁRNY, a. s.
+lego: "26128209"              # LEGO Production s.r.o.
+hella: "25834151"             # HELLA AUTOTECHNIK NOVA, s.r.o.
+brose: "61465704"             # Brose CZ spol. s r.o.
+alstom: "49902083"            # ALSTOM Czech Republic a.s.
+honeywell: "27617793"         # Honeywell International s.r.o.
+daikin: "26357895"            # Daikin Industries Czech Republic s.r.o.
+seznam: "26168685"            # Seznam.cz, a.s.
+seznam.cz: "26168685"
+kiwi.com: "29352886"          # Kiwi.com s.r.o.
+xxxlutz: "27127133"           # XLCZ Nábytek s.r.o.
+xxx lutz: "27127133"
+mobelix: "27127133"

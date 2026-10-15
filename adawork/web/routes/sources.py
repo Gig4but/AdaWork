@@ -9,15 +9,21 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from adawork.config import Settings
 from adawork.db.models import SourceState
+from adawork.employers.google import FREE_DETAILS
+from adawork.i18n import translate
 from adawork.scraper.sources import KINDS, LABELS, NEEDS_CONSENT, NEEDS_KEY, SOCIAL, SWITCHABLE
 from adawork.secrets import Secrets
-from adawork.services import Services
+from adawork.services import GOOGLE_KEY, Services
 from adawork.social import browser
 from adawork.social.reader import SocialState
 from adawork.web.pages import Svc, render
 
 router = APIRouter()
 
+# Keys that are not job sources: Google Places (customer ratings on employer cards).
+EXTRA_KEYS = {
+    GOOGLE_KEY: "https://developers.google.com/maps/documentation/places/web-service/get-api-key"
+}
 API_KEY = re.compile(r"[\w.:-]{8,200}")
 FACEBOOK_GROUP = r"https://(?:www\.|m\.)?facebook\.com/groups/[\w.-]+"
 
@@ -50,34 +56,46 @@ def apply_source_choices(settings: Settings, form) -> str | None:
     return None
 
 
+def key_label(key_id: str, lang: str) -> str:
+    return translate(lang, "keys.google") if key_id == GOOGLE_KEY else LABELS[key_id]
+
+
 def apply_keys(settings: Settings, keys: Secrets, form) -> str | None:
     """Saves the API keys typed in: a new key switches its source on, a deleted one off.
     Returns the label of a source whose key looks wrong (nothing is saved then)."""
-    typed = {sid: str(form.get(f"key_{sid}") or "").strip() for sid in NEEDS_KEY}
+    typed = {sid: str(form.get(f"key_{sid}") or "").strip() for sid in (*NEEDS_KEY, *EXTRA_KEYS)}
     for source_id, key in typed.items():
         if key and not API_KEY.fullmatch(key):
-            return LABELS[source_id]
+            return key_label(source_id, settings.language)
     for source_id, key in typed.items():
+        is_source = source_id in NEEDS_KEY
         if form.get(f"remove_{source_id}") == "on":
             keys.delete(source_id)
-            settings.sources[source_id] = False
+            if is_source:
+                settings.sources[source_id] = False
         elif key:
             keys.set(source_id, key)
-            settings.sources[source_id] = True
+            if is_source:
+                settings.sources[source_id] = True
     settings.save()
     return None
 
 
 def key_rows(svc: Services) -> list[dict]:
-    """The key-based sources; `end`: the last characters of a saved key."""
+    """The key-based sources and Google; `end`: the last characters of a saved key."""
+    lang = svc.settings.language
+    used = svc.employers.google_quota().details
     return [
         {
-            "id": source_id,
-            "label": LABELS[source_id],
+            "id": key_id,
+            "label": key_label(key_id, lang),
             "url": url,
-            "end": (svc.secrets.get(source_id) or "")[-4:],
+            "end": (svc.secrets.get(key_id) or "")[-4:],
+            "hint": translate(lang, "keys.google_hint", used=used, free=FREE_DETAILS)
+            if key_id == GOOGLE_KEY
+            else "",
         }
-        for source_id, url in NEEDS_KEY.items()
+        for key_id, url in {**NEEDS_KEY, **EXTRA_KEYS}.items()
     ]
 
 

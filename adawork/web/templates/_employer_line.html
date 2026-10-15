@@ -1,0 +1,15 @@
+{# The employer on a job card: its name opens the employer card; employee satisfaction
+   (Atmoskop), official warnings and an uncertain match as small marks. #}
+<button type="button" class="link employer-open" data-employer="{{ emp.id }}" title="{{ t('employer.more') }}"><strong>{{ emp_name }}</strong></button>
+{%- if emp.satisfaction is not none %}
+  <span class="emp-badge {{ 'good' if emp.satisfaction >= 70 else 'mid' if emp.satisfaction >= 50 else 'low' }}" title="{{ t('employer.badge_satisfaction') }}">{{ emp.satisfaction }} %</span>
+{%- endif %}
+{%- for w in emp.warnings %}
+  <span class="emp-badge warn" title="{{ t('employer.badge_guess' if w == 'unlicensed' else 'employer.badge_warning') }}">⚠ {{ t("employer.warning." ~ w) }}</span>
+{%- endfor %}
+{%- if emp.agency or emp.looks_agency %}{% set client = job.description | agency_client %}
+  {%- if client %} <span class="small muted">{{ t("employer.for_client", name=client) }}</span>{% endif %}
+{%- endif %}
+{%- if emp.match == "uncertain" %}
+  <span class="emp-badge unsure" title="{{ t('employer.uncertain') }}">?</span>
+{%- endif %}

@@ -15,7 +15,7 @@ Three main modules:
 Shared services: a small **local AI model** (reads messy ads and posters, summarizes
 reviews) and a **local routing engine** (travel times and routes, offline maps).
 
-Status: **M0–M8 done** (2026-10-14; M7's 3-day unattended run is still to do); next is M9.
+Status: **M0–M9 done** (2026-10-14; M7's 3-day unattended run is still to do); next is M10.
 Spike results: `docs/spikes.md`.
 
 ---
@@ -274,7 +274,7 @@ each other; a thin async plugin layer is simpler and shares the app's event loop
 │ index → employer link → expire → notify                                          │
 └──┬────────────────────────────────────────────────────────────────────────────────┘
 ┌──▼──── SQLite (%LOCALAPPDATA%\AdaWork\adawork.db) ─────────────────────────┐
-│ jobs · sources · employers · employer_reviews · employer_checks · travel_times ·   │
+│ jobs · sources · employers · employer_names · employer_reviews · travel_times ·    │
 │ locations · codebooks · saved_searches · llm_cache · settings                      │
 └────────────────────────────────────────────────────────────────────────────────────┘
 * optional, needs a Google API key
@@ -426,6 +426,11 @@ social posts (M6b).
 | Social | Facebook page recommendations and posts (if logged in) | On demand only |
 | Web mentions | ddgs search ("{firma} zkušenosti zaměstnanci", "{firma} recenze práce", "{firma} nevyplacená mzda"…) → top ~5 pages → trafilatura → AI picks relevant passages | On demand + profile matches, small daily limit, cached 30 days |
 
+The background work (ARES name resolving, official checks, profile-match reviews, mentions,
+summaries) runs only with the switch "Ověřovat zaměstnavatele automaticky po každém hledání"
+(off by default). Off: ads are still linked locally (IČO, brands, agency list), and everything
+else runs when a card is opened.
+
 **AI summary** (same local model): from collected review texts and mentions → Czech
 summary, "Co chválí" / "Co kritizují" (what people praise / criticize), warning signals
 (unpaid wages, illegal work, unpaid trial), each point with a **link to its source**.
@@ -510,18 +515,18 @@ The prompt forbids claims not found in the texts; the summary is labelled as AI-
   requirements, benefits, provenance) + `employer_id`, `location_id`.
 - `locations(id, lat, lon, precision, address_text, municipality_code, okres, kraj)`: shared
   by jobs at the same place, which keeps routing calls low.
-- `employers(id, ico, dic, name, name_normalized, legal_form, founded, address, nace,
-  nace_main, employee_category, is_agency, agency_temp_staffing, agency_licence_until,
-  atmoskop_url, website, match_confidence, updated_at)`
-- `employer_aliases(name_normalized, ico, source[curated|confirmed|agency_register])`
-- `bulk_lists(kind[vat_unreliable|agencies|atmoskop_sitemap], etag, fetched_at)` + their
-  local lookup tables.
-- `employer_checks(employer_id, kind[ares|isir|vat|agency], status, detail_json, checked_at)`
-- `employer_reviews(id, employer_id, source, rating, rating_scale[stars5|percent], count,
-  scores_json, review_texts_json, url, fetched_at)`
-- `employer_mentions(id, employer_id, url, title, snippet, sentiment, fetched_at)`
-- `employer_summary(employer_id, summary_json, model, prompt_version, created_at)`
-- `travel_times(origin_key, mode, depart_profile, location_id, minutes, computed_at)`
+- `employers(id, ico, name, match, confidence, candidates, dic, legal_form, founded, ended,
+  address, nace_main, employee_band, insolvency, vat_unreliable, agency, looks_agency,
+  warnings, checked_at, satisfaction, links, reviews_at, mentions_at, jobs_count)`: one row
+  per IČO, or per name that could not be resolved (with its candidates).
+- `employer_names(key, employer_id, source[ad|ad_ok|brand|agency|inside|ares|ai|manual|
+  uncertain|none])`: the learned name → employer cache. Curated brands: `employers/brands.yaml`.
+- The VAT, agency and Atmoskop lists stay files in the cache (M7 downloads).
+- `employer_reviews(employer_id, source[atmoskop|google], rating, scale[percent|stars5], count,
+  scores, texts, url, fetched_at)`
+- `employer_mentions(employer_id, source, url, title, snippet, passages, fetched_at)`
+- `employer_summaries(employer_id, summary, sources, inputs, model, prompt_version)`
+- `travel_sets(origin, depart, mode)` + `travel_times(set_id, location_id, minutes, version)`
 - Codebooks: CZ-ISCO, CZ-NACE, UI categories, municipalities with GPS + English names.
 
 ---
@@ -696,7 +701,9 @@ Every step has defaults; optional steps have "Skip"; downloads run in the backgr
    - Automatic checks can be switched on/off or paused any time from the tray or Settings.
 7. **Mapy a jízdní řády** — "Stáhnout mapu" (~1 GB) and the area; "Přeskočit" leaves travel
    times off until downloaded from Settings.
-8. **Hotovo** — summary; "Start" runs MPSV first (fast, all industries).
+8. **Zaměstnavatelé** — "Ověřovat zaměstnavatele automaticky po každém hledání" (**off** by
+   default: checks and reviews only when a card is opened) and the review sources.
+9. **Hotovo** — summary; "Start" runs MPSV first (fast, all industries).
    - Map/routing data and the model download continue in the background.
    - The dashboard shows their progress ("Mapy a jízdní řády: 60 %").
 
@@ -750,9 +757,9 @@ AdaWork/
 │  │               classifieds (+ classifieds.yaml), jooble, careerjet
 │  ├─ social/  browser.py (Edge via Playwright), posts.py (page parsing), reader.py
 │  ├─ employers/                    # MODULE 3
-│  │  ├─ downloads.py (official lists), resolver.py (name → IČO), service.py, summary.py
-│  │  └─ sources/  ares, isir, vat_register, agency_register, atmoskop, indeed_reviews,
-│  │               google_places, facebook_page, web_mentions (ddgs)
+│  │  ├─ downloads.py (official lists), names.py, brands.yaml, resolver.py (name → IČO),
+│  │  ├─ official.py (ARES/RES, ISIR, VAT + agency lists), atmoskop.py, google.py,
+│  │  └─ mentions.py (ddgs + pages), summary.py (AI), service.py (background + cards)
 │  ├─ routing/                      # commute
 │  │  ├─ motis.py (process + API client), data.py (OSM + GTFS download, clip, import),
 │  │  ├─ gtfs.py (sanitize, clip), commute.py (travel times, area, routes),
@@ -885,22 +892,42 @@ AdaWork/
   - Estimates shown and labelled before the import finishes. ✓
 - Not measured on an 8 GB machine; the 150 km profile ran on 32 GB.
 
-### M9 — Employer reviews module (6–7 days)
-- Resolver (IČO, alias table + learned cache, ARES search with name variants, RES batch
-  ranking, AI disambiguation, agency + client extraction).
-- Official checks: ARES + RES, ISIR (only when flagged), VAT and agency register from local
-  bulk lists.
-- Atmoskop reviews via sitemap slug index + `__NEXT_DATA__`; Indeed as a link only; Google
-  Places (optional key, quota counter); Facebook page (if logged in); web mentions via ddgs
-  with retries.
-- AI summary with source links; employer card; employer filters; prefetch for profile
-  matches.
-- Wizard step 5 Google key.
-- **Done when:**
-  - ≥ 90 % of 50 sample employers resolve to the right IČO.
-  - Cards show official checks for all of them, and reviews where they exist.
-  - Every summary point links to a source; a manual check of 20 summaries finds no invented
-    claims.
+### M9 — Employer reviews module — done
+- Jobs link to employers (`employers/service.py`, background after each search and hourly):
+  the IČO in the ad; names learned from ads that carry one (a learned name unlike the
+  register name is checked once in ARES: portals give a group's IČO, "IMOBA" → Agrofert);
+  `brands.yaml` (~120 brands); the agency register; a known employer inside a longer name;
+  ARES search with variants (ČR expanded, no venue words, no town, brackets, no country),
+  ranked by name, legal form, size and activity (RES), seat. Close candidates: the AI picks
+  with the ad's text, else "nejisté přiřazení" with candidates; the user can fix any match
+  by IČO. Agency ads that name their client show it on the job card (rule, not AI).
+- Official checks for every employer with an IČO, 100 per ARES/RES call (20.2k in ~25 min),
+  ISIR only when ARES flags insolvency, VAT and agency lists locally; again after 30 days.
+  Warnings: ceased, insolvency, unreliable VAT payer, agency work without a licence.
+- For employers of profile matches (and when a card opens): Atmoskop (% satisfaction,
+  reviews), Google Places with the user's key (stops at 950 details a month), web mentions
+  via ddgs (retries; review sites read politely, job-site pages skipped); daily limits.
+  Indeed and Facebook only as links (Facebook pages are not read).
+- AI summary (`summary.py`): numbered texts, every point ends with its sources and is checked
+  against them: praise only from praise, criticism only from complaints (the halves of an
+  Atmoskop review), web passages back only warnings (unpaid wages, no contract…); words must
+  stand together in one source; list parts no source says are cut. A small model invents
+  otherwise (M9: "práce na černo" from a changed job title).
+- Card (dialog from the job's employer name), badges on job cards, filters (satisfaction ≥,
+  no warnings, verified, no unlicensed agencies, one employer's jobs), sort by employer,
+  Settings → Zaměstnavatelé, Google key in wizard step 5 with the month's count.
+- **Done when** (61.7k jobs, 20.6k employers, Core Ultra 7 255U, Gemma 4 E2B):
+  - ≥ 90 % of 50 sample employers resolve to the right IČO: 47/50 (94 %) of names from ads
+    without an IČO, judged by hand (2 not found, 1 sole trader left uncertain with the right
+    one first; none wrong); 46/50 on two samples of ads that give an IČO (3 ads per sample
+    give the group's IČO for a subsidiary that was matched by name). ✓
+  - Cards show official checks for all of them, and reviews where they exist: the 47 with an
+    IČO show the checks, the 3 without one say so; Atmoskop where a profile exists (live
+    check in Edge: card from the list, all jobs of the employer, uncertain match). ✓
+- Employer filters on the full list: +20–40 ms (105 → 125–147 ms), sort by employer 224 ms.
+  - Every summary point links to a source; no invented claims in 20 summaries: 21 written
+    (5–46 s each), 14 with points, none invented on a manual check of every point against
+    its sources; 7 left empty (nothing could be confirmed). ✓
 
 ### M10 — Installer and delivery (3 days)
 - PyInstaller + Inno Setup; bundles llama-server and MOTIS; clean Windows 11 VM test; one-page

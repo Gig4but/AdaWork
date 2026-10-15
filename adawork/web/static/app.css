@@ -285,3 +285,50 @@ body[data-view="map"] #results { display: none; }
 /* Map pins are role="button" for keyboard users; Pico would draw them as buttons. */
 .maplibregl-marker[role="button"] { padding: 0; border: 0; background: none; box-shadow: none;
                                     width: auto; }
+/* Employer card (PLAN §4.5) and its marks on job cards */
+button.link { background: none; border: 0; padding: 0; margin: 0; width: auto; color: inherit;
+              font: inherit; cursor: pointer; text-align: left; }
+button.link:hover strong, button.link:focus-visible strong { text-decoration: underline; }
+.emp-badge { display: inline-block; font-size: .75rem; padding: 0 .4rem; border-radius: .6rem;
+             margin-left: .3rem; white-space: nowrap; vertical-align: .05em;
+             border: 1px solid var(--pico-muted-border-color); }
+.emp-badge.good { background: #d9f2df; color: #1b5e2b; border-color: transparent; }
+.emp-badge.mid { background: #fff1c7; color: #6b4e00; border-color: transparent; }
+.emp-badge.low { background: #fde0dc; color: #8a1c12; border-color: transparent; }
+.emp-badge.warn { background: #fde0dc; color: #8a1c12; border-color: transparent; }
+.emp-badge.unsure { color: var(--pico-muted-color); }
+#employer article { width: min(52rem, 96vw); max-width: none; }
+#employer header h3 { margin: 0; }
+#employer header h3 .icon, .emp-actions .icon { vertical-align: -.15em; }
+#employer section { margin-bottom: 1rem; }
+#employer h4 { margin: .4rem 0; font-size: 1rem; }
+.emp-checks { padding-left: 0; margin-bottom: .3rem; }
+.emp-checks li { list-style: none; margin-bottom: .15rem; }
+.emp-checks .ok { color: var(--pico-ins-color); }
+.emp-checks .bad, .emp-summary .bad { color: var(--pico-del-color); }
+.emp-score { font-size: 1.4rem; font-weight: 700; margin-right: .3rem; }
+.emp-summary { border-left: 3px solid var(--pico-primary-border); padding-left: .8rem; }
+.emp-summary ul { margin-bottom: .4rem; }
+.emp-summary .cite { font-size: .75rem; margin-left: .15rem; text-decoration: none; }
+.emp-candidates { padding-left: 0; }
+.emp-candidates li { list-style: none; margin-bottom: .4rem; }
+.emp-candidates form { display: flex; flex-wrap: wrap; gap: .3rem .6rem; align-items: center;
+                       margin: 0; }
+.emp-candidates button, .emp-fix-form button { margin: 0; padding: .2rem .7rem; width: auto; }
+.emp-fix-form { display: flex; gap: .5rem; align-items: center; margin: .3rem 0; }
+.emp-fix-form input { width: 9rem; margin: 0; }
+.emp-links a { margin-right: .8rem; white-space: nowrap; }
+.emp-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.emp-actions > * { margin: 0; width: auto; }
+.emp-mentions { padding-left: 1rem; }
+.emp-mentions li { margin-bottom: .4rem; }
+.emp-only button.link { color: var(--pico-primary); margin-left: .3rem; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .emp-badge.good { background: #1f4d2a; color: #c8f0d2; }
+  :root:not([data-theme="light"]) .emp-badge.mid { background: #5a4710; color: #ffe9a8; }
+  :root:not([data-theme="light"]) .emp-badge.low,
+  :root:not([data-theme="light"]) .emp-badge.warn { background: #5c1d17; color: #ffd2cc; }
+}
+[data-theme="dark"] .emp-badge.good { background: #1f4d2a; color: #c8f0d2; }
+[data-theme="dark"] .emp-badge.mid { background: #5a4710; color: #ffe9a8; }
+[data-theme="dark"] .emp-badge.low, [data-theme="dark"] .emp-badge.warn { background: #5c1d17; color: #ffd2cc; }

@@ -11,7 +11,7 @@ from adawork.normalize.vocab import derived_values
 
 
 class Base(DeclarativeBase):
-    type_annotation_map = {dict[str, Any]: JSON, list[str]: JSON}
+    type_annotation_map = {dict[str, Any]: JSON, list[str]: JSON, list[dict[str, Any]]: JSON}
 
 
 def table(model: type[Base]) -> Table:
@@ -82,6 +82,112 @@ class Municipality(Base):
     postal_codes: Mapped[str] = mapped_column(default="")  # space-separated PSČ, e.g. "14000 14200"
 
 
+class Employer(Base):
+    """A company behind ads (PLAN §4.5): one row per IČO, or per name that could not be
+    resolved (no IČO; `candidates` lists the companies it may be)."""
+
+    __tablename__ = "employers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ico: Mapped[str | None] = mapped_column(String(8), unique=True)
+    name: Mapped[str]
+    # How the ads' name became this IČO: ad (the IČO was in an ad) | brand | agency | ares |
+    # ai | manual; uncertain (several candidates) | none (nothing found)
+    match: Mapped[str] = mapped_column(String(10), default="ad")
+    confidence: Mapped[float | None]
+    candidates: Mapped[list[dict[str, Any]]] = mapped_column(default=list)  # {"ico", "name"...}
+    # From ARES and RES
+    dic: Mapped[str | None] = mapped_column(String(14))
+    legal_form: Mapped[str | None] = mapped_column(String(3))
+    founded: Mapped[date | None]
+    ended: Mapped[date | None]
+    address: Mapped[str | None]
+    nace_main: Mapped[str | None] = mapped_column(String(6))
+    employee_band: Mapped[str | None] = mapped_column(String(3))
+    # Official checks (`warnings` lists the codes for the filter: ended, insolvency, vat,
+    # unlicensed): proceedings from ISIR, unreliable VAT payer since, agency licence.
+    insolvency: Mapped[list[dict[str, Any]]] = mapped_column(default=list)
+    vat_unreliable: Mapped[str | None] = mapped_column(String(20))
+    agency: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # {"temp", "until"}
+    looks_agency: Mapped[bool] = mapped_column(default=False)  # its ads speak of agency work
+    warnings: Mapped[list[str]] = mapped_column(default=list)
+    checked_at: Mapped[datetime | None] = mapped_column(index=True)
+    # Reviews (`satisfaction`: Atmoskop's employer %, for the filter and sorting)
+    satisfaction: Mapped[int | None] = mapped_column(index=True)
+    links: Mapped[dict[str, Any]] = mapped_column(default=dict)  # atmoskop, indeed, facebook...
+    reviews_at: Mapped[datetime | None]
+    mentions_at: Mapped[datetime | None]
+    jobs_count: Mapped[int] = mapped_column(default=0)
+    updated_at: Mapped[datetime]
+
+
+class EmployerName(Base):
+    """An employer name as ads write it (names.name_key) -> the employer it was resolved to.
+    The learned cache: each name goes to ARES only once."""
+
+    __tablename__ = "employer_names"
+
+    key: Mapped[str] = mapped_column(String(200), primary_key=True)
+    employer_id: Mapped[int | None] = mapped_column(
+        ForeignKey("employers.id", ondelete="SET NULL"), index=True
+    )
+    source: Mapped[str] = mapped_column(String(10))  # ad | brand | agency | ares | ai | manual
+    resolved_at: Mapped[datetime]
+
+
+class EmployerReview(Base):
+    """Ratings and review texts from one source (atmoskop: employees in %, google: customers
+    in stars)."""
+
+    __tablename__ = "employer_reviews"
+    __table_args__ = (UniqueConstraint("employer_id", "source"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    employer_id: Mapped[int] = mapped_column(ForeignKey("employers.id", ondelete="CASCADE"))
+    source: Mapped[str] = mapped_column(String(10))
+    rating: Mapped[float | None]
+    scale: Mapped[str] = mapped_column(String(8))  # percent | stars5
+    count: Mapped[int] = mapped_column(default=0)
+    scores: Mapped[dict[str, Any]] = mapped_column(default=dict)
+    texts: Mapped[list[dict[str, Any]]] = mapped_column(default=list)  # as the source gives
+    url: Mapped[str | None]
+    fetched_at: Mapped[datetime]
+
+
+class EmployerMention(Base):
+    """A web page that speaks about working for the employer (the Facebook page is only a
+    link, `Employer.links`)."""
+
+    __tablename__ = "employer_mentions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    employer_id: Mapped[int] = mapped_column(
+        ForeignKey("employers.id", ondelete="CASCADE"), index=True
+    )
+    source: Mapped[str] = mapped_column(String(10), default="web")  # web: found by web search
+    url: Mapped[str]
+    title: Mapped[str] = mapped_column(default="")
+    snippet: Mapped[str] = mapped_column(default="")
+    passages: Mapped[list[str]] = mapped_column(default=list)
+    fetched_at: Mapped[datetime]
+
+
+class EmployerSummary(Base):
+    """The AI summary of the reviews and mentions; written again when they change."""
+
+    __tablename__ = "employer_summaries"
+
+    employer_id: Mapped[int] = mapped_column(
+        ForeignKey("employers.id", ondelete="CASCADE"), primary_key=True
+    )
+    summary: Mapped[dict[str, Any]] = mapped_column(default=dict)
+    sources: Mapped[list[dict[str, Any]]] = mapped_column(default=list)  # {"source", "url"}
+    inputs: Mapped[str] = mapped_column(String(32))
+    model: Mapped[str] = mapped_column(String(40))
+    prompt_version: Mapped[int]
+    created_at: Mapped[datetime]
+
+
 class Job(Base):
     __tablename__ = "jobs"
 
@@ -90,6 +196,9 @@ class Job(Base):
     description: Mapped[str] = mapped_column(default="")
     employer_name: Mapped[str | None]
     employer_ico: Mapped[str | None] = mapped_column(String(8), index=True)
+    employer_id: Mapped[int | None] = mapped_column(
+        ForeignKey("employers.id", ondelete="SET NULL"), index=True
+    )
     place_text: Mapped[str | None]
     location_id: Mapped[int | None] = mapped_column(ForeignKey("locations.id"), index=True)
 
@@ -133,6 +242,7 @@ class Job(Base):
     hidden_at: Mapped[datetime | None] = mapped_column(index=True)  # hidden from the list
 
     location: Mapped[Location | None] = relationship()
+    employer: Mapped[Employer | None] = relationship()
     sources: Mapped[list["JobSource"]] = relationship(
         back_populates="job", cascade="all, delete-orphan"
     )

@@ -5,15 +5,17 @@ from typing import Annotated
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from sqlalchemy import func, select
 
 from adawork import paths
 from adawork.config import TIME_OF_DAY, IntervalHours, Language, Settings, Theme, TravelMode
+from adawork.db.models import Employer
 from adawork.i18n import translate
-from adawork.scraper.sources import LABELS, NEEDS_KEY, SWITCHABLE
+from adawork.scraper.sources import NEEDS_KEY, SWITCHABLE
 from adawork.search.service import TRAVEL_MODES
 from adawork.services import Services
 from adawork.web.pages import THEMES, Svc, render, status_context
-from adawork.web.routes.sources import apply_keys, key_rows
+from adawork.web.routes.sources import EXTRA_KEYS, apply_keys, key_label, key_rows
 
 router = APIRouter()
 
@@ -24,7 +26,9 @@ SECTIONS = {
     "keys": "keys.title",
     "automation": "auto.title",
     "map": "routing.title",
+    "employers": "employers.title",
 }
+EMPLOYER_SOURCES = ("atmoskop", "mentions", "google", "facebook")
 LANGUAGE_NAMES = {"cs": "Čeština", "en": "English"}
 INTERVALS: dict[str, IntervalHours] = {"6": 6, "12": 12, "24": 24, "48": 48}
 
@@ -62,6 +66,14 @@ def apply_automation(settings: Settings, form) -> None:
     settings.save()
 
 
+def apply_employers(settings: Settings, form) -> None:
+    cfg = settings.employers
+    cfg.auto_check = form.get("auto_check") == "on"
+    for name in EMPLOYER_SOURCES:
+        setattr(cfg, name, form.get(name) == "on")
+    settings.save()
+
+
 def save_map(svc: Services, form) -> None:
     """The area, and with "download" the first download of the map and timetables."""
     settings = svc.settings
@@ -78,6 +90,30 @@ def map_context(svc: Services) -> dict:
         "routing_auto_whole": svc.ai.manager.resources.limits.routing_radius_km is None,
         "routing_needs_home": svc.routing.wanted_area() is None,  # home area without a home
     }
+
+
+def employers_summary(settings: Settings) -> str:
+    lang, cfg = settings.language, settings.employers
+    on = [name for name in EMPLOYER_SOURCES if getattr(cfg, name)]
+    when = translate(lang, "employers.auto.on" if cfg.auto_check else "employers.auto.off")
+    return " · ".join([when, *(translate(lang, f"employers.source.{n}") for n in on)])
+
+
+def employer_stats(svc: Services) -> dict:
+    with svc.sessions() as s:
+
+        def count(*where) -> int:
+            return s.scalar(select(func.count(Employer.id)).where(*where)) or 0
+
+        listed = Employer.jobs_count > 0
+        return {
+            "total": count(listed),
+            "resolved": count(listed, Employer.ico.is_not(None)),
+            "checked": count(listed, Employer.checked_at.is_not(None)),
+            "warned": count(listed, func.json_array_length(Employer.warnings) > 0),
+            "reviewed": count(listed, Employer.reviews_at.is_not(None)),
+            "progress": svc.employers.progress,
+        }
 
 
 def routing_summary(svc: Services) -> str:
@@ -108,7 +144,7 @@ def catalog(svc: Services) -> list[dict]:
     else:
         ai_summary = active.name if active else tr("settings.ai.none")
     sources_on = sum(1 for sid, on in SWITCHABLE if settings.sources.get(sid, on))
-    keys = [LABELS[k] for k in NEEDS_KEY if svc.secrets.get(k)]
+    keys = [key_label(k, lang) for k in (*NEEDS_KEY, *EXTRA_KEYS) if svc.secrets.get(k)]
     rows = [
         (
             "/settings/appearance",
@@ -147,6 +183,7 @@ def catalog(svc: Services) -> list[dict]:
             tr("auto.every", h=auto.interval_hours) if auto.enabled else tr("settings.off"),
         ),
         ("/settings/map", "map", "routing.title", routing_summary(svc)),
+        ("/settings/employers", "building", "employers.title", employers_summary(settings)),
     ]
     return [{"href": h, "icon": i, "title": t, "summary": x} for h, i, t, x in rows]
 
@@ -156,6 +193,8 @@ def render_section(request: Request, svc: Services, section: str, **context) -> 
         context.setdefault("keys", key_rows(svc))
     if section == "map":
         context |= map_context(svc)
+    if section == "employers":
+        context.setdefault("stats", employer_stats(svc))
     return render(
         request,
         "settings_section.html",
@@ -246,6 +285,13 @@ def map_update(svc: Svc) -> RedirectResponse:
 @router.get("/settings/map/status", response_class=HTMLResponse)
 def map_status(request: Request, svc: Svc) -> HTMLResponse:
     return render(request, "_routing_status.html", **status_context(svc))
+
+
+@router.post("/settings/employers")
+async def employers_save(request: Request, svc: Svc) -> RedirectResponse:
+    apply_employers(svc.settings, await request.form())
+    svc.employers.wake()  # switched on: the backlog starts now
+    return RedirectResponse("/settings/employers?saved=1", status_code=303)
 
 
 @router.post("/settings/keys", response_class=HTMLResponse)

@@ -72,6 +72,19 @@ class SocialSettings(BaseModel):
     instagram_tags: list[str] = Field(default_factory=list)  # extra hashtags, without "#"
 
 
+class EmployerSettings(BaseModel):
+    """Settings → Zaměstnavatelé (PLAN §4.5): the review sources, each can be switched off.
+    The official registers are always used. Google needs the user's key (Settings → keys)."""
+
+    # After each search: employers checked and reviews fetched in the background. Off: only
+    # when an employer card is opened (ads are still linked to employers known locally).
+    auto_check: bool = False
+    atmoskop: bool = True
+    mentions: bool = True  # web search (ddgs) and reading the pages found
+    google: bool = True
+    facebook: bool = True  # a link to the employer's Facebook page, when the search finds one
+
+
 class Settings(BaseModel):
     language: Language = "cs"
     theme: Theme = "system"
@@ -80,6 +93,7 @@ class Settings(BaseModel):
     automation: AutomationSettings = Field(default_factory=AutomationSettings)
     ai: AiSettings = Field(default_factory=AiSettings)
     social: SocialSettings = Field(default_factory=SocialSettings)
+    employers: EmployerSettings = Field(default_factory=EmployerSettings)
     routing_area: RoutingArea = "auto"
     # The map and timetables are downloaded only once the user asks (wizard or Settings →
     # Mapy); until imported, travel times and routes are off.

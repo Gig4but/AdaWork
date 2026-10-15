@@ -8,8 +8,9 @@ from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from adawork.core import utcnow
-from adawork.db.models import Job, table
+from adawork.db.models import Employer, Job, table
 from adawork.geo.scope import radius_km
+from adawork.i18n import translate
 from adawork.scraper.check import unchecked
 from adawork.scraper.sources import SWITCHABLE, indeed
 from adawork.search.service import (
@@ -238,7 +239,14 @@ def facets(request: Request, svc: Svc) -> HTMLResponse:
     f = svc.travel.filters(request.query_params)
     with svc.sessions() as s:
         counts, flagged = facet_counts(s, f)
+        employer = s.get(Employer, f.employer) if f.employer else None
     settings = svc.settings
+    if employer:
+        employer_name = employer.name
+    elif f.employer:  # merged away since: still shown, so it can be cleared
+        employer_name = translate(settings.language, "filters.employer_gone")
+    else:
+        employer_name = None
     return render(
         request,
         "_facets.html",
@@ -246,6 +254,7 @@ def facets(request: Request, svc: Svc) -> HTMLResponse:
         sources_on=[sid for sid, on in SWITCHABLE if settings.sources.get(sid, on)],
         facets=counts,
         flagged=flagged,
+        employer_name=employer_name,
         salary_steps=SALARY_STEPS,
         posted_days=POSTED_DAYS,
     )

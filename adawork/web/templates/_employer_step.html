@@ -1,0 +1,4 @@
+{# What a card's refresh is fetching; asks again until done, then the whole card comes
+   (web/routes/employers.py employer_page). #}
+<p id="employer-step" class="small muted" aria-busy="true" hx-get="/employer/{{ eid }}?poll=1"
+   hx-trigger="load delay:2s" hx-target="this" hx-swap="outerHTML">{{ t("employer.step." ~ step) }}</p>

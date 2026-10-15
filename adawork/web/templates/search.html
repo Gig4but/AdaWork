@@ -5,6 +5,7 @@
   <script src="/static/map.js" defer></script>
   <script src="/static/nav.js" defer></script>
   <script src="/static/commute.js" defer></script>
+  <script src="/static/employer.js" defer></script>
   <script src="/static/job.js" defer></script>
 {% endblock %}
 {% block content %}
@@ -63,8 +64,9 @@
       <button type="button" class="outline" data-show-view="map">{{ icon("map") }}{{ t("view.map") }}</button>
     </div>
     <input type="hidden" name="view" value="{{ view }}">
+    <input type="hidden" name="employer" value="{{ f.employer or '' }}">
     <select name="sort" aria-label="{{ t('filters.sort') }}">
-      {% for s in ("relevance", "date", "salary", "travel") %}
+      {% for s in ("relevance", "date", "salary", "travel", "employer") %}
         <option value="{{ s }}" {% if f.sort == s %}selected{% endif %}{% if s == "travel" and not f.origin %} disabled{% endif %}>{{ t("sort." ~ s) }}</option>
       {% endfor %}
     </select>
@@ -87,6 +89,7 @@
 </form>
 <div id="facets-refresh"></div>
 <dialog id="commute" aria-label="{{ t('commute.title') }}"><article id="commute-body"></article></dialog>
+<dialog id="employer" aria-label="{{ t('employer.title') }}"><article id="employer-body"></article></dialog>
 <dialog id="job-detail" aria-label="{{ t('job.full_text') }}"><article id="job-detail-body"></article></dialog>
 <button type="button" id="to-top" class="secondary" hidden title="{{ t('page.top') }}" aria-label="{{ t('page.top') }}"
         onclick="window.scrollTo({top: 0, behavior: 'smooth'})">{{ icon("up") }}</button>

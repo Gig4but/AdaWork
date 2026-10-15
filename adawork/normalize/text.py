@@ -304,3 +304,11 @@ def split_places(text: str | None) -> list[str]:
 def slugify(text: str) -> str:
     """ "Kutná Hora" -> "kutna-hora", as portals write places in URLs."""
     return re.sub(r"[^a-z0-9]+", "-", fold(text)).strip("-")
+
+
+def valid_ico(text: str | None) -> bool:
+    """Eight digits with the right check digit (mod 11): a typo is not a company."""
+    if not text or not re.fullmatch(r"\d{8}", text):
+        return False
+    total = sum(int(d) * w for d, w in zip(text[:7], range(8, 1, -1), strict=True))
+    return (11 - total % 11) % 10 == int(text[7])

@@ -21,6 +21,7 @@ from adawork.normalize.text import (
     fold,
     node_text,
     suitable_for,
+    valid_ico,
 )
 from adawork.scraper.crawl import (
     KRAJ_SLUGS,
@@ -49,13 +50,6 @@ _BENEFITS = (
     ("jizdne", ("jizdn", "doprava do zamestnani")),
     ("predsk", ("skolk",)),
 )
-
-
-def valid_ico(text: str) -> bool:
-    if not re.fullmatch(r"\d{8}", text):
-        return False
-    total = sum(int(d) * w for d, w in zip(text[:7], range(8, 1, -1), strict=True))
-    return (11 - total % 11) % 10 == int(text[7])
 
 
 def _is_contracts(text: str) -> bool:

@@ -72,7 +72,7 @@ async def add_ad(request: Request, svc: Svc) -> HTMLResponse:
         if image is not None:
             job.images.append(image)
         s.commit()
-        _ = job.sources, job.images, job.location  # loaded for the card
+        _ = job.sources, job.images, job.location, job.employer  # loaded for the card
     svc.ai.enricher.start()  # reads the picture and fills the fields in the background
     return render(request, "add.html", job=job)
 

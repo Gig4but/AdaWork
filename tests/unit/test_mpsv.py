@@ -11,7 +11,7 @@ from adawork.config import Profile
 from adawork.core import ParsedJob
 from adawork.db.models import Job, JobSource, Location, Run
 from adawork.db.session import make_engine, make_sessionmaker, migrate
-from adawork.scraper.runner import ScrapeRunner
+from adawork.scraper.runner import RunHooks, ScrapeRunner
 from adawork.scraper.sources import mpsv
 from adawork.scraper.store import JobStore
 from adawork.search.service import search_jobs
@@ -281,3 +281,24 @@ def test_a_dropped_connection_is_tried_again_but_not_an_offline_one():
     with pytest.raises(httpx.ConnectError):
         retry_dropped(offline, "x", waits=(0, 0))
     assert len(calls) == 1
+
+
+def test_each_source_is_handed_on_before_the_search_ends(sessions, tmp_path):
+    transport, _ = make_transport(RECORDS)
+    seen = []
+
+    def after_step():
+        with sessions() as s:
+            seen.append(s.scalar(select(func.count(Job.id))))
+
+    runner = ScrapeRunner(
+        sessions,
+        tmp_path / "cache",
+        lambda: httpx.Client(transport=transport),
+        geocode=False,
+        sources=[mpsv.SOURCE],
+        hooks=RunHooks(after_source=after_step),
+    )
+    assert runner.start()
+    runner.wait(60)
+    assert seen[0] == 30  # right after the Úřad práce import

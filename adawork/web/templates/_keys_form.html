@@ -10,5 +10,6 @@
     {% if k.end %}
       <label class="small"><input type="checkbox" name="remove_{{ k.id }}"> {{ t("keys.remove") }}</label>
     {% endif %}
+    {% if k.hint %}<p class="small muted">{{ k.hint }}</p>{% endif %}
   </div>
 {% endfor %}

@@ -5,6 +5,7 @@ costs ~20 % more output tokens, and every output token is a slow decoding step o
 Only the small schema subset the app uses is supported: an object with fixed keys (in schema
 order) whose values are booleans, enums, short strings, integers, arrays of enums or short
 strings (with a minimum length, so a small model cannot dodge with []), or any of these or null.
+A string with "x-cites" must end with the numbers of its sources: "Dobrý kolektiv [1,3]".
 """
 
 import json
@@ -38,7 +39,12 @@ class _Builder:
         elif kind == "integer":
             body = '"-"? ("0" | [1-9] [0-9]{0,8})'  # no leading zeros: JSON forbids them
         elif kind == "string":
-            body = f'"\\"" char{{0,{spec.get("maxLength", 200)}}} "\\""'
+            length = spec.get("maxLength", 200)
+            if spec.get("x-cites"):
+                cites = '" [" [1-9] [0-9]? ( "," [1-9] [0-9]? ){0,3} "]"'
+                body = f'"\\"" char{{1,{length}}} {cites} "\\""'
+            else:
+                body = f'"\\"" char{{0,{length}}} "\\""'
             self.rules["char"] = _CHAR
         elif kind == "array":
             item = self.value(f"{name}-item", spec["items"])

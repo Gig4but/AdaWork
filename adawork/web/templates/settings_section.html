@@ -24,6 +24,14 @@
       <button type="submit">{{ t("keys.save") }}</button>
     </form>
 
+  {% elif section == "employers" %}
+    <form method="post" action="/settings/employers">
+      {% include "_employers_form.html" %}
+      <button type="submit">{{ t("settings.save") }}</button>
+    </form>
+    <p class="small">{{ t("employers.stats", **stats) }}</p>
+    {% if stats.progress.running %}<p class="small muted" aria-busy="true">{{ t("employers.phase." ~ stats.progress.phase) }} {{ stats.progress.done }}/{{ stats.progress.total }}</p>{% endif %}
+
   {% elif section == "map" %}
     {% if settings.routing_download %}
       {% include "_routing_status.html" %}

@@ -10,13 +10,16 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from sqlalchemy.orm import Session, sessionmaker
+from starlette.datastructures import QueryParams
 
 from adawork import paths
 from adawork.ai.services import AiServices, make_ai_services
 from adawork.config import Settings
+from adawork.db.models import Job
 from adawork.db.session import db_file, make_engine, make_sessionmaker, migrate
 from adawork.desktop import autostart
 from adawork.employers import downloads
+from adawork.employers.service import EmployerService
 from adawork.geo import ruian
 from adawork.geo.home import Locator
 from adawork.geo.places import SharedPlaces
@@ -27,12 +30,16 @@ from adawork.routing.motis import MotisServer
 from adawork.scheduler import Scheduler
 from adawork.scraper.runner import RunHooks, ScrapeRunner
 from adawork.scraper.sources import MANUAL
+from adawork.search.kinds import Wanted
+from adawork.search.service import all_jobs
 from adawork.search.travel import TravelFilter, kept_starts
 from adawork.secrets import Secrets, default_secrets
 from adawork.social.logins import SocialLogins
 from adawork.system.resources import Priority
 
 log = logging.getLogger(__name__)
+
+GOOGLE_KEY = "google_places"  # the user's Google Places key (customer ratings on cards)
 
 
 @dataclass
@@ -46,12 +53,14 @@ class Services:
     ai: AiServices
     runner: ScrapeRunner
     scheduler: Scheduler
+    employers: EmployerService
     motis: MotisServer
     routing: RoutingData
     commute: CommuteService
     travel: TravelFilter
     logins: SocialLogins
     autostart_sync: Callable[[bool], object]
+    employer_updates: bool  # False in tests: no registers, reviews or web searches
 
     def set_automation(self, on: bool | None = None) -> None:
         """Automatic checks changed (or `on`: switch them): rescheduled at once."""
@@ -73,10 +82,12 @@ class Services:
             self.set_automation()  # the Run value follows the app if it moved
         self.scheduler.start()
         self.routing.start()
+        self.employers.start()
 
     def stop(self) -> None:
         self.scheduler.stop()  # first: it could start a new search meanwhile
         self.runner.stop()
+        self.employers.stop()
         self.routing.stop()
         self.motis.close()
         self.ai.shutdown()
@@ -93,6 +104,7 @@ def build(
     autostart_sync: Callable[[bool], object] | None = None,  # the Run value added or removed
     refreshes: tuple[Refresh, ...] | None = None,
     routing_updates: bool = True,  # False in tests: no map data downloads
+    employer_updates: bool = True,  # False in tests: no registers, reviews or web searches
 ) -> Services:
     settings = settings or Settings.load()
     engine = make_engine(db_path or db_file())
@@ -145,8 +157,35 @@ def build(
     travel = TravelFilter(lambda: settings.profile, locator, routing, commute)
     routing.on_ready = travel.routing_ready
 
+    # --- Employers (PLAN §4.5) ---
+    def profile_jobs(s: Session) -> set[int]:
+        """Jobs matching the profile (commute limit from home + kinds of work): their
+        employers' reviews are fetched ahead."""
+        f = travel.filters(QueryParams())  # places found since the last search get times
+        want = Wanted.load(s, settings.profile.kinds_of_work)
+        rows = all_jobs(s, f, [Job.id, Job.title, Job.isco_code])
+        return {r.id for r in rows if want.matches(r.title, r.isco_code)}
+
+    employers = EmployerService(
+        sessions,
+        cache_dir / "employers",
+        lambda: settings.employers,
+        allowed=lambda: employer_updates and settings.wizard_completed,
+        manager=ai.manager,
+        google_key=lambda: keys.get(GOOGLE_KEY),
+        profile_jobs=profile_jobs,
+    )
+
     # --- Searching ---
-    hooks = RunHooks(before_clear=ai.enricher.stop, after_run=ai.enricher.start)
+    def after_run() -> None:
+        ai.enricher.start()
+        employers.wake()  # new jobs: their employers are linked and checked
+
+    hooks = RunHooks(
+        before_clear=ai.enricher.stop,
+        after_source=employers.wake,  # their jobs get employer cards before the search ends
+        after_run=after_run,
+    )
     runner = (runner_factory or ScrapeRunner)(
         sessions,
         cache_dir,
@@ -172,10 +211,12 @@ def build(
         ai=ai,
         runner=runner,
         scheduler=scheduler,
+        employers=employers,
         motis=motis,
         routing=routing,
         commute=commute,
         travel=travel,
         logins=SocialLogins(sessions, data_dir),
         autostart_sync=autostart_sync or autostart.sync,
+        employer_updates=employer_updates,
     )

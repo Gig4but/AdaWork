@@ -840,6 +840,260 @@ TEXTS: dict[str, dict[str, str]] = {
     "routing.osm_at": {"cs": "Mapa stažena", "en": "Map downloaded"},
     "routing.gtfs_at": {"cs": "Jízdní řády staženy", "en": "Timetables downloaded"},
     "routing.imported_at": {"cs": "Připraveno", "en": "Prepared"},
+    # --- Employers (PLAN §4.5) ---
+    "sort.employer": {"cs": "Nejlépe hodnocený zaměstnavatel", "en": "Best-rated employer"},
+    "filters.employer": {"cs": "Zaměstnavatel", "en": "Employer"},
+    "filters.emp_min": {"cs": "Spokojenost zaměstnanců", "en": "Employee satisfaction"},
+    "filters.and_more": {"cs": "a víc", "en": "or more"},
+    "filters.emp_ok": {"cs": "Bez úředních varování", "en": "No official warnings"},
+    "filters.emp_verified": {
+        "cs": "Jen ověření zaměstnavatelé (s IČO)",
+        "en": "Verified employers only (with IČO)",
+    },
+    "filters.emp_licensed": {
+        "cs": "Skrýt agentury bez povolení",
+        "en": "Hide agencies without a licence",
+    },
+    "filters.employer_only": {"cs": "Jen nabídky firmy", "en": "Only jobs of"},
+    "filters.employer_clear": {"cs": "zrušit", "en": "clear"},
+    "keys.google": {
+        "cs": "Google Maps (hodnocení zákazníků)",
+        "en": "Google Maps (customer ratings)",
+    },
+    "keys.google_hint": {
+        "cs": "Nepovinné: hodnocení provozoven od zákazníků na kartě zaměstnavatele. Google "
+        "vyžaduje platební kartu, aplikace ale zůstane v bezplatném limitu: tento měsíc "
+        "{used} z {free} dotazů.",
+        "en": "Optional: customer ratings of shops and branches on employer cards. Google asks "
+        "for a payment card, but the app stays within the free limit: {used} of {free} "
+        "requests this month.",
+    },
+    "employers.title": {"cs": "Zaměstnavatelé", "en": "Employers"},
+    "employers.text": {
+        "cs": "Při otevření karty zaměstnavatele se ověří úřední údaje (obchodní rejstřík, "
+        "insolvence, DPH, agentury práce) a stáhnou recenze a zmínky na internetu.",
+        "en": "When you open an employer card, official data (business register, insolvency, "
+        "VAT, employment agencies) is checked and reviews and web mentions are fetched.",
+    },
+    "employers.auto": {
+        "cs": "Ověřovat zaměstnavatele automaticky po každém hledání",
+        "en": "Check employers automatically after each search",
+    },
+    "employers.auto.hint": {
+        "cs": "Na pozadí ověří úřední údaje všech zaměstnavatelů a stáhne recenze u nabídek, "
+        "které odpovídají vašemu profilu.",
+        "en": "Checks the official data of all employers in the background and fetches "
+        "reviews for jobs that match your profile.",
+    },
+    "employers.auto.on": {"cs": "automaticky", "en": "automatically"},
+    "employers.auto.off": {"cs": "při otevření karty", "en": "when a card is opened"},
+    "employers.sources": {"cs": "Recenze a zmínky", "en": "Reviews and mentions"},
+    "employers.source.atmoskop": {
+        "cs": "Atmoskop (recenze zaměstnanců)",
+        "en": "Atmoskop (employee reviews)",
+    },
+    "employers.source.atmoskop.hint": {
+        "cs": "Spokojenost v % a texty recenzí; v pozadí nanejvýš 150 firem denně.",
+        "en": "Satisfaction in % and review texts; at most 150 companies a day in the background.",
+    },
+    "employers.source.mentions": {"cs": "Zmínky na internetu", "en": "Web mentions"},
+    "employers.source.mentions.hint": {
+        "cs": "Vyhledávání zkušeností a stížností a čtení nalezených stránek; v pozadí "
+        "nanejvýš 20 firem denně.",
+        "en": "Searches for experiences and complaints and reads the pages found; at most 20 "
+        "companies a day in the background.",
+    },
+    "employers.source.google": {
+        "cs": "Google Maps (hodnocení zákazníků)",
+        "en": "Google Maps (customer ratings)",
+    },
+    "employers.source.google.hint": {
+        "cs": "Jen s vlastním klíčem (Nastavení → Klíče k dalším službám).",
+        "en": "Only with your own key (Settings → Keys for other services).",
+    },
+    "employers.source.facebook": {
+        "cs": "Facebook (stránka firmy)",
+        "en": "Facebook (company page)",
+    },
+    "employers.source.facebook.hint": {
+        "cs": "Odkaz na stránku firmy, když ji vyhledávání najde.",
+        "en": "A link to the company page when the search finds it.",
+    },
+    "employers.stats": {
+        "cs": "Zaměstnavatelů v nabídkách: {total}, s IČO {resolved}, ověřeno {checked}, "
+        "s varováním {warned}, s recenzemi {reviewed}.",
+        "en": "Employers in the jobs: {total}, with IČO {resolved}, checked {checked}, "
+        "with warnings {warned}, with reviews {reviewed}.",
+    },
+    "employers.phase.link": {"cs": "Přiřazuji nabídky", "en": "Linking jobs"},
+    "employers.phase.resolve": {"cs": "Hledám firmy v rejstříku", "en": "Finding companies"},
+    "employers.phase.check": {"cs": "Ověřuji v rejstřících", "en": "Checking registers"},
+    "employers.phase.reviews": {"cs": "Stahuji recenze", "en": "Fetching reviews"},
+    "employers.phase.summaries": {"cs": "Píšu shrnutí", "en": "Writing summaries"},
+    "employers.phase.done": {"cs": "Hotovo", "en": "Done"},
+    "employers.phase.failed": {"cs": "Selhalo", "en": "Failed"},
+    "employer.title": {"cs": "Karta zaměstnavatele", "en": "Employer card"},
+    "employer.more": {"cs": "Více o zaměstnavateli", "en": "More about the employer"},
+    "filters.employer_gone": {
+        "cs": "(už není v seznamu)",
+        "en": "(no longer listed)",
+    },
+    "employer.gone": {
+        "cs": "Tento zaměstnavatel už není v seznamu.",
+        "en": "This employer is no longer listed.",
+    },
+    "employer.as_ads": {"cs": "v inzerátech:", "en": "in the ads:"},
+    "employer.step.check": {"cs": "Ověřuji v rejstřících", "en": "Checking the registers"},
+    "employer.step.resolve": {
+        "cs": "Hledám, o kterou firmu jde",
+        "en": "Finding out which company it is",
+    },
+    "employer.step.reviews": {"cs": "Stahuji recenze", "en": "Fetching reviews"},
+    "employer.step.mentions": {"cs": "Hledám zmínky na internetu", "en": "Searching the web"},
+    "employer.step.summary": {
+        "cs": "Umělá inteligence píše shrnutí",
+        "en": "The AI is writing a summary",
+    },
+    "employer.uncertain": {
+        "cs": "Nejisté přiřazení: jménu z inzerátu odpovídá víc firem. Vyberte tu správnou.",
+        "en": "Uncertain match: several companies fit the name in the ad. Pick the right one.",
+    },
+    "employer.unknown": {
+        "cs": "Firmu se nepodařilo dohledat v obchodním rejstříku. Znáte její IČO?",
+        "en": "The company was not found in the business register. Do you know its IČO?",
+    },
+    "employer.people": {"cs": "zaměstnanců", "en": "employees"},
+    "employer.this_one": {"cs": "Je to tato", "en": "This one"},
+    "employer.checks": {"cs": "Ověření", "en": "Checks"},
+    "employer.no_ico": {
+        "cs": "Bez IČO nelze ověřit v úředních rejstřících.",
+        "en": "Without an IČO the official registers cannot be checked.",
+    },
+    "employer.checking": {"cs": "Ověřuje se", "en": "Being checked"},
+    "employer.ended": {"cs": "Firma zanikla {date}", "en": "The company ceased on {date}"},
+    "employer.founded": {
+        "cs": "V obchodním rejstříku od {date}, činná",
+        "en": "Registered since {date}, active",
+    },
+    "employer.insolvency": {"cs": "Insolvenční řízení", "en": "Insolvency proceedings"},
+    "employer.since": {"cs": "od", "en": "since"},
+    "employer.no_insolvency": {"cs": "Bez insolvence", "en": "No insolvency"},
+    "employer.vat_unreliable": {
+        "cs": "Nespolehlivý plátce DPH (od {date})",
+        "en": "Unreliable VAT payer (since {date})",
+    },
+    "employer.vat_ok": {"cs": "Spolehlivý plátce DPH", "en": "Reliable VAT payer"},
+    "employer.no_vat": {"cs": "Není plátce DPH", "en": "Not a VAT payer"},
+    "employer.agency": {"cs": "Agentura práce s povolením", "en": "Licensed employment agency"},
+    "employer.agency_temp": {
+        "cs": "Agentura práce s povolením i k agenturnímu zaměstnávání",
+        "en": "Employment agency licensed for temporary staffing",
+    },
+    "employer.until": {"cs": "do {date}", "en": "until {date}"},
+    "employer.unlicensed": {
+        "cs": "Inzeráty mluví o agenturní práci, ale firma není v registru agentur práce",
+        "en": "The ads speak of agency work, but the company is not a licensed agency",
+    },
+    "employer.seat": {"cs": "sídlo", "en": "registered office"},
+    "employer.checked": {
+        "cs": "Ověřeno {date} (ARES, ISIR, registr DPH, registr agentur MPSV).",
+        "en": "Checked on {date} (ARES, ISIR, VAT register, MPSV agency register).",
+    },
+    "employer.match.ares": {
+        "cs": "přiřazeno podle jména v rejstříku",
+        "en": "matched by name in the register",
+    },
+    "employer.match.ai": {"cs": "přiřadila umělá inteligence", "en": "matched by the AI"},
+    "employer.match.brand": {"cs": "přiřazeno podle značky", "en": "matched by brand"},
+    "employer.match.agency": {
+        "cs": "přiřazeno podle registru agentur",
+        "en": "matched by the agency register",
+    },
+    "employer.wrong": {"cs": "Je to jiná firma?", "en": "A different company?"},
+    "employer.fix": {"cs": "Opravit podle IČO", "en": "Fix by IČO"},
+    "employer.employees": {"cs": "Zaměstnanci", "en": "Employees"},
+    "employer.satisfaction": {
+        "cs": "spokojenost se zaměstnavatelem ({n} hodnocení)",
+        "en": "satisfied with the employer ({n} ratings)",
+    },
+    "employer.colleagues": {"cs": "kolegové", "en": "colleagues"},
+    "employer.boss": {"cs": "nadřízený", "en": "boss"},
+    "employer.suitable": {"cs": "vhodné pro:", "en": "good for:"},
+    "employer.no_atmoskop": {
+        "cs": "Na Atmoskopu zatím nemá hodnocení.",
+        "en": "No ratings on Atmoskop yet.",
+    },
+    "employer.summary": {"cs": "Shrnutí od AI", "en": "AI summary"},
+    "employer.summary_note": {
+        "cs": "z recenzí a zmínek; čísla vedou na zdroj. Může se mýlit.",
+        "en": "from the reviews and mentions; the numbers link to the source. It can be wrong.",
+    },
+    "employer.warnings": {"cs": "Varování", "en": "Warnings"},
+    "employer.praise": {"cs": "Co chválí", "en": "What people praise"},
+    "employer.criticism": {"cs": "Co kritizují", "en": "What people criticize"},
+    "employer.reviews": {"cs": "Recenze ({n})", "en": "Reviews ({n})"},
+    "employer.current": {"cs": "současný zaměstnanec", "en": "current employee"},
+    "employer.customers": {"cs": "Zákazníci", "en": "Customers"},
+    "employer.google": {"cs": "({n} hodnocení)", "en": "({n} ratings)"},
+    "employer.customers_note": {
+        "cs": "Hodnocení zákazníků provozovny, ne zaměstnanců.",
+        "en": "Ratings by customers of the place, not by employees.",
+    },
+    "employer.google_key": {
+        "cs": "Hodnocení zákazníků z Google Map se ukáže po zadání klíče v",
+        "en": "Customer ratings from Google Maps appear once you enter a key in",
+    },
+    "employer.no_google": {
+        "cs": "Google Maps provozovnu nenašly.",
+        "en": "Google Maps found no place.",
+    },
+    "employer.web": {"cs": "Internet a sociální sítě", "en": "Web and social media"},
+    "employer.no_mentions": {
+        "cs": "Žádné zmínky o práci u této firmy.",
+        "en": "No mentions of working there.",
+    },
+    "employer.link.atmoskop": {"cs": "Atmoskop", "en": "Atmoskop"},
+    "employer.link.indeed": {"cs": "Indeed", "en": "Indeed"},
+    "employer.link.google": {"cs": "Google Maps", "en": "Google Maps"},
+    "employer.link.mapy": {"cs": "Mapy.cz", "en": "Mapy.cz"},
+    "employer.link.facebook": {"cs": "Facebook", "en": "Facebook"},
+    "employer.link.ares": {"cs": "ARES", "en": "ARES"},
+    "employer.link.justice": {"cs": "Obchodní rejstřík", "en": "Business register"},
+    "employer.link.isir": {"cs": "Insolvenční rejstřík", "en": "Insolvency register"},
+    "employer.all_jobs": {"cs": "Všechny nabídky ({n})", "en": "All jobs ({n})"},
+    "employer.refresh": {"cs": "Aktualizovat", "en": "Refresh"},
+    "employer.reviews_at": {"cs": "Recenze {date}", "en": "Reviews {date}"},
+    "employer.mentions_at": {"cs": "zmínky {date}", "en": "mentions {date}"},
+    "employer.summary_at": {"cs": "shrnutí {date} ({model})", "en": "summary {date} ({model})"},
+    "employer.badge_satisfaction": {
+        "cs": "Spokojenost zaměstnanců (Atmoskop)",
+        "en": "Employee satisfaction (Atmoskop)",
+    },
+    "employer.for_client": {"cs": "pro firmu {name}", "en": "for {name}"},
+    "employer.badge_warning": {"cs": "Úřední varování", "en": "Official warning"},
+    "employer.warning.ended": {"cs": "zaniklá firma", "en": "company ceased"},
+    "employer.warning.insolvency": {"cs": "insolvence", "en": "insolvency"},
+    "employer.warning.vat": {"cs": "nespolehlivý plátce DPH", "en": "unreliable VAT payer"},
+    "employer.warning.unlicensed": {"cs": "agentura bez povolení?", "en": "unlicensed agency?"},
+    "employer.warning.not_found": {"cs": "IČO není v ARES", "en": "IČO not in ARES"},
+    "employer.not_in_ares": {
+        "cs": "IČO z inzerátu v obchodním rejstříku (ARES) není.",
+        "en": "The IČO from the ad is not in the business register (ARES).",
+    },
+    "employer.badge_guess": {
+        "cs": "Odhad z textu inzerátů, ne úřední údaj",
+        "en": "A guess from the ads' text, not an official record",
+    },
+    "employer.not_checked": {"cs": "Zatím neověřeno.", "en": "Not checked yet."},
+    "employer.isir.pending": {"cs": "návrh se projednává", "en": "petition being decided"},
+    "employer.isir.moratorium": {"cs": "moratorium", "en": "moratorium"},
+    "employer.isir.bankrupt": {"cs": "zjištěn úpadek", "en": "declared insolvent"},
+    "employer.isir.konkurs": {"cs": "konkurs", "en": "bankruptcy"},
+    "employer.isir.debt_relief": {"cs": "oddlužení", "en": "debt relief"},
+    "employer.isir.reorganization": {"cs": "reorganizace", "en": "reorganization"},
+    "employer.isir.ended": {"cs": "řízení skončilo", "en": "proceedings ended"},
+    "employer.isir.cancelled": {"cs": "řízení zrušeno", "en": "proceedings cancelled"},
+    "employer.isir.error": {"cs": "chybný zápis", "en": "wrong entry"},
 }
 
 

@@ -43,5 +43,7 @@ class BackgroundServer:
             self._thread.join(timeout=0.5)
 
     def stop(self) -> None:
+        """Ends the server; its shutdown also stops the app's background work (a running
+        search, the employer pass, MOTIS and the AI model), which can take up to a minute."""
         self._server.should_exit = True
-        self._thread.join(timeout=5)
+        self._thread.join(timeout=60)

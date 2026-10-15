@@ -11,9 +11,11 @@
     </div>
   </header>
   <p class="meta">
-    {% if job.employer_name %}<strong>{{ job.employer_name }}</strong>{% endif %}
-    {% if job.place_text %}{% if job.employer_name %} · {% endif %}{{ job.place_text }}{% endif %}
-    {% if job.posted_at %}{% if job.employer_name or job.place_text %} · {% endif %}{{ t("job.posted") }} {{ job.posted_at | date }}{% endif %}
+    {% set emp = job.employer %}
+    {% set emp_name = job.employer_name or (emp.name if emp else "") %}
+    {% if emp %}{% include "_employer_line.html" %}{% elif emp_name %}<strong>{{ emp_name }}</strong>{% endif %}
+    {% if job.place_text %}{% if emp_name %} · {% endif %}{{ job.place_text }}{% endif %}
+    {% if job.posted_at %}{% if emp_name or job.place_text %} · {% endif %}{{ t("job.posted") }} {{ job.posted_at | date }}{% endif %}
   </p>
   {% include "_travel.html" %}
   {% if job.contract_types or job.shifts or job.benefits %}

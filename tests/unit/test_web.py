@@ -69,6 +69,7 @@ def app(tmp_path):
         autostart_sync=autostart.append,
         refreshes=(),
         routing_updates=False,
+        employer_updates=False,
     )
     app.state.autostart = autostart  # what the Run value was set to, in order
     return app
@@ -148,13 +149,19 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
     page = client.get("/wizard/map").text
     assert "Stáhnout mapu" in page and "Přeskočit" in page  # nothing downloads unasked
     r = client.post("/wizard/map", data={"routing_area": "auto"}, follow_redirects=False)
-    assert r.headers["location"] == "/wizard/done"
+    assert r.headers["location"] == "/wizard/employers"
     assert not app.state.services.settings.routing_download
     r = client.post("/wizard/map", data={"routing_area": "home", "download": "1"},
                     follow_redirects=False)  # fmt: skip
     assert r.headers["location"] == "/wizard/map"  # stays to show the progress
     page = client.get("/wizard/map").text
     assert "Stáhnout mapu" not in page and 'id="routing-status"' in page
+    page = client.get("/wizard/employers").text
+    assert re.search(r'name="auto_check"\s*>', page)  # off by default
+    assert re.search(r'name="atmoskop"\s+checked', page)
+    r = client.post("/wizard/employers", data={"auto_check": "on", "atmoskop": "on"},
+                    follow_redirects=False)  # fmt: skip
+    assert r.headers["location"] == "/wizard/done"
     done = client.get("/wizard/done").text
     assert "Automatické hledání je vypnuté" in done
 
@@ -175,6 +182,7 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
     assert saved.sources == {source_id: source_id in chosen for source_id, _ in SWITCHABLE}
     assert saved.automation.enabled is False
     assert saved.routing_download and saved.routing_area == "home"
+    assert saved.employers.auto_check and not saved.employers.mentions
 
 
 def test_facebook_and_instagram_need_consent_then_offer_a_login(app, client):
@@ -756,6 +764,7 @@ def test_settings_list_the_wizard_steps_in_order(app, client):
         "/settings/keys",
         "/settings/automation",
         "/settings/map",
+        "/settings/employers",
     ]
     assert "Čeština · Podle Windows" in page and "domov nezadán" in page
     for href in pages:
@@ -1043,3 +1052,162 @@ def test_other_sites_cannot_start_work_through_the_app(app, client):
     assert client.get("/", headers=cross).status_code == 403
     assert client.get("/static/app.css", headers=cross).status_code == 200
     assert client.get("/", headers={"Sec-Fetch-Site": "none"}).status_code == 200  # typed in
+
+
+# --- M9: employer cards -------------------------------------------------------------------------
+
+
+def employer_jobs(app):
+    """Two jobs: Penny (checked, Atmoskop 62 %, an AI summary) and an uncertain pub."""
+    from adawork.core import ParsedJob
+    from adawork.db.models import Employer, EmployerReview, EmployerSummary
+
+    now = datetime(2026, 10, 14, 12, 0)
+    with app.state.services.sessions() as s:
+        store = JobStore(s, "x")
+        store.add(
+            ParsedJob(
+                external_id="p",
+                title="Prodavač Penny",
+                employer_name="Penny Market s.r.o.",
+                employer_ico="64945880",
+            )
+        )
+        store.add(ParsedJob(external_id="u", title="Číšník", employer_name="Hospoda U Lípy"))
+        store.commit()
+        penny = Employer(
+            ico="64945880",
+            name="Penny Market s.r.o.",
+            match="ad",
+            dic="CZ64945880",
+            founded=datetime(1996, 1, 1).date(),
+            employee_band="470",
+            checked_at=now,
+            satisfaction=62,
+            reviews_at=now,
+            mentions_at=now,
+            updated_at=now,
+            links={"atmoskop": "https://www.atmoskop.cz/nazory-na-zamestnavatele/1-penny"},
+        )
+        pub = Employer(
+            name="Hospoda U Lípy",
+            match="uncertain",
+            updated_at=now,
+            candidates=[
+                {
+                    "ico": "12345679",
+                    "name": "Hostinec u Lípy, s.r.o.",
+                    "seat": "Praha",
+                    "band": "120",
+                },
+            ],
+        )
+        s.add_all([penny, pub])
+        s.flush()
+        s.add(
+            EmployerReview(
+                employer_id=penny.id,
+                source="atmoskop",
+                rating=62,
+                scale="percent",
+                count=861,
+                scores={"colleagues": 71, "boss": 62, "suitable_for": []},
+                texts=[{"plus": "Dobrý kolektiv", "minus": "Přesčasy", "date": "2025"}],
+                url="https://www.atmoskop.cz/nazory-na-zamestnavatele/1-penny",
+                fetched_at=now,
+            )
+        )
+        s.add(
+            EmployerSummary(
+                employer_id=penny.id,
+                inputs="x",
+                model="test",
+                prompt_version=1,
+                created_at=now,
+                summary={
+                    "praise": [{"text": "Dobrý kolektiv.", "sources": [1]}],
+                    "criticism": [],
+                    "warnings": [],
+                },
+                sources=[{"source": "atmoskop", "url": "https://www.atmoskop.cz/r"}],
+            )
+        )
+        for job in s.scalars(select(Job)):
+            job.employer_id = penny.id if job.title.startswith("Prodavač") else pub.id
+        penny.jobs_count, pub.jobs_count = 1, 1
+        s.commit()
+        return penny.id, pub.id
+
+
+def test_employer_card_from_the_job_list(app, client):
+    app.state.services.settings.wizard_completed = True
+    penny, pub = employer_jobs(app)
+    page = client.get("/").text
+    assert f'class="link employer-open" data-employer="{penny}"' in page
+    assert '<span class="emp-badge mid"' in page and "62 %" in page  # Atmoskop satisfaction
+    assert 'id="employer-body"' in page and "/static/employer.js" in page
+
+    card = client.get(f"/employer/{penny}").text
+    assert "IČO 64945880" in card and "Bez insolvence" in card and "Spolehlivý plátce DPH" in card
+    assert "5 000–9 999 zaměstnanců" in card and "861 hodnocení" in card
+    assert 'href="https://www.atmoskop.cz/r"' in card and ">[1]</a>" in card  # cited point
+    assert "Shrnutí od AI" in card and f'href="/?q=&employer={penny}"' in card
+    assert "ares.gov.cz/ekonomicke-subjekty?ico=64945880" in card
+    assert 'hx-trigger="load delay:2s"' not in card  # nothing being fetched in tests
+
+    unsure = client.get(f"/employer/{pub}").text
+    assert "Nejisté přiřazení" in unsure and "Hostinec u Lípy, s.r.o." in unsure
+    assert client.get("/employer/99999").status_code == 200  # gone: a short note
+    assert client.get(f"/employer/{2**64}").status_code == 422  # not a number SQLite keeps
+
+    # While a refresh runs, the card asks for the step line only; at the end, the card.
+    app.state.services.employers.refreshing[penny] = "reviews"
+    step = client.get(f"/employer/{penny}", params={"poll": "1"})
+    assert 'id="employer-step"' in step.text and "IČO" not in step.text
+    assert "HX-Retarget" not in step.headers
+    del app.state.services.employers.refreshing[penny]
+    done = client.get(f"/employer/{penny}", params={"poll": "1"})
+    assert "IČO 64945880" in done.text and done.headers["HX-Retarget"] == "#employer-body"
+
+
+def test_employer_match_corrected_by_ico(app, client):
+    app.state.services.settings.wizard_completed = True
+    penny, pub = employer_jobs(app)
+    for typo in ("123", "64945881"):  # not an IČO; a wrong check digit
+        r = client.post(f"/employer/{pub}/correct", data={"ico": typo})
+        assert 'aria-invalid="true"' in r.text
+    r = client.post(f"/employer/{pub}/correct", data={"ico": "6494 5880"})
+    assert "IČO 64945880" in r.text and r.headers["HX-Trigger"] == "jobs-updated"
+    with app.state.services.sessions() as s:
+        assert {j.employer_id for j in s.scalars(select(Job))} == {penny}
+
+
+def test_employer_filters_in_the_panel(app, client):
+    app.state.services.settings.wizard_completed = True
+    penny, _ = employer_jobs(app)
+    panel = client.get("/facets", params={"employer": penny}).text
+    assert "Jen nabídky firmy <strong>Penny Market s.r.o.</strong>" in panel
+    assert 'name="emp_min"' in panel and 'name="emp_ok"' in panel
+    results = client.get("/results", params={"emp_min": "60"}, headers={"HX-Request": "true"})
+    assert "Prodavač Penny" in results.text and "Číšník" not in results.text
+    page = client.get("/", params={"sort": "employer"}).text
+    assert 'value="employer" selected' in page
+    gone = client.get("/facets", params={"employer": 99999}).text  # merged away since
+    assert "(už není v seznamu)" in gone and "zrušit" in gone
+
+
+def test_google_key_and_employer_sources_in_settings(app, client):
+    app.state.services.settings.wizard_completed = True
+    page = client.get("/settings/keys").text
+    assert "Klíč Google Maps (hodnocení zákazníků)" in page and "0 z 950" in page
+    client.post("/settings/keys", data={"key_google_places": "AIza-test-1234"})
+    assert app.state.services.secrets.get("google_places") == "AIza-test-1234"
+    assert "google_places" not in app.state.services.settings.sources  # not a job source
+    r = client.post("/settings/employers", data={"atmoskop": "on"}, follow_redirects=False)
+    assert r.headers["location"] == "/settings/employers?saved=1"
+    cfg = app.state.services.settings.employers
+    assert cfg.atmoskop and not cfg.mentions and not cfg.google and not cfg.auto_check
+    assert "Zaměstnavatelů v nabídkách" in client.get("/settings/employers").text
+    assert "při otevření karty · Atmoskop" in client.get("/settings").text
+    client.post("/settings/employers", data={"auto_check": "on", "atmoskop": "on"})
+    assert cfg.auto_check and "automaticky · Atmoskop" in client.get("/settings").text

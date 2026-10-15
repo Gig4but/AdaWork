@@ -80,13 +80,23 @@
       </div>
     </form>
 
+  {% elif step == "employers" %}
+    <h2>{{ t("employers.title") }}</h2>
+    <form method="post" action="/wizard/employers">
+      {% include "_employers_form.html" %}
+      <div class="grid">
+        <a href="/wizard/map" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
+        <button type="submit">{{ t("wizard.next") }}</button>
+      </div>
+    </form>
+
   {% elif step == "done" %}
     <h2>{{ t("wizard.done") }}</h2>
     <p>{{ t("wizard.done.text") }}</p>
     <p class="muted">{% if settings.automation.enabled %}{{ t("wizard.auto_on", h=settings.automation.interval_hours) }}{% else %}{{ t("wizard.auto_off") }}{% endif %}</p>
     <form method="post" action="/wizard/done">
       <div class="grid">
-        <a href="/wizard/map" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
+        <a href="/wizard/employers" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
         <button type="submit">{{ t("wizard.start") }}</button>
       </div>
     </form>

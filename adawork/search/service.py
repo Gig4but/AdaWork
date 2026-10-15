@@ -29,7 +29,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from adawork.config import TIME_OF_DAY
 from adawork.core import utcnow
-from adawork.db.models import Job, JobSource, Location, SourceState
+from adawork.db.models import Employer, Job, JobSource, Location, SourceState
 from adawork.normalize.text import accented_words, fold
 from adawork.normalize.vocab import EDUCATION_LEVEL
 from adawork.routing.commute import travel_table, within
@@ -39,8 +39,9 @@ from adawork.search import kinds
 _BM25 = "bm25(jobs_fts, 10.0, 3.0, 2.0, 1.0)"
 _TOKEN = re.compile(r"\w+", re.UNICODE)
 
-Sort = Literal["relevance", "date", "salary", "travel"]
-SORTS = ("relevance", "date", "salary", "travel")
+Sort = Literal["relevance", "date", "salary", "travel", "employer"]
+SORTS = ("relevance", "date", "salary", "travel", "employer")
+SATISFACTION_STEPS = (50, 60, 70, 80)  # employer filter: minimum Atmoskop satisfaction, %
 TRAVEL_MODES = ("any", "car", "transit", "walk", "bike")
 MAX_TRAVEL = 120  # minutes; the slider's end
 LIST_FIELDS = ("categories", "contract_types", "shifts", "suitable_for", "benefits")
@@ -115,6 +116,13 @@ class Filters:
     travel_mode: str = "any"
     travel_max: int | None = None  # minutes; None = not filtered by travel time
     depart: str = "07:00"
+    # Employer (PLAN §4.5): one employer's jobs; minimum employee satisfaction (%); no
+    # official warnings; only employers resolved to an IČO; no agencies without a licence.
+    employer: int | None = None
+    emp_min: int | None = None
+    emp_ok: bool = False
+    emp_verified: bool = False
+    emp_licensed: bool = False
     sort: Sort = "relevance"
 
     def is_filtered(self) -> bool:
@@ -151,6 +159,7 @@ def filters_from(qp, defaults: dict[str, str] | None = None) -> Filters:
     mode = get("mode", "any")
     depart = get("depart", "07:00")
     travel_max = number("max_min", MAX_TRAVEL)
+    emp_min = number("emp_min", 100)
     return Filters(
         q=get("q"),
         **{name: [v for v in qp.getlist(name) if v] for name in (*LIST_FIELDS, "kraj")},
@@ -165,6 +174,11 @@ def filters_from(qp, defaults: dict[str, str] | None = None) -> Filters:
         travel_mode=mode if mode in TRAVEL_MODES else "any",
         travel_max=travel_max or None,  # 0 = "bez omezení"
         depart=depart if re.fullmatch(TIME_OF_DAY, depart) else "07:00",
+        employer=number("employer", 10**9),
+        emp_min=emp_min if emp_min in SATISFACTION_STEPS else None,
+        emp_ok=qp.get("emp_ok") == "1",
+        emp_verified=qp.get("emp_verified") == "1",
+        emp_licensed=qp.get("emp_licensed") == "1",
         sort=sort if sort in SORTS and (sort != "travel" or origin) else "relevance",
     )
 
@@ -179,6 +193,11 @@ def filters_to_query(f: Filters) -> str:
             pairs.append((name, getattr(f, name)))
     if f.flagged:
         pairs.append(("flagged", 1))
+    if f.employer:
+        pairs.append(("employer", f.employer))
+    if f.emp_min:
+        pairs.append(("emp_min", f.emp_min))
+    pairs += [(name, 1) for name in ("emp_ok", "emp_verified", "emp_licensed") if getattr(f, name)]
     if f.origin:
         pairs += [("from", f.origin_label), ("at", f.origin), ("mode", f.travel_mode),
                   ("max_min", f.travel_max or 0), ("depart", f.depart)]  # fmt: skip
@@ -237,6 +256,27 @@ def _conditions(f: Filters, skip: frozenset[str] = frozenset()) -> list[ColumnEl
         conds.append(Job.salary_month_min.is_not(None))
     if f.posted_days:
         conds.append(Job.posted_at >= utcnow() - timedelta(days=f.posted_days))
+    return conds + _employer_conditions(f)
+
+
+def _employer_conditions(f: Filters) -> list[ColumnElement[bool]]:
+    """Each is one lookup of matching employer ids (a non-correlated IN), not a join."""
+    conds: list[ColumnElement[bool]] = []
+    if f.employer:
+        conds.append(Job.employer_id == f.employer)
+    if f.emp_min:
+        good = select(Employer.id).where(Employer.satisfaction >= f.emp_min)
+        conds.append(Job.employer_id.in_(good))
+    if f.emp_verified:
+        conds.append(Job.employer_id.in_(select(Employer.id).where(Employer.ico.is_not(None))))
+    warned = []
+    if f.emp_ok:
+        warned.append(func.json_array_length(Employer.warnings) > 0)
+    if f.emp_licensed:
+        warned.append(_any_of(Employer.warnings, ["unlicensed"]))
+    if warned:
+        bad = select(Employer.id).where(or_(*warned))
+        conds.append(or_(Job.employer_id.is_(None), Job.employer_id.not_in(bad)))
     return conds
 
 
@@ -484,15 +524,23 @@ def search_jobs(
     total = session.scalar(count_stmt.where(*known), params) or 0
 
     stmt = _sorted(session, f, match).where(*known)
-    stmt = stmt.options(
-        selectinload(Job.sources), selectinload(Job.location), selectinload(Job.images)
-    )
+    stmt = stmt.options(*_card_loads())
     jobs = list(session.scalars(stmt.limit(limit).offset(offset), params))
     result = SearchResult(total, jobs, 0.0)
     if facets:
         result.facets, result.flagged = facet_counts(session, f)
     result.took_ms = (time.perf_counter() - started) * 1000
     return result
+
+
+def _card_loads() -> tuple:
+    """What a job card shows besides the job: its sources, place, pictures and employer."""
+    return (
+        selectinload(Job.sources),
+        selectinload(Job.location),
+        selectinload(Job.images),
+        selectinload(Job.employer),
+    )
 
 
 def _sorted(session: Session, f: Filters, match: TextMatch) -> Select:
@@ -506,6 +554,9 @@ def _sorted(session: Session, f: Filters, match: TextMatch) -> Select:
     if f.sort == "salary":
         salary = func.coalesce(Job.salary_month_max, Job.salary_month_min)
         return stmt.order_by(salary.desc().nulls_last(), *newest)
+    if f.sort == "employer":
+        rating = select(Employer.satisfaction).where(Employer.id == Job.employer_id)
+        return stmt.order_by(rating.scalar_subquery().desc().nulls_last(), *newest)
     if f.sort == "relevance" and hits is not None:
         return stmt.order_by(*_batch_order(session), hits.c.rank.nulls_last(), Job.id.desc())
     if f.sort == "relevance":
@@ -562,7 +613,7 @@ def jobs_found_since(
     stmt = (
         stmt.where(Job.id > since, Job.id <= up_to_id, Job.id.not_in(skip))
         .order_by(Job.id)
-        .options(selectinload(Job.sources), selectinload(Job.location), selectinload(Job.images))
+        .options(*_card_loads())
         .limit(limit)
     )
     return list(session.scalars(stmt, params)), total

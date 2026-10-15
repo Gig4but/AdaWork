@@ -1,0 +1,197 @@
+{# "Karta zaměstnavatele" (PLAN §4.5), shown in the search page's dialog (static/employer.js).
+   While something is being fetched, the card asks again every few seconds. #}
+{% from "_icons.html" import icon %}
+{% if not e %}
+  <header><button type="button" aria-label="{{ t('commute.close') }}" rel="prev" onclick="this.closest('dialog').close()"></button>
+    <h3>{{ t("employer.title") }}</h3></header>
+  <p>{{ t("employer.gone") }}</p>
+{% else %}
+{% set atm = reviews.get("atmoskop") %}
+{% set goo = reviews.get("google") %}
+<header>
+  <button type="button" aria-label="{{ t('commute.close') }}" rel="prev" onclick="this.closest('dialog').close()"></button>
+  <h3>{{ icon("building") }} {{ e.name }}</h3>
+  <p class="muted small">
+    {% if e.ico %}IČO {{ e.ico }}{% endif %}
+    {% if names and (names | length > 1 or names[0] != e.name) %} · {{ t("employer.as_ads") }} {{ names | join(", ") }}{% endif %}
+  </p>
+</header>
+
+{% if step %}{% set eid = e.id %}{% include "_employer_step.html" %}{% endif %}
+
+{# --- who it is --- #}
+{% if e.match in ("uncertain", "none") %}
+  <section class="emp-match">
+    <p class="warning">{{ t("employer.uncertain") if e.match == "uncertain" else t("employer.unknown") }}</p>
+    {% if e.candidates %}
+      <ul class="emp-candidates">
+        {% for c in e.candidates %}
+          <li>
+            <form hx-post="/employer/{{ e.id }}/correct" hx-target="#employer-body">
+              <input type="hidden" name="ico" value="{{ c.ico }}">
+              <strong>{{ c.name }}</strong> <span class="muted small">IČO {{ c.ico }}{% if c.seat %} · {{ c.seat }}{% endif %}{% if c.band and c.band in bands %} · {{ bands[c.band] }} {{ t("employer.people") }}{% endif %}</span>
+              <button type="submit" class="secondary outline">{{ t("employer.this_one") }}</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </section>
+{% endif %}
+
+{# --- Ověření: official registers --- #}
+<section>
+  <h4>{{ t("employer.checks") }}</h4>
+  {% if not e.ico %}
+    <p class="muted small">{{ t("employer.no_ico") }}</p>
+  {% elif not e.checked_at %}
+    <p class="muted small">{{ t("employer.checking") if step else t("employer.not_checked") }}</p>
+  {% elif "not_found" in e.warnings %}
+    <p class="bad">⚠ {{ t("employer.not_in_ares") }}</p>
+  {% else %}
+    <ul class="emp-checks">
+      {% if e.ended %}
+        <li class="bad">⚠ {{ t("employer.ended", date=e.ended | date) }}</li>
+      {% elif e.founded %}
+        <li class="ok">✓ {{ t("employer.founded", date=e.founded | date) }}</li>
+      {% endif %}
+      {% if e.insolvency %}
+        {% for p in e.insolvency %}
+          <li class="{{ 'bad' if 'insolvency' in e.warnings else 'muted' }}">{{ '⚠' if 'insolvency' in e.warnings else '·' }} {{ t("employer.insolvency") }}{% if p.state %}{% set k = isir_state(p.state) %}: {{ t("employer.isir." ~ k) if k else p.state | lower }}{% endif %}{% if p.case %} ({{ p.case }}{% if p.court %}, {{ p.court }}{% endif %}){% endif %}{% if p.since %}, {{ t("employer.since") }} {{ p.since }}{% endif %}
+            {% if p.url %}<a href="{{ p.url | safe_url }}" target="_blank" rel="noopener">ISIR ↗</a>{% endif %}</li>
+        {% endfor %}
+      {% else %}
+        <li class="ok">✓ {{ t("employer.no_insolvency") }}</li>
+      {% endif %}
+      {% if e.vat_unreliable %}
+        <li class="bad">⚠ {{ t("employer.vat_unreliable", date=e.vat_unreliable) }}</li>
+      {% elif e.dic %}
+        <li class="ok">✓ {{ t("employer.vat_ok") }}</li>
+      {% else %}
+        <li class="muted">· {{ t("employer.no_vat") }}</li>
+      {% endif %}
+      {% if e.agency %}
+        <li class="ok">✓ {{ t("employer.agency_temp") if e.agency.temp else t("employer.agency") }}{% if e.agency.until %} {{ t("employer.until", date=e.agency.until) }}{% endif %}</li>
+      {% elif "unlicensed" in e.warnings %}
+        <li class="bad">⚠ {{ t("employer.unlicensed") }}</li>
+      {% endif %}
+      {% if band %}<li class="muted">· {{ band }} {{ t("employer.people") }}</li>{% endif %}
+      {% if e.address %}<li class="muted">· {{ t("employer.seat") }} {{ e.address }}</li>{% endif %}
+    </ul>
+    <p class="muted small">{{ t("employer.checked", date=e.checked_at | date) }}
+      {% if e.match not in ("ad", "manual", "uncertain", "none") %} · {{ t("employer.match." ~ e.match) }}{% endif %}</p>
+  {% endif %}
+  {% if e.ico and e.match not in ("ad", "uncertain", "none") or bad_ico %}
+    <details class="emp-fix" {% if bad_ico %}open{% endif %}>
+      <summary class="small">{{ t("employer.wrong") }}</summary>
+      <form hx-post="/employer/{{ e.id }}/correct" hx-target="#employer-body" class="emp-fix-form">
+        <input name="ico" inputmode="numeric" pattern="[0-9 ]{8,9}" placeholder="IČO" aria-label="IČO" required
+               {% if bad_ico %}aria-invalid="true"{% endif %}>
+        <button type="submit" class="secondary">{{ t("employer.fix") }}</button>
+      </form>
+    </details>
+  {% elif e.match == "none" %}
+    <form hx-post="/employer/{{ e.id }}/correct" hx-target="#employer-body" class="emp-fix-form">
+      <input name="ico" inputmode="numeric" pattern="[0-9 ]{8,9}" placeholder="IČO" aria-label="IČO" required>
+      <button type="submit" class="secondary">{{ t("employer.fix") }}</button>
+    </form>
+  {% endif %}
+</section>
+
+{# --- Zaměstnanci: Atmoskop, AI summary --- #}
+<section>
+  <h4>{{ t("employer.employees") }}</h4>
+  {% if atm and atm.rating is not none %}
+    <p><span class="emp-score">{{ atm.rating | int }} %</span> {{ t("employer.satisfaction", n=atm.count) }}
+      <a href="{{ atm.url | safe_url }}" target="_blank" rel="noopener">Atmoskop ↗</a></p>
+    <p class="small muted">{{ t("employer.colleagues") }} {{ atm.scores.colleagues }} % · {{ t("employer.boss") }} {{ atm.scores.boss }} %
+      {% if atm.scores.suitable_for %} · {{ t("employer.suitable") }} {{ atm.scores.suitable_for | join(", ") }}{% endif %}</p>
+  {% elif e.reviews_at %}
+    <p class="muted small">{{ t("employer.no_atmoskop") }}</p>
+  {% endif %}
+
+  {% if summary and (summary.summary.praise or summary.summary.criticism or summary.summary.warnings) %}
+    <div class="emp-summary">
+      <p class="small"><span class="ai-mark">✦ {{ t("employer.summary") }}</span> <span class="muted">{{ t("employer.summary_note") }}</span></p>
+      {% macro points(items, title, cls) %}
+        {% if items %}
+          <p class="small"><strong>{{ title }}</strong></p>
+          <ul class="{{ cls }}">
+            {% for p in items %}
+              <li>{{ p.text }}
+                {% for n in p.sources %}{% set src = summary.sources[n - 1] %}<a class="cite" href="{{ src.url | safe_url }}" target="_blank" rel="noopener" title="{{ src.url }}">[{{ n }}]</a>{% endfor %}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endmacro %}
+      {{ points(summary.summary.warnings, t("employer.warnings"), "bad") }}
+      {{ points(summary.summary.praise, t("employer.praise"), "") }}
+      {{ points(summary.summary.criticism, t("employer.criticism"), "") }}
+    </div>
+  {% endif %}
+
+  {% if atm and atm.texts %}
+    <details>
+      <summary class="small">{{ t("employer.reviews", n=atm.texts | length) }}</summary>
+      {% for r in atm.texts %}
+        <blockquote class="small">
+          {% if r.plus %}<p><strong>+</strong> {{ r.plus }}</p>{% endif %}
+          {% if r.minus %}<p><strong>−</strong> {{ r.minus }}</p>{% endif %}
+          <footer class="muted">{{ r.date }}{% if r.current %} · {{ t("employer.current") }}{% endif %}</footer>
+        </blockquote>
+      {% endfor %}
+    </details>
+  {% endif %}
+</section>
+
+{# --- Zákazníci: Google --- #}
+<section>
+  <h4>{{ t("employer.customers") }}</h4>
+  {% if goo and goo.rating is not none %}
+    <p><span class="emp-score">★ {{ "%.1f" | format(goo.rating) }}</span> {{ t("employer.google", n=goo.count) }}
+      <a href="{{ goo.url | safe_url }}" target="_blank" rel="noopener">Google Maps ↗</a></p>
+    <p class="small muted">{{ t("employer.customers_note") }}{% if goo.scores.place %} ({{ goo.scores.place }}){% endif %}</p>
+    {% if goo.texts %}
+      <details><summary class="small">{{ t("employer.reviews", n=goo.texts | length) }}</summary>
+        {% for r in goo.texts %}<blockquote class="small"><p>{{ "★" * (r.rating or 0) }} {{ r.text }}</p><footer class="muted">{{ r.when }}</footer></blockquote>{% endfor %}
+      </details>
+    {% endif %}
+  {% elif not google_key %}
+    <p class="small muted">{{ t("employer.google_key") }} <a href="/settings/keys">{{ t("settings.title") }}</a></p>
+  {% else %}
+    <p class="small muted">{{ t("employer.no_google") }}</p>
+  {% endif %}
+</section>
+
+{# --- Internet a sociální sítě --- #}
+<section>
+  <h4>{{ t("employer.web") }}</h4>
+  {% if mentions %}
+    <ul class="emp-mentions small">
+      {% for m in mentions %}
+        <li><a href="{{ m.url | safe_url }}" target="_blank" rel="noopener">{{ m.title or m.url }}</a>
+          {% if m.snippet %}<br><span class="muted">{{ m.snippet | truncate(220) }}</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+  {% elif e.mentions_at %}
+    <p class="small muted">{{ t("employer.no_mentions") }}</p>
+  {% endif %}
+</section>
+
+<footer class="emp-footer">
+  <p class="emp-links small">
+    {% for k in ("atmoskop", "indeed", "google", "mapy", "facebook", "ares", "justice", "isir") if links.get(k) %}
+      <a href="{{ links[k] | safe_url }}" target="_blank" rel="noopener">{{ t("employer.link." ~ k) }} ↗</a>
+    {% endfor %}
+  </p>
+  <p class="emp-actions">
+    {% if e.jobs_count %}<a href="/?q=&employer={{ e.id }}" role="button" class="secondary outline">{{ t("employer.all_jobs", n=e.jobs_count) }}</a>{% endif %}
+    <button type="button" class="secondary outline" hx-post="/employer/{{ e.id }}/refresh" hx-target="#employer-body" {% if step %}disabled{% endif %}>{{ icon("refresh") }} {{ t("employer.refresh") }}</button>
+  </p>
+  <p class="muted small">
+    {% if e.reviews_at %}{{ t("employer.reviews_at", date=e.reviews_at | date) }}{% endif %}
+    {% if e.mentions_at %} · {{ t("employer.mentions_at", date=e.mentions_at | date) }}{% endif %}
+    {% if summary %} · {{ t("employer.summary_at", date=summary.created_at | date, model=summary.model) }}{% endif %}
+  </p>
+</footer>
+{% endif %}

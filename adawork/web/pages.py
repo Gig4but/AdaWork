@@ -13,11 +13,12 @@ from sqlalchemy import Row, func, select
 
 from adawork import __version__
 from adawork.db.models import Job, Run
+from adawork.employers.names import client_in
 from adawork.i18n import translate
 from adawork.normalize.vocab import VOCABULARIES, label
 from adawork.routing.commute import MODES
 from adawork.scraper.sources import LABELS as SOURCE_LABELS
-from adawork.search.service import TRAVEL_MODES
+from adawork.search.service import SATISFACTION_STEPS, TRAVEL_MODES
 from adawork.services import Services
 
 WEB_DIR = Path(__file__).parent
@@ -82,6 +83,7 @@ def local_time(utc: datetime) -> datetime:
 TEMPLATES.env.filters["safe_url"] = _safe_url
 TEMPLATES.env.filters["date"] = _format_date
 TEMPLATES.env.filters["datetime"] = _format_datetime
+TEMPLATES.env.filters["agency_client"] = client_in
 TEMPLATES.env.filters["source_label"] = lambda source_id: SOURCE_LABELS.get(source_id, source_id)
 
 
@@ -101,6 +103,7 @@ def render(request: Request, name: str, **context) -> HTMLResponse:
         "vocab": VOCABULARIES,
         "commute_modes": MODES,
         "travel_modes": TRAVEL_MODES,
+        "satisfaction_steps": SATISFACTION_STEPS,
         "commute_on": svc.travel.on(),
     }
     context.setdefault("times", {})  # travel times of the listed jobs

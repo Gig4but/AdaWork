@@ -10,12 +10,18 @@ from adawork.search.service import TRAVEL_MODES
 from adawork.services import Services
 from adawork.web.pages import THEMES, Svc, render, status_context
 from adawork.web.routes.ai import ai_context, apply_ai_choice
-from adawork.web.routes.settings import apply_automation, map_context, save_map, save_profile
+from adawork.web.routes.settings import (
+    apply_automation,
+    apply_employers,
+    map_context,
+    save_map,
+    save_profile,
+)
 from adawork.web.routes.sources import apply_keys, apply_source_choices, key_rows, source_rows
 
 router = APIRouter()
 
-STEPS = ("welcome", "profile", "ai", "sources", "keys", "automation", "map", "done")
+STEPS = ("welcome", "profile", "ai", "sources", "keys", "automation", "map", "employers", "done")
 
 
 def render_step(request: Request, svc: Services, step: str, **context) -> HTMLResponse:
@@ -99,6 +105,12 @@ async def wizard_map(request: Request, svc: Svc) -> RedirectResponse:
     save_map(svc, form)
     if form.get("download"):
         return RedirectResponse("/wizard/map", status_code=303)
+    return RedirectResponse("/wizard/employers", status_code=303)
+
+
+@router.post("/wizard/employers")
+async def wizard_employers(request: Request, svc: Svc) -> RedirectResponse:
+    apply_employers(svc.settings, await request.form())
     return RedirectResponse("/wizard/done", status_code=303)
 
 
