@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 {% block title %}{{ t("wizard.title") }} – AdaWork{% endblock %}
 {% block content %}
 <article class="wizard">
@@ -11,7 +12,7 @@
     <h2>{{ t("wizard.welcome") }}</h2>
     <p>{{ t("wizard.welcome.text") }}</p>
     <form>{% include "_appearance_form.html" %}</form>
-    <a href="/wizard/profile" role="button">{{ t("wizard.next") }}</a>
+    <div class="wizard-nav"><a href="/wizard/profile" role="button">{{ t("wizard.next") }}</a></div>
 
   {% elif step == "profile" %}
     <h2>{{ t("wizard.profile") }}</h2>
@@ -21,8 +22,8 @@
         <input name="kinds_of_work" value="{{ settings.profile.kinds_of_work | join(', ') }}" aria-describedby="kinds-hint">
         <small id="kinds-hint">{{ t("wizard.kinds.hint") }}</small>
       </label>
-      <div class="grid">
-        <a href="/wizard/welcome" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
+      <div class="wizard-nav">
+        <a href="/wizard/welcome" class="secondary">{{ icon("back") }}{{ t("wizard.back") }}</a>
         <button type="submit">{{ t("wizard.next") }}</button>
       </div>
     </form>
@@ -32,8 +33,8 @@
     <p>{{ t("ai.text") }} {{ t("wizard.later") }}</p>
     <form method="post" action="/wizard/ai">
       {% include "_ai_form.html" %}
-      <div class="grid">
-        <a href="/wizard/profile" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
+      <div class="wizard-nav">
+        <a href="/wizard/profile" class="secondary">{{ icon("back") }}{{ t("wizard.back") }}</a>
         <button type="submit">{{ t("wizard.next") }}</button>
       </div>
     </form>
@@ -43,8 +44,8 @@
     <p>{{ t("sources.text") }} {{ t("wizard.later") }}</p>
     <form method="post" action="/wizard/sources">
       {% include "_sources_form.html" %}
-      <div class="grid">
-        <a href="/wizard/ai" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
+      <div class="wizard-nav">
+        <a href="/wizard/ai" class="secondary">{{ icon("back") }}{{ t("wizard.back") }}</a>
         <button type="submit">{{ t("wizard.next") }}</button>
       </div>
     </form>
@@ -53,8 +54,8 @@
     <h2>{{ t("keys.title") }}</h2>
     <form method="post" action="/wizard/keys">
       {% include "_keys_form.html" %}
-      <div class="grid">
-        <a href="/wizard/sources" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
+      <div class="wizard-nav">
+        <a href="/wizard/sources" class="secondary">{{ icon("back") }}{{ t("wizard.back") }}</a>
         <button type="submit">{{ t("wizard.next") }}</button>
       </div>
     </form>
@@ -63,8 +64,8 @@
     <h2>{{ t("auto.title") }}</h2>
     <form method="post" action="/wizard/automation">
       {% include "_automation_form.html" %}
-      <div class="grid">
-        <a href="/wizard/keys" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
+      <div class="wizard-nav">
+        <a href="/wizard/keys" class="secondary">{{ icon("back") }}{{ t("wizard.back") }}</a>
         <button type="submit">{{ t("wizard.next") }}</button>
       </div>
     </form>
@@ -74,8 +75,8 @@
     {% if settings.routing_download %}{% include "_routing_status.html" %}{% endif %}
     <form method="post" action="/wizard/map">
       {% include "_map_form.html" %}
-      <div class="grid">
-        <a href="/wizard/automation" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
+      <div class="wizard-nav">
+        <a href="/wizard/automation" class="secondary">{{ icon("back") }}{{ t("wizard.back") }}</a>
         <button type="submit" class="{{ '' if settings.routing_download else 'secondary' }}">{{ t("wizard.next") if settings.routing_download else t("wizard.skip") }}</button>
       </div>
     </form>
@@ -84,8 +85,8 @@
     <h2>{{ t("employers.title") }}</h2>
     <form method="post" action="/wizard/employers">
       {% include "_employers_form.html" %}
-      <div class="grid">
-        <a href="/wizard/map" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
+      <div class="wizard-nav">
+        <a href="/wizard/map" class="secondary">{{ icon("back") }}{{ t("wizard.back") }}</a>
         <button type="submit">{{ t("wizard.next") }}</button>
       </div>
     </form>
@@ -95,9 +96,9 @@
     <p>{{ t("wizard.done.text") }}</p>
     <p class="muted">{% if settings.automation.enabled %}{{ t("wizard.auto_on", h=settings.automation.interval_hours) }}{% else %}{{ t("wizard.auto_off") }}{% endif %}</p>
     <form method="post" action="/wizard/done">
-      <div class="grid">
-        <a href="/wizard/employers" role="button" class="secondary outline">{{ t("wizard.back") }}</a>
-        <button type="submit">{{ t("wizard.start") }}</button>
+      <div class="wizard-nav">
+        <a href="/wizard/employers" class="secondary">{{ icon("back") }}{{ t("wizard.back") }}</a>
+        <button type="submit" class="start">{{ t("wizard.start") }}</button>
       </div>
     </form>
   {% endif %}

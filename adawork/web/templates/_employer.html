@@ -10,7 +10,7 @@
 {% set goo = reviews.get("google") %}
 <header>
   <button type="button" aria-label="{{ t('commute.close') }}" rel="prev" onclick="this.closest('dialog').close()"></button>
-  <h3>{{ icon("building") }} {{ e.name }}</h3>
+  <h3>{{ icon("building") }}{{ e.name }}</h3>
   <p class="muted small">
     {% if e.ico %}IČO {{ e.ico }}{% endif %}
     {% if names and (names | length > 1 or names[0] != e.name) %} · {{ t("employer.as_ads") }} {{ names | join(", ") }}{% endif %}
@@ -47,36 +47,36 @@
   {% elif not e.checked_at %}
     <p class="muted small">{{ t("employer.checking") if step else t("employer.not_checked") }}</p>
   {% elif "not_found" in e.warnings %}
-    <p class="bad">⚠ {{ t("employer.not_in_ares") }}</p>
+    <p class="bad">{{ icon("alert") }} {{ t("employer.not_in_ares") }}</p>
   {% else %}
     <ul class="emp-checks">
       {% if e.ended %}
-        <li class="bad">⚠ {{ t("employer.ended", date=e.ended | date) }}</li>
+        <li class="bad">{{ icon("alert") }}<span>{{ t("employer.ended", date=e.ended | date) }}</span></li>
       {% elif e.founded %}
-        <li class="ok">✓ {{ t("employer.founded", date=e.founded | date) }}</li>
+        <li class="ok">{{ icon("check") }}<span>{{ t("employer.founded", date=e.founded | date) }}</span></li>
       {% endif %}
       {% if e.insolvency %}
         {% for p in e.insolvency %}
-          <li class="{{ 'bad' if 'insolvency' in e.warnings else 'muted' }}">{{ '⚠' if 'insolvency' in e.warnings else '·' }} {{ t("employer.insolvency") }}{% if p.state %}{% set k = isir_state(p.state) %}: {{ t("employer.isir." ~ k) if k else p.state | lower }}{% endif %}{% if p.case %} ({{ p.case }}{% if p.court %}, {{ p.court }}{% endif %}){% endif %}{% if p.since %}, {{ t("employer.since") }} {{ p.since }}{% endif %}
-            {% if p.url %}<a href="{{ p.url | safe_url }}" target="_blank" rel="noopener">ISIR ↗</a>{% endif %}</li>
+          <li class="{{ 'bad' if 'insolvency' in e.warnings else 'muted' }}">{{ icon("alert" if "insolvency" in e.warnings else "info") }}<span>{{ t("employer.insolvency") }}{% if p.state %}{% set k = isir_state(p.state) %}: {{ t("employer.isir." ~ k) if k else p.state | lower }}{% endif %}{% if p.case %} ({{ p.case }}{% if p.court %}, {{ p.court }}{% endif %}){% endif %}{% if p.since %}, {{ t("employer.since") }} {{ p.since }}{% endif %}
+            {% if p.url %} <a href="{{ p.url | safe_url }}" target="_blank" rel="noopener">ISIR{{ icon("external", "icon-sm") }}</a>{% endif %}</span></li>
         {% endfor %}
       {% else %}
-        <li class="ok">✓ {{ t("employer.no_insolvency") }}</li>
+        <li class="ok">{{ icon("check") }}<span>{{ t("employer.no_insolvency") }}</span></li>
       {% endif %}
       {% if e.vat_unreliable %}
-        <li class="bad">⚠ {{ t("employer.vat_unreliable", date=e.vat_unreliable) }}</li>
+        <li class="bad">{{ icon("alert") }}<span>{{ t("employer.vat_unreliable", date=e.vat_unreliable) }}</span></li>
       {% elif e.dic %}
-        <li class="ok">✓ {{ t("employer.vat_ok") }}</li>
+        <li class="ok">{{ icon("check") }}<span>{{ t("employer.vat_ok") }}</span></li>
       {% else %}
-        <li class="muted">· {{ t("employer.no_vat") }}</li>
+        <li class="muted">{{ icon("info") }}<span>{{ t("employer.no_vat") }}</span></li>
       {% endif %}
       {% if e.agency %}
-        <li class="ok">✓ {{ t("employer.agency_temp") if e.agency.temp else t("employer.agency") }}{% if e.agency.until %} {{ t("employer.until", date=e.agency.until) }}{% endif %}</li>
+        <li class="ok">{{ icon("check") }}<span>{{ t("employer.agency_temp") if e.agency.temp else t("employer.agency") }}{% if e.agency.until %} {{ t("employer.until", date=e.agency.until) }}{% endif %}</span></li>
       {% elif "unlicensed" in e.warnings %}
-        <li class="bad">⚠ {{ t("employer.unlicensed") }}</li>
+        <li class="bad">{{ icon("alert") }}<span>{{ t("employer.unlicensed") }}</span></li>
       {% endif %}
-      {% if band %}<li class="muted">· {{ band }} {{ t("employer.people") }}</li>{% endif %}
-      {% if e.address %}<li class="muted">· {{ t("employer.seat") }} {{ e.address }}</li>{% endif %}
+      {% if band %}<li class="muted">{{ icon("info") }}<span>{{ band }} {{ t("employer.people") }}</span></li>{% endif %}
+      {% if e.address %}<li class="muted">{{ icon("info") }}<span>{{ t("employer.seat") }} {{ e.address }}</span></li>{% endif %}
     </ul>
     <p class="muted small">{{ t("employer.checked", date=e.checked_at | date) }}
       {% if e.match not in ("ad", "manual", "uncertain", "none") %} · {{ t("employer.match." ~ e.match) }}{% endif %}</p>
@@ -103,7 +103,7 @@
   <h4>{{ t("employer.employees") }}</h4>
   {% if atm and atm.rating is not none %}
     <p><span class="emp-score">{{ atm.rating | int }} %</span> {{ t("employer.satisfaction", n=atm.count) }}
-      <a href="{{ atm.url | safe_url }}" target="_blank" rel="noopener">Atmoskop ↗</a></p>
+      <a href="{{ atm.url | safe_url }}" target="_blank" rel="noopener">Atmoskop{{ icon("external", "icon-sm") }}</a></p>
     <p class="small muted">{{ t("employer.colleagues") }} {{ atm.scores.colleagues }} % · {{ t("employer.boss") }} {{ atm.scores.boss }} %
       {% if atm.scores.suitable_for %} · {{ t("employer.suitable") }} {{ atm.scores.suitable_for | join(", ") }}{% endif %}</p>
   {% elif e.reviews_at %}
@@ -112,7 +112,7 @@
 
   {% if summary and (summary.summary.praise or summary.summary.criticism or summary.summary.warnings) %}
     <div class="emp-summary">
-      <p class="small"><span class="ai-mark">✦ {{ t("employer.summary") }}</span> <span class="muted">{{ t("employer.summary_note") }}</span></p>
+      <p class="small"><span class="ai-mark">{{ icon("ai") }}{{ t("employer.summary") }}</span> <span class="muted">{{ t("employer.summary_note") }}</span></p>
       {% macro points(items, title, cls) %}
         {% if items %}
           <p class="small"><strong>{{ title }}</strong></p>
@@ -148,12 +148,12 @@
 <section>
   <h4>{{ t("employer.customers") }}</h4>
   {% if goo and goo.rating is not none %}
-    <p><span class="emp-score">★ {{ "%.1f" | format(goo.rating) }}</span> {{ t("employer.google", n=goo.count) }}
-      <a href="{{ goo.url | safe_url }}" target="_blank" rel="noopener">Google Maps ↗</a></p>
+    <p><span class="emp-score">{{ icon("star") }}{{ "%.1f" | format(goo.rating) }}</span> {{ t("employer.google", n=goo.count) }}
+      <a href="{{ goo.url | safe_url }}" target="_blank" rel="noopener">Google Maps{{ icon("external", "icon-sm") }}</a></p>
     <p class="small muted">{{ t("employer.customers_note") }}{% if goo.scores.place %} ({{ goo.scores.place }}){% endif %}</p>
     {% if goo.texts %}
       <details><summary class="small">{{ t("employer.reviews", n=goo.texts | length) }}</summary>
-        {% for r in goo.texts %}<blockquote class="small"><p>{{ "★" * (r.rating or 0) }} {{ r.text }}</p><footer class="muted">{{ r.when }}</footer></blockquote>{% endfor %}
+        {% for r in goo.texts %}<blockquote class="small"><p>{% if r.rating %}<span class="review-stars with-icon">{{ icon("star") }}{{ r.rating }}</span> {% endif %}{{ r.text }}</p><footer class="muted">{{ r.when }}</footer></blockquote>{% endfor %}
       </details>
     {% endif %}
   {% elif not google_key %}
@@ -181,12 +181,12 @@
 <footer class="emp-footer">
   <p class="emp-links small">
     {% for k in ("atmoskop", "indeed", "google", "mapy", "facebook", "ares", "justice", "isir") if links.get(k) %}
-      <a href="{{ links[k] | safe_url }}" target="_blank" rel="noopener">{{ t("employer.link." ~ k) }} ↗</a>
+      <a href="{{ links[k] | safe_url }}" target="_blank" rel="noopener">{{ t("employer.link." ~ k) }}{{ icon("external", "icon-sm") }}</a>
     {% endfor %}
   </p>
   <p class="emp-actions">
     {% if e.jobs_count %}<a href="/?q=&employer={{ e.id }}" role="button" class="secondary outline">{{ t("employer.all_jobs", n=e.jobs_count) }}</a>{% endif %}
-    <button type="button" class="secondary outline" hx-post="/employer/{{ e.id }}/refresh" hx-target="#employer-body" {% if step %}disabled{% endif %}>{{ icon("refresh") }} {{ t("employer.refresh") }}</button>
+    <button type="button" class="secondary outline" hx-post="/employer/{{ e.id }}/refresh" hx-target="#employer-body" {% if step %}disabled{% endif %}>{{ icon("refresh") }}{{ t("employer.refresh") }}</button>
   </p>
   <p class="muted small">
     {% if e.reviews_at %}{{ t("employer.reviews_at", date=e.reviews_at | date) }}{% endif %}

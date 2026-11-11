@@ -9,9 +9,11 @@
       <li class="saved-row">
         <a href="/saved/{{ s.id }}">{{ s.name }}</a>
         {% if n %}<mark class="small">{{ t("saved.new", n=n) }}</mark>{% endif %}
+        {# The icon is named so the view transition cross-fades bell and crossed-out bell (app.css). #}
         <button type="button" class="secondary outline" hx-post="/saved/{{ s.id }}/notify" hx-target="#saved"
+                hx-swap="innerHTML transition:true"
                 title="{{ t('saved.notify_on') if s.notify else t('saved.notify_off') }}"
-                aria-label="{{ t('saved.notify_on') if s.notify else t('saved.notify_off') }}">{{ icon("bell" if s.notify else "bell-off") }}</button>
+                aria-label="{{ t('saved.notify_on') if s.notify else t('saved.notify_off') }}">{{ icon("bell" if s.notify else "bell-off", style="view-transition-name: notify-" ~ s.id ~ "; view-transition-class: aw-icon") }}</button>
         <button type="button" class="secondary outline" hx-post="/saved/{{ s.id }}/delete" hx-target="#saved"
                 title="{{ t('saved.delete') }}" aria-label="{{ t('saved.delete') }}">{{ icon("trash") }}</button>
       </li>

@@ -1,3 +1,4 @@
+{% from "_icons.html" import icon %}
 {# Login state of one social platform; polls while the login window is open. #}
 <p class="small" {% if s.login_running %}hx-get="/social/{{ s.id }}/status" hx-trigger="every 3s" hx-target="#social-{{ s.id }}" hx-select="unset" hx-swap="innerHTML"{% endif %}>
   {% if s.login_running %}
@@ -5,9 +6,9 @@
   {% elif s.pause_reason == "login" or not s.logged_in %}
     {{ t("social.logged_out") }}
   {% elif s.pause_reason == "blocked" %}
-    ⚠ {{ t("social.blocked", until=s.paused_until | date) }}
+    {{ icon("alert", "bad") }} {{ t("social.blocked", until=s.paused_until | date) }}
   {% else %}
-    ✓ {{ t("social.logged_in", n=s.read_today) }}
+    {{ icon("check", "ok") }} {{ t("social.logged_in", n=s.read_today) }}
   {% endif %}
   {% if s.login_failed and not s.login_running %}<br>{{ t(s.login_failed) }}{% endif %}
 </p>

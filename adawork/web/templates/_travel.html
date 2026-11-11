@@ -1,5 +1,5 @@
 {# Travel times to the job's place from the search's start point, and the commute window.
-   "~": the place is only a town or district; italics: an estimate. #}
+   "~": the place is only a town or district; muted: an estimate. #}
 {% from "_icons.html" import icon %}
 {% set tt = times.get(job.location_id) if job.location_id else None %}
 {% if tt %}

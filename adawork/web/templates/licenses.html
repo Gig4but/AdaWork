@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 {% block title %}{{ t("licenses.title") }} – AdaWork{% endblock %}
 {% block content %}
 <article class="wizard licenses">
-  <a href="/settings" class="back small">← {{ t("settings.title") }}</a>
+  <a href="/settings" class="back">{{ icon("back") }}{{ t("settings.title") }}</a>
   <h2>{{ t("licenses.title") }}</h2>
   <p class="muted">{{ t("licenses.intro") }}</p>
   {% for group, entries in groups.items() %}

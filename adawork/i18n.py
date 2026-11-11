@@ -6,7 +6,10 @@ TEXTS: dict[str, dict[str, str]] = {
     "wizard.step": {"cs": "Krok {n} ze {total}", "en": "Step {n} of {total}"},
     "wizard.next": {"cs": "Další", "en": "Next"},
     "wizard.back": {"cs": "Zpět", "en": "Back"},
-    "wizard.welcome": {"cs": "Vítejte", "en": "Welcome"},
+    "wizard.welcome": {
+        "cs": "Všechny nabídky práce ve vašem okolí na jednom místě",
+        "en": "Every job near you, in one place",
+    },
     "wizard.welcome.text": {
         "cs": "Aplikace hledá volná místa na úřadu práce, pracovních portálech a dalších "
         "zdrojích a ukáže vám ty, které vám dávají smysl. Nastavení zabere minutu.",
@@ -51,7 +54,10 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "In your own words, separated by commas, e.g. “warehouse, nursery teacher”. "
         "Jobs of these kinds are fetched first and filled into the search. Empty = every field.",
     },
-    "wizard.done": {"cs": "Hotovo", "en": "Done"},
+    "wizard.done": {
+        "cs": "Vše je nastaveno, můžeme stáhnout první nabídky",
+        "en": "All set, ready to fetch your first jobs",
+    },
     "wizard.done.text": {
         "cs": "Po kliknutí na Start stáhneme nabídky z úřadu práce (všechny obory, asi minuta) "
         "a potom z vybraných portálů pro kraje ve vašem dosahu. Portály čteme pomalu, aby "
@@ -61,7 +67,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "are read slowly so they do not block us, which can take tens of minutes. Jobs "
         "appear as they come in.",
     },
-    "wizard.sources": {"cs": "Zdroje nabídek", "en": "Job sources"},
+    "wizard.sources": {"cs": "Kde máme nabídky hledat", "en": "Where to look for jobs"},
     "sources.title": {"cs": "Zdroje nabídek", "en": "Job sources"},
     "sources.text": {
         "cs": "Vyberte, odkud má aplikace nabídky stahovat.",
@@ -250,11 +256,15 @@ TEXTS: dict[str, dict[str, str]] = {
     "search.indeed": {"cs": "Hledat také na Indeed", "en": "Also search on Indeed"},
     "nav.add": {"cs": "Vložit inzerát", "en": "Add an ad"},
     "add.title": {"cs": "Vložit inzerát", "en": "Add an ad"},
+    "add.heading": {
+        "cs": "Přidejte nabídku, kterou jste našli jinde",
+        "en": "Add a job you found elsewhere",
+    },
     "add.text": {
-        "cs": "Našli jste nabídku jinde (na nástěnce, v novinách, ve zprávě)? Vložte její text "
-        "nebo fotku či snímek obrazovky. Umělá inteligence z ní doplní obor, místo a mzdu.",
-        "en": "Found an offer elsewhere (a notice board, a newspaper, a message)? Paste its text "
-        "or add a photo or screenshot. The AI fills in the field, place and pay.",
+        "cs": "Z nástěnky, novin nebo zprávy: vložte text inzerátu, nebo jeho fotku či snímek "
+        "obrazovky. Umělá inteligence z něj doplní obor, místo a mzdu.",
+        "en": "From a notice board, a newspaper or a message: paste the ad's text, or add a "
+        "photo or screenshot of it. The AI fills in the field, place and pay.",
     },
     "add.ad_text": {"cs": "Text inzerátu", "en": "Ad text"},
     "add.placeholder": {
@@ -283,7 +293,10 @@ TEXTS: dict[str, dict[str, str]] = {
         "cs": "Soubor není obrázek (JPEG, PNG…).",
         "en": "The file is not a picture (JPEG, PNG…).",
     },
-    "wizard.ai": {"cs": "Umělá inteligence", "en": "Artificial intelligence"},
+    "wizard.ai": {
+        "cs": "Má umělá inteligence doplňovat údaje z textu inzerátů?",
+        "en": "Should the AI fill in details from the ad texts?",
+    },
     "ai.title": {"cs": "Umělá inteligence", "en": "Artificial intelligence"},
     "ai.text": {
         "cs": "Model umělé inteligence běží jen na vašem počítači, nic se nikam neposílá. "
@@ -980,7 +993,7 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "employer.people": {"cs": "zaměstnanců", "en": "employees"},
     "employer.this_one": {"cs": "Je to tato", "en": "This one"},
-    "employer.checks": {"cs": "Ověření", "en": "Checks"},
+    "employer.checks": {"cs": "Úřední rejstříky", "en": "Official registers"},
     "employer.no_ico": {
         "cs": "Bez IČO nelze ověřit v úředních rejstřících.",
         "en": "Without an IČO the official registers cannot be checked.",
@@ -1027,7 +1040,7 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "employer.wrong": {"cs": "Je to jiná firma?", "en": "A different company?"},
     "employer.fix": {"cs": "Opravit podle IČO", "en": "Fix by IČO"},
-    "employer.employees": {"cs": "Zaměstnanci", "en": "Employees"},
+    "employer.employees": {"cs": "Co říkají zaměstnanci", "en": "What employees say"},
     "employer.satisfaction": {
         "cs": "spokojenost se zaměstnavatelem ({n} hodnocení)",
         "en": "satisfied with the employer ({n} ratings)",
@@ -1049,7 +1062,7 @@ TEXTS: dict[str, dict[str, str]] = {
     "employer.criticism": {"cs": "Co kritizují", "en": "What people criticize"},
     "employer.reviews": {"cs": "Recenze ({n})", "en": "Reviews ({n})"},
     "employer.current": {"cs": "současný zaměstnanec", "en": "current employee"},
-    "employer.customers": {"cs": "Zákazníci", "en": "Customers"},
+    "employer.customers": {"cs": "Co říkají zákazníci", "en": "What customers say"},
     "employer.google": {"cs": "({n} hodnocení)", "en": "({n} ratings)"},
     "employer.customers_note": {
         "cs": "Hodnocení zákazníků provozovny, ne zaměstnanců.",
@@ -1063,7 +1076,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "cs": "Google Maps provozovnu nenašly.",
         "en": "Google Maps found no place.",
     },
-    "employer.web": {"cs": "Internet a sociální sítě", "en": "Web and social media"},
+    "employer.web": {"cs": "Zmínky na internetu", "en": "Mentions online"},
     "employer.no_mentions": {
         "cs": "Žádné zmínky o práci u této firmy.",
         "en": "No mentions of working there.",

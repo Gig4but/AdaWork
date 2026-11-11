@@ -19,6 +19,7 @@
   <a href="/" class="secondary small">{{ t("filters.reset") }}</a>
 </div>
 
+<div class="facet-group">
 <label>{{ t("filters.salary") }}
   <select name="salary_min">
     <option value="">{{ t("filters.any") }}</option>
@@ -28,6 +29,7 @@
   </select>
 </label>
 <label class="facet"><input type="checkbox" name="with_salary" value="1" {% if f.with_salary %}checked{% endif %}> <span>{{ t("filters.with_salary") }}</span></label>
+</div>
 
 <label>{{ t("filters.education") }}
   <select name="education">
@@ -51,9 +53,9 @@
   <p class="emp-only small">{{ t("filters.employer_only") }} <strong>{{ employer_name }}</strong>
     <button type="button" class="link" onclick="const i = this.form.elements.employer; i.value = ''; htmx.trigger(this.form, 'change')">{{ t("filters.employer_clear") }}</button></p>
 {% endif %}
-{% set emp_on = f.emp_min or f.emp_ok or f.emp_verified or f.emp_licensed %}
-<details {% if emp_on %}open{% endif %}>
-  <summary>{{ t("filters.employer") }}{% if emp_on %} <span class="badge">✓</span>{% endif %}</summary>
+{% set emp_n = [f.emp_min, f.emp_ok, f.emp_verified, f.emp_licensed] | select | list | length %}
+<details {% if emp_n %}open{% endif %}>
+  <summary>{{ t("filters.employer") }}{% if emp_n %} <span class="badge">{{ emp_n }}</span>{% endif %}</summary>
   <label>{{ t("filters.emp_min") }}
     <select name="emp_min">
       <option value="">{{ t("filters.any") }}</option>

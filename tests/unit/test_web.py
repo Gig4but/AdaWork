@@ -92,7 +92,8 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
     first = client.get("/", follow_redirects=False)
     assert first.status_code == 303 and first.headers["location"] == "/wizard/welcome"
     welcome = client.get("/wizard/welcome").text
-    assert "Vítejte" in welcome and re.search(r'value="system"[^>]*checked', welcome)
+    assert "Všechny nabídky práce ve vašem okolí" in welcome
+    assert re.search(r'value="system"[^>]*checked', welcome)
     assert welcome.count('name="theme"') == 8
 
     assert 'href="/wizard/profile"' in welcome
@@ -437,7 +438,8 @@ def test_a_running_search_adds_its_finds_in_found_order(app, client, monkeypatch
     assert "Nalezené nabídky: 5" in r.text
     store_jobs(app, jobs[5:15])  # fills the page; the rest is behind "more"
     r = poll(5, range(1, 6))
-    assert r.text.count('class="job"') == 5 and order(r.text, range(6, 11)) == [6, 7, 8, 9, 10]
+    assert r.text.count('class="job arrived"') == 5
+    assert order(r.text, range(6, 11)) == [6, 7, 8, 9, 10]
     assert 'class="secondary outline more"' in r.text and "since=15" in r.text
 
     with app.state.services.sessions() as s:  # no longer offered: drops out of the list
@@ -642,8 +644,8 @@ def test_ask_in_a_sentence(app, client, monkeypatch):
     from adawork.ai.client import Reply, Timing
 
     app.state.services.settings.wizard_completed = True
-    page = client.get("/").text  # no model yet: the box is disabled and asks again
-    assert 'name="question" disabled' in page and 'hx-get="/ask"' in page
+    page = client.get("/").text  # no model yet: no box, a line that asks again
+    assert 'name="question"' not in page and 'hx-get="/ask"' in page
     assert "AI zatím není připravená" in page
     r = client.post("/ask", data={"question": "sklad u Kolína"})
     assert "model není stažený" in r.text

@@ -2,16 +2,14 @@
    waits for; asks again meanwhile, so it turns on without reloading the page. #}
 {% from "_icons.html" import icon %}
 <div id="ask" {% if ask.wait %}hx-get="/ask" hx-trigger="every 3s" hx-target="this" hx-swap="outerHTML"{% endif %}>
+  {% if ask.wait %}
+  <p class="ask-wait muted">{{ icon("ai") }}<span>{{ t("ask.button") }} · {{ t(ask.wait[0], **ask.wait[1]) }}</span></p>
+  {% else %}
   <form class="ask-row" hx-post="/ask" hx-target="#ask-error">
-    {% if ask.wait %}
-    <input type="text" name="question" disabled placeholder="{{ t(ask.wait[0], **ask.wait[1]) }}"
-           aria-label="{{ t('ask.button') }}">
-    <button type="submit" class="outline" disabled>{{ icon("ai") }}{{ t("ask.button") }}</button>
-    {% else %}
     <input type="text" name="question" maxlength="300" placeholder="{{ t('ask.placeholder') }}"
            aria-label="{{ t('ask.placeholder') }}">
     <button type="submit" class="outline">{{ icon("ai") }}{{ t("ask.button") }}</button>
-    {% endif %}
     <small id="ask-error" class="error"></small>
   </form>
+  {% endif %}
 </div>

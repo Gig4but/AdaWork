@@ -64,7 +64,7 @@
       map.on("click", "clusters", async (e) => {
         const feature = e.features[0];
         const zoom = await map.getSource("jobs").getClusterExpansionZoom(feature.properties.cluster_id);
-        map.easeTo({ center: feature.geometry.coordinates, zoom });
+        map.flyTo({ center: feature.geometry.coordinates, zoom }); // an arc (out, across, in)
       });
       map.on("click", "points", async (e) => {
         const feature = e.features[0];

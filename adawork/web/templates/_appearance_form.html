@@ -23,11 +23,26 @@
 <script>
   // Shows the chosen scheme at once.
   for (const input of document.querySelectorAll("input[name=theme]")) {
-    input.addEventListener("change", () => {
+    input.addEventListener("change", async () => {
       const root = document.documentElement;
-      if (input.dataset.base) root.dataset.theme = input.dataset.base;
-      else delete root.dataset.theme;
-      root.dataset.scheme = input.value;
+      const apply = () => {
+        if (input.dataset.base) root.dataset.theme = input.dataset.base;
+        else delete root.dataset.theme;
+        root.dataset.scheme = input.value;
+      };
+      // The new colours spread from the picked swatch as a widening circle (app.css: aw-scheme).
+      const swatch = input.closest("label").querySelector(".swatch").getBoundingClientRect();
+      const x = swatch.left + swatch.width / 2;
+      const y = swatch.top + swatch.height / 2;
+      const reach = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+      root.style.setProperty("--aw-x", `${x}px`);
+      root.style.setProperty("--aw-y", `${y}px`);
+      root.style.setProperty("--aw-r", `${reach}px`);
+      if (document.startViewTransition) {
+        await document.startViewTransition({ update: apply, types: ["scheme"] }).finished;
+      } else {
+        apply();
+      }
       if (window.adaworkPaintFrame) window.adaworkPaintFrame();
     });
   }

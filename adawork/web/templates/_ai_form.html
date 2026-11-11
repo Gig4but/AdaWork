@@ -1,18 +1,16 @@
+{% from "_icons.html" import icon %}
 {# Model choice; shared by the wizard and the AI page (PLAN §6.6). #}
-{% macro fit_icon(icon) -%}
-  <svg class="fit-icon fit-{{ icon }}" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
-    {% if icon == "green" %}<circle cx="10" cy="10" r="9"/><path d="M5.5 10.5l3 3 6-7" fill="none" stroke="#fff" stroke-width="2.2"/>
-    {% elif icon == "yellow" %}<circle cx="10" cy="10" r="9"/><path d="M5 13a5 5 0 0 1 10 0M10 13l3-4" fill="none" stroke="#222" stroke-width="2"/>
-    {% else %}<circle cx="10" cy="10" r="9"/><path d="M6.5 6.5l7 7M13.5 6.5l-7 7" stroke="#fff" stroke-width="2.2"/>{% endif %}
-  </svg>
+{% macro fit_icon(fit) -%}
+  {{ icon({"green": "check", "yellow": "info", "red": "alert"}[fit], "fit-icon fit-" ~ fit) }}
 {%- endmacro %}
 
 <p class="muted">{{ ai.hardware_line }}</p>
 <fieldset class="ai-choice">
   <label>
     <input type="radio" name="choice" value="auto" {% if ai.choice == "auto" %}checked{% endif %}>
-    <strong>⚙ {{ t("ai.auto") }}</strong>
-    <small class="muted">({% if ai.pick %}{{ t("ai.auto.now", tier=t("ai.tier." ~ ai.pick.tier)) }}{% else %}{{ t("ai.auto.none") }}{% endif %})</small>
+    {{ icon("settings", "fit-icon fit-auto") }}
+    <span><strong>{{ t("ai.auto") }}</strong>
+    <small class="muted">({% if ai.pick %}{{ t("ai.auto.now", tier=t("ai.tier." ~ ai.pick.tier)) }}{% else %}{{ t("ai.auto.none") }}{% endif %})</small></span>
   </label>
   {% for o in ai.options %}
     <label title="{{ t('ai.fit.' ~ o.icon) }}{% for r in o.reasons %} · {{ t(r) }}{% endfor %}">

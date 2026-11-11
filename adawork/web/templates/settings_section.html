@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 {% block title %}{{ t(title) }} – AdaWork{% endblock %}
 {% block content %}
 <article class="wizard">
-  <a href="/settings" class="back small">← {{ t("settings.title") }}</a>
+  <a href="/settings" class="back">{{ icon("back") }}{{ t("settings.title") }}</a>
   <h2>{{ t(title) }}</h2>
   {% if saved %}<p class="ok" role="status">{{ t("settings.saved") }}</p>{% endif %}
 

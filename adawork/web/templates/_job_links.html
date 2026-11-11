@@ -1,5 +1,6 @@
 {# A job's sources, each with a link to its original ad (job cards and the whole text). #}
+{% from "_icons.html" import icon %}
 {% for src in job.sources if src.status == "active" or job.status != "active" %}
-  <span class="badge">{{ src.source_id | source_label }}</span>
-  {% if src.url %}<a href="{{ src.url | safe_url }}" target="_blank" rel="noopener">{{ t("job.open") }} ↗</a>{% endif %}
+  {% if src.url %}<a href="{{ src.url | safe_url }}" target="_blank" rel="noopener" title="{{ t('job.open') }}" aria-label="{{ t('job.open') }}: {{ src.source_id | source_label }}">{{ src.source_id | source_label }}{{ icon("external", "icon-sm") }}</a>
+  {%- else %}<span class="muted">{{ src.source_id | source_label }}</span>{% endif %}
 {% endfor %}

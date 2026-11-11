@@ -14,13 +14,13 @@
   <ul class="catalog">
     {% for c in catalog %}
       <li><a href="{{ c.href }}">{{ icon(c.icon) }}<span><strong>{{ t(c.title) }}</strong>
-        <small>{{ c.summary }}</small></span></a></li>
+        <small>{{ c.summary }}</small></span>{{ icon("chevron") }}</a></li>
     {% endfor %}
   </ul>
 
   <section>
     <h3>{{ t("settings.data") }}</h3>
-    <p class="small">{{ t("settings.data_dir") }}: <code>{{ data_dir }}</code><br>
+    <p class="small">{{ t("settings.data_dir") }}: <code>{{ data_dir }}</code>
       {{ t("settings.log_dir") }}: <code>{{ log_dir }}</code></p>
   </section>
 

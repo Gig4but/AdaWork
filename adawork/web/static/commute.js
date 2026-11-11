@@ -64,22 +64,24 @@
   });
 
   // --- The commute window ---
-  window.adaworkCommute = (jobId) => {
+  let trigger = null;
+  window.adaworkCommute = (jobId, source) => {
+    trigger = source;
     const params = new URLSearchParams(new FormData(form));
-    htmx.ajax("GET", `/commute/job/${jobId}?${params}`, { target: body, swap: "innerHTML" });
+    htmx.ajax("GET", `/commute/job/${jobId}?${params}`, { source, target: body, swap: "innerHTML" });
   };
   document.addEventListener("click", (event) => {
     const button = event.target.closest(".commute-open");
-    if (button) window.adaworkCommute(button.dataset.job);
+    if (button) window.adaworkCommute(button.dataset.job, button);
   });
 
   let map = null;
   document.body.addEventListener("htmx:afterSwap", (event) => {
     if (event.detail.target !== body) return;
-    if (!dialog.open) dialog.showModal();
+    if (!dialog.open) window.adaworkShowModal(dialog, trigger);
     showMap();
   });
-  dialog.addEventListener("close", () => {
+  window.adaworkOnClosed(dialog, () => {
     if (map) map.remove();
     map = null;
   });

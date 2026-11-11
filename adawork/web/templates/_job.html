@@ -1,4 +1,5 @@
-<article class="job{% if unchecked and job.id in unchecked %} unchecked{% endif %}" id="job-{{ job.id }}" data-id="{{ job.id }}">
+{% from "_icons.html" import icon %}
+<article class="job{% if unchecked and job.id in unchecked %} unchecked{% endif %}{% if arrived %} arrived{% endif %}" id="job-{{ job.id }}" data-id="{{ job.id }}"{% if row is defined %} style="--row: {{ row }}"{% endif %}>
   {% if new_after and job.id > new_after %}<span class="new-mark" title="{{ t('job.new') }}"></span>{% endif %}
   <header>
     <h3><a href="/jobs/{{ job.id }}" class="job-open" data-job="{{ job.id }}">{{ job.title }}</a></h3>
@@ -7,7 +8,7 @@
       {% set pay = salary(job) %}
       {% if pay %}<span class="salary">{{ pay }}</span>{% endif %}
       <button type="button" class="hide secondary outline" hx-post="/jobs/{{ job.id }}/hide"
-              hx-target="closest .job" hx-swap="outerHTML" title="{{ t('job.hide_hint') }}">{{ t("job.hide") }}</button>
+              hx-target="closest .job" hx-swap="outerHTML swap:160ms" title="{{ t('job.hide_hint') }}">{{ t("job.hide") }}</button>
     </div>
   </header>
   <p class="meta">
@@ -15,7 +16,7 @@
     {% set emp_name = job.employer_name or (emp.name if emp else "") %}
     {% if emp %}{% include "_employer_line.html" %}{% elif emp_name %}<strong>{{ emp_name }}</strong>{% endif %}
     {% if job.place_text %}{% if emp_name %} · {% endif %}{{ job.place_text }}{% endif %}
-    {% if job.posted_at %}{% if emp_name or job.place_text %} · {% endif %}{{ t("job.posted") }} {{ job.posted_at | date }}{% endif %}
+    {% if job.posted_at %}{% if emp_name or job.place_text %} · {% endif %}<time class="muted" title="{{ t('job.posted') }}">{{ job.posted_at | date }}</time>{% endif %}
   </p>
   {% include "_travel.html" %}
   {% if job.contract_types or job.shifts or job.benefits %}
@@ -26,7 +27,7 @@
     </p>
   {% endif %}
   {% if job.red_flags %}
-    <p class="warning small" role="note">⚠ {{ t("job.red_flags") }}
+    <p class="warning small" role="note">{{ icon("alert") }} {{ t("job.red_flags") }}
       {% for c in job.red_flags %}{{ label("red_flags", c) }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
   {% endif %}
   {% set pictures = job.images | selectattr("file") | list %}
@@ -37,7 +38,7 @@
     {%- if job.description | length > 260 %} <a href="/jobs/{{ job.id }}" class="job-open" data-job="{{ job.id }}">{{ t("job.full_text") }}</a>{% endif %}</p>{% endif %}
   {% set origin = (job.extra or {}).get("origin") or {} %}
   <footer>
-    {% if "ai" in origin.values() %}<span class="ai-mark">✦ {{ t("job.ai_badge") }}</span>{% endif %}
     {% include "_job_links.html" %}
+    {% if "ai" in origin.values() %}<span class="ai-mark" role="img" title="{{ t('job.ai_badge') }}" aria-label="{{ t('job.ai_badge') }}">{{ icon("ai") }}</span>{% endif %}
   </footer>
 </article>

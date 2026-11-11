@@ -4,6 +4,7 @@
   <script src="/static/vendor/maplibre-gl.js" defer></script>
   <script src="/static/map.js" defer></script>
   <script src="/static/nav.js" defer></script>
+  <script src="/static/dialog.js" defer></script>
   <script src="/static/commute.js" defer></script>
   <script src="/static/employer.js" defer></script>
   <script src="/static/job.js" defer></script>
@@ -11,17 +12,17 @@
 {% block content %}
 {% from "_icons.html" import icon %}
 <script>document.body.dataset.view = "{{ view }}";</script>
-<div id="status" hx-get="/status" hx-trigger="jobs-updated from:body">
-  {% include "_status.html" %}
-</div>
 <section class="toolbar">
+  <div id="status" hx-get="/status" hx-trigger="jobs-updated from:body">
+    {% include "_status.html" %}
+  </div>
   <div id="saved" hx-get="/saved" hx-trigger="load, jobs-updated from:body"></div>
   {# Kept out of #progress, which is replaced every second while a search runs. #}
   <div class="refresh">
     <div class="scrape-buttons">
-      <button class="soft" hx-post="/scrape" hx-target="#progress" title="{{ t('scrape.button_hint') }}">{{ icon("refresh") }}{{ t("scrape.button") }}</button>
       <button class="secondary outline fresh" hx-post="/scrape?fresh=1" hx-target="#progress"
               hx-confirm="{{ t('scrape.fresh_confirm') }}" title="{{ t('scrape.fresh_hint') }}">{{ icon("trash") }}{{ t("scrape.fresh") }}</button>
+      <button class="soft" hx-post="/scrape" hx-target="#progress" title="{{ t('scrape.button_hint') }}">{{ icon("refresh") }}{{ t("scrape.button") }}</button>
     </div>
     <div id="progress">{% include "_progress.html" %}</div>
   </div>
@@ -30,8 +31,23 @@
 {% with ask = ai.ask %}{% include "_ask.html" %}{% endwith %}
 
 <form id="search-form" onsubmit="return false"
-      hx-get="/results" hx-target="#results"
+      hx-get="/results" hx-target="#results" hx-swap="innerHTML transition:true"
       hx-trigger="change[target.name !== 'depart'], change delay:800ms from:input[name=depart], input delay:300ms from:#q, jobs-updated from:body">
+  <div class="search-row">
+    <input id="q" type="search" name="q" value="{{ f.q }}" placeholder="{{ t('search.placeholder') }}"
+           aria-label="{{ t('nav.search') }}" autofocus>
+    <div role="group" class="view-toggle">
+      <button type="button" class="outline" data-show-view="list">{{ icon("list") }}{{ t("view.list") }}</button>
+      <button type="button" class="outline" data-show-view="map">{{ icon("map") }}{{ t("view.map") }}</button>
+    </div>
+    <input type="hidden" name="view" value="{{ view }}">
+    <input type="hidden" name="employer" value="{{ f.employer or '' }}">
+    <select name="sort" aria-label="{{ t('filters.sort') }}">
+      {% for s in ("relevance", "date", "salary", "travel", "employer") %}
+        <option value="{{ s }}" {% if f.sort == s %}selected{% endif %}{% if s == "travel" and not f.origin %} disabled{% endif %}>{{ t("sort." ~ s) }}</option>
+      {% endfor %}
+    </select>
+  </div>
   {# Travel time (PLAN §4.6): the start point, mode, limit and departure; static/commute.js.
      Without the map the times are straight-line estimates. #}
   <div class="commute-bar">
@@ -56,31 +72,12 @@
     </label>
     {% include "_commute_state.html" %}
   </div>
-  <div class="search-row">
-    <input id="q" type="search" name="q" value="{{ f.q }}" placeholder="{{ t('search.placeholder') }}"
-           aria-label="{{ t('nav.search') }}" autofocus>
-    <div role="group" class="view-toggle">
-      <button type="button" class="outline" data-show-view="list">{{ icon("list") }}{{ t("view.list") }}</button>
-      <button type="button" class="outline" data-show-view="map">{{ icon("map") }}{{ t("view.map") }}</button>
-    </div>
-    <input type="hidden" name="view" value="{{ view }}">
-    <input type="hidden" name="employer" value="{{ f.employer or '' }}">
-    <select name="sort" aria-label="{{ t('filters.sort') }}">
-      {% for s in ("relevance", "date", "salary", "travel", "employer") %}
-        <option value="{{ s }}" {% if f.sort == s %}selected{% endif %}{% if s == "travel" and not f.origin %} disabled{% endif %}>{{ t("sort." ~ s) }}</option>
-      {% endfor %}
-    </select>
-  </div>
   <div class="layout">
     <aside id="facets" hx-get="/facets?{{ qs }}" hx-trigger="load" hx-target="this" hx-swap="innerHTML"
            hx-sync="this:replace">
       <p aria-busy="true">{{ t("filters.loading") }}</p>
     </aside>
     <div>
-      <p class="elsewhere small">
-        <a href="/out/indeed?q={{ f.q | urlencode }}" target="_blank" rel="noopener"
-           hx-boost="false" onclick="this.href='/out/indeed?q=' + encodeURIComponent(document.getElementById('q').value)">{{ t("search.indeed") }} ↗</a>
-      </p>
       {% include "_ai_status.html" %}
       <div id="map" aria-label="{{ t('view.map') }}" data-start-here="{{ t('commute.start_here') }}"><p id="map-empty" class="small" hidden>{{ t("map.empty") }}</p></div>
       <div id="results">{% include "_results.html" %}</div>

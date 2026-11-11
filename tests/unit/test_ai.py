@@ -657,6 +657,50 @@ def test_auto_upgrades_after_a_ram_upgrade_and_keeps_the_old_model_until_then(tm
     assert manager.target().id == simple and not manager.tier_still_right()
 
 
+def test_a_model_is_benchmarked_once_per_pc(tmp_path):
+    from adawork.ai.manager import MIN_SAMPLES, ModelManager
+    from adawork.ai.runtime import LlamaServer
+
+    settings = Settings.load(tmp_path / "config.json")
+    hw = {"now": make_hw(16, "AMD Radeon(TM) Graphics", 0.5, cores=8)}
+
+    def manager():
+        return ModelManager(
+            lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
+            LlamaServer(tmp_path, tmp_path / "log"), probe=lambda: hw["now"],
+            is_metered=lambda: False,
+        )  # fmt: skip
+
+    runs = []
+
+    def with_benchmark(m):
+        def run(spec):
+            runs.append(spec.id)
+            m._store_speed(spec.id, 300, 15, samples=MIN_SAMPLES)
+            return Speed(300, 15, True)
+
+        m.run_benchmark = run
+        return m
+
+    first = with_benchmark(manager())
+    good = first.target().id
+    fake_download(first, good)
+    first._try_switch(MODELS[good])
+    assert runs == [good] and first.active_model().id == good
+
+    first.state.active = None  # e.g. the app closed before the switch was saved
+    first._save()
+    second = with_benchmark(manager())
+    assert second.needs_download()
+    second._try_switch(MODELS[good])
+    assert runs == [good] and second.active_model().id == good  # the measured speed is reused
+
+    hw["now"] = make_hw(32, "AMD Radeon(TM) Graphics", 0.5, cores=8)  # new hardware: measured again
+    third = with_benchmark(manager())
+    third._try_switch(MODELS[third.target().id])
+    assert len(runs) == 2
+
+
 def test_auto_rejects_a_model_that_benchmarks_too_slow(tmp_path):
     from adawork.ai.manager import ModelManager
     from adawork.ai.runtime import LlamaServer

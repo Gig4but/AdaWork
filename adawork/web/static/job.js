@@ -5,6 +5,7 @@
   if (!dialog) return;
   const body = document.getElementById("job-detail-body");
   let opening = false;
+  let trigger = null;
 
   function jobOf(event) {
     const link = event.target.closest(".job-open");
@@ -21,13 +22,15 @@
     if (!job) return;
     event.preventDefault();
     opening = true;
-    htmx.ajax("GET", `/jobs/${job}`, { target: body, swap: "innerHTML" });
+    const source = event.target.closest(".job") || undefined;
+    trigger = event.target.closest(".job-open") || source;
+    htmx.ajax("GET", `/jobs/${job}`, { source, target: body, swap: "innerHTML" });
   });
   document.body.addEventListener("htmx:afterSwap", (event) => {
     if (event.detail.target !== body || !opening) return;
     opening = false;
-    if (!dialog.open) dialog.showModal();
+    if (!dialog.open) window.adaworkShowModal(dialog, trigger);
     body.scrollTop = 0;
   });
-  dialog.addEventListener("close", () => body.replaceChildren());
+  window.adaworkOnClosed(dialog, () => body.replaceChildren());
 })();

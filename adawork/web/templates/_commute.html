@@ -3,7 +3,7 @@
 {% from "_icons.html" import icon %}
 <header>
   <button type="button" aria-label="{{ t('commute.close') }}" rel="prev" onclick="this.closest('dialog').close()"></button>
-  <h3>{{ icon("route") }} {{ t("commute.title") }}</h3>
+  <h3>{{ icon("route") }}{{ t("commute.title") }}</h3>
   <p class="muted small">{{ job.title }}{% if place %} · {{ place }}{% endif %}</p>
 </header>
 
@@ -80,9 +80,9 @@
         <a href="/settings/map">{{ t("routing.download") }}</a>{% endif %}</p>
     {% endif %}
     <p class="links small">{{ t("commute.open_in") }}
-      {% if links.mapy %}<a href="{{ links.mapy }}" target="_blank" rel="noopener">Mapy.com ↗</a> ·{% endif %}
-      {% if mode == "transit" %}<a href="{{ links.idos }}" target="_blank" rel="noopener">IDOS ↗</a> ·{% endif %}
-      <a href="{{ links.google }}" target="_blank" rel="noopener">Google Maps ↗</a></p>
+      {% if links.mapy %}<a href="{{ links.mapy }}" target="_blank" rel="noopener">Mapy.com{{ icon("external", "icon-sm") }}</a> ·{% endif %}
+      {% if mode == "transit" %}<a href="{{ links.idos }}" target="_blank" rel="noopener">IDOS{{ icon("external", "icon-sm") }}</a> ·{% endif %}
+      <a href="{{ links.google }}" target="_blank" rel="noopener">Google Maps{{ icon("external", "icon-sm") }}</a></p>
   </div>
 </div>
 <label class="area-range">{{ t("commute.area") }} <output>{{ f.travel_max or 45 }}</output> {{ t("minutes") }}

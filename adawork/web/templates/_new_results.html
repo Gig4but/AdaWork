@@ -2,9 +2,11 @@
 {% for id in gone %}<div id="job-{{ id }}" hx-swap-oob="delete"></div>{% endfor %}
 {% if jobs %}
   <div hx-swap-oob="{{ where }}">
+  {% with arrived = true %}
   {% for job in jobs %}
     {% include "_job.html" %}
   {% endfor %}
+  {% endwith %}
   </div>
 {% endif %}
 {% if add_more %}

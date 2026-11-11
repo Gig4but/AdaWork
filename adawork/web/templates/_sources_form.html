@@ -1,3 +1,4 @@
+{% from "_icons.html" import icon %}
 {# Source switches; shared by the wizard and the Sources page. #}
 {% if consent_missing %}<p class="error" role="alert">{{ t("sources.consent_missing", source=consent_missing) }}</p>{% endif %}
 {# The wizard asks for the keys in its next step. #}
@@ -17,7 +18,7 @@
     <label><input type="checkbox" role="switch" name="source_{{ s.id }}" {% if s.on %}checked{% endif %}>
       <strong>{{ s.label }}</strong> <small class="muted">({{ t("sources.off_default") }})</small></label>
     {% if s.social %}
-      <p>⚠ <strong>{{ t("sources.social.warning_title") }}</strong></p>
+      <p class="with-icon">{{ icon("alert", "bad") }}<strong>{{ t("sources.social.warning_title") }}</strong></p>
       <ul>
         <li>{{ t("sources.social.terms") }}</li>
         <li>{{ t("sources.social.account") }}</li>
@@ -38,7 +39,7 @@
         <p class="small">{{ t("risk.gdpr") }}</p>
       </details>
     {% else %}
-      <p>⚠ {{ t("sources." ~ s.id ~ ".warning") }}</p>
+      <p>{{ icon("alert", "bad") }} {{ t("sources." ~ s.id ~ ".warning") }}</p>
     {% endif %}
     <label class="small"><input type="checkbox" name="consent_{{ s.id }}" {% if s.consented %}checked{% endif %}> {{ t("sources.consent") }}</label>
 

@@ -4,17 +4,20 @@
   if (!dialog) return;
   const body = document.getElementById("employer-body");
   let opening = false; // only a click opens the dialog, not a card that finished refreshing
+  let trigger = null;
   document.addEventListener("click", (event) => {
     const button = event.target.closest(".employer-open");
     if (!button) return;
     event.preventDefault();
     opening = true;
-    htmx.ajax("GET", `/employer/${button.dataset.employer}`, { target: body, swap: "innerHTML" });
+    trigger = button;
+    htmx.ajax("GET", `/employer/${button.dataset.employer}`,
+              { source: button, target: body, swap: "innerHTML" });
   });
   document.body.addEventListener("htmx:afterSwap", (event) => {
     if (event.detail.target !== body || !opening) return;
     opening = false;
-    if (!dialog.open) dialog.showModal();
+    if (!dialog.open) window.adaworkShowModal(dialog, trigger);
   });
-  dialog.addEventListener("close", () => body.replaceChildren()); // a closed card stops asking
+  window.adaworkOnClosed(dialog, () => body.replaceChildren()); // a closed card stops asking
 })();

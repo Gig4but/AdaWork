@@ -251,7 +251,8 @@ class ModelManager:
                         download.download(remote, directory, client, progress, self._cancel)
                         status.done = base + remote.size
             if target:
-                status.state = "benchmark"
+                if target.id not in self.measured():
+                    status.state = "benchmark"
                 self._try_switch(target)
             status.state = "done"
         except download.Cancelled:
@@ -261,7 +262,7 @@ class ModelManager:
             status.state, status.error = "failed", str(exc)[:300]
 
     def _try_switch(self, target: ModelSpec) -> None:
-        speed = self.run_benchmark(target)
+        speed = self.measured().get(target.id) or self.run_benchmark(target)
         fit = advisor.fit(target, self.hw, measured=speed, downloaded=True)
         auto = self.settings().choice == "auto"
         if auto and fit.seconds_per_ad > advisor.YELLOW_SECONDS:

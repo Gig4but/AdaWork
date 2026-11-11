@@ -3,14 +3,20 @@
 <div class="list-head">
   {% if result.total %}
     <p id="found-count" class="muted small">{{ t("search.found", n=result.total) }}</p>
-    {# The name goes as a form field: a header cannot carry "š". #}
-    <button type="button" class="secondary outline list-action" data-prompt="{{ t('saved.prompt') }}"
-            onclick="const name = prompt(this.dataset.prompt); if (name !== null) htmx.ajax('POST', '/saved', {source: this, target: '#saved', values: {saved_name: name}})">{{ icon("bookmark") }}{{ t("saved.save") }}</button>
-    <span class="small list-action">{{ icon("download") }}{{ t("export.label") }}:
-      <a href="/export.csv?{{ qs }}" download>CSV</a> · <a href="/export.xlsx?{{ qs }}" download>Excel</a></span>
   {% else %}
     <p id="found-count" class="muted">{{ t("search.empty_filtered") if f.is_filtered() else t("search.empty") }}</p>
   {% endif %}
+  <div class="list-actions">
+    {% if result.total %}
+      {# The name goes as a form field: a header cannot carry "š". #}
+      <button type="button" class="secondary outline list-action" data-prompt="{{ t('saved.prompt') }}"
+              onclick="const name = prompt(this.dataset.prompt); if (name !== null) htmx.ajax('POST', '/saved', {source: this, target: '#saved', values: {saved_name: name}})">{{ icon("bookmark") }}{{ t("saved.save") }}</button>
+      <span class="with-icon" title="{{ t('export.label') }}">{{ icon("download", "muted") }}
+        <a href="/export.csv?{{ qs }}" download>CSV</a> · <a href="/export.xlsx?{{ qs }}" download>Excel</a></span>
+    {% endif %}
+    <a href="/out/indeed?q={{ f.q | urlencode }}" target="_blank" rel="noopener"
+       hx-boost="false" onclick="this.href='/out/indeed?q=' + encodeURIComponent(document.getElementById('q').value)">{{ t("search.indeed") }}{{ icon("external", "icon-sm") }}</a>
+  </div>
   {% include "_hidden.html" %}
 </div>
   {% if request.headers.get("HX-Request") %}
@@ -23,7 +29,7 @@
 <div id="job-list">
 {% endif %}
 {% for job in result.jobs %}
-  {% include "_job.html" %}
+  {% with row = loop.index0 %}{% include "_job.html" %}{% endwith %}
 {% endfor %}
 {% if offset + result.jobs | length < result.total %}
   {% include "_more.html" %}

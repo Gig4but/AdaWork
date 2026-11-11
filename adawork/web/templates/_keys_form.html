@@ -1,10 +1,11 @@
+{% from "_icons.html" import icon %}
 {# API keys of the key-based sources; shared by the wizard and Settings. #}
 <p>{{ t("keys.text") }}</p>
 {% if key_invalid %}<p class="error" role="alert">{{ t("keys.invalid", source=key_invalid) }}</p>{% endif %}
 {% for k in keys %}
   <div class="key-row">
     <label for="key-{{ k.id }}">{{ t("keys.key", source=k.label) }}
-      <a href="{{ k.url }}" target="_blank" rel="noopener" class="small">{{ t("keys.get") }} ↗</a></label>
+      <a href="{{ k.url }}" target="_blank" rel="noopener" class="small">{{ t("keys.get") }}{{ icon("external", "icon-sm") }}</a></label>
     <input id="key-{{ k.id }}" name="key_{{ k.id }}" autocomplete="off" spellcheck="false"
            {% if k.end %}placeholder="{{ t('keys.saved', end=k.end) }}"{% endif %}>
     {% if k.end %}
