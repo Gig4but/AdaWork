@@ -50,22 +50,12 @@
       </div>
     </form>
 
-  {% elif step == "keys" %}
-    <h2>{{ t("keys.title") }}</h2>
-    <form method="post" action="/wizard/keys">
-      {% include "_keys_form.html" %}
-      <div class="wizard-nav">
-        <a href="/wizard/sources" class="secondary">{{ icon("back") }}{{ t("wizard.back") }}</a>
-        <button type="submit">{{ t("wizard.next") }}</button>
-      </div>
-    </form>
-
   {% elif step == "automation" %}
     <h2>{{ t("auto.title") }}</h2>
     <form method="post" action="/wizard/automation">
       {% include "_automation_form.html" %}
       <div class="wizard-nav">
-        <a href="/wizard/keys" class="secondary">{{ icon("back") }}{{ t("wizard.back") }}</a>
+        <a href="/wizard/sources" class="secondary">{{ icon("back") }}{{ t("wizard.back") }}</a>
         <button type="submit">{{ t("wizard.next") }}</button>
       </div>
     </form>

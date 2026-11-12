@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from starlette.concurrency import run_in_threadpool
 
 from adawork.config import TravelMode
 from adawork.search.service import TRAVEL_MODES
@@ -11,26 +12,30 @@ from adawork.services import Services
 from adawork.web.pages import THEMES, Svc, render, status_context
 from adawork.web.routes.ai import ai_context, apply_ai_choice
 from adawork.web.routes.settings import (
+    EMPLOYER_SOURCES,
     apply_automation,
     apply_employers,
     map_context,
     save_map,
     save_profile,
 )
-from adawork.web.routes.sources import apply_keys, apply_source_choices, key_rows, source_rows
+from adawork.web.routes.sources import apply_source_choices, source_rows
 
 router = APIRouter()
 
-STEPS = ("welcome", "profile", "ai", "sources", "keys", "automation", "map", "employers", "done")
+STEPS = ("welcome", "profile", "ai", "sources", "automation", "map", "employers", "done")
+KINDS = ("portal", "classifieds")
+
+
+def wizard_sources_rows(svc: Services, form=None) -> list[dict]:
+    return [r for r in source_rows(svc, form) if r["kind"] in KINDS]
 
 
 def render_step(request: Request, svc: Services, step: str, **context) -> HTMLResponse:
     if step == "sources":
-        context.setdefault("sources", source_rows(svc))
+        context.setdefault("sources", wizard_sources_rows(svc))
     if step == "ai":
         context.setdefault("ai", ai_context(svc))
-    if step == "keys":
-        context.setdefault("keys", key_rows(svc))
     if step == "map":
         context |= map_context(svc) | status_context(svc)
     return render(
@@ -75,18 +80,11 @@ async def wizard_ai(request: Request, svc: Svc) -> RedirectResponse:
 @router.post("/wizard/sources", response_class=HTMLResponse)
 async def wizard_sources(request: Request, svc: Svc) -> Response:
     form = await request.form()
-    missing = apply_source_choices(svc.settings, form)
+    rows = wizard_sources_rows(svc, form)
+    missing = apply_source_choices(svc.settings, form, shown={r["id"] for r in rows})
     if missing:
-        rows = source_rows(svc, form)
         return render_step(request, svc, "sources", sources=rows, consent_missing=missing)
-    return RedirectResponse("/wizard/keys", status_code=303)
-
-
-@router.post("/wizard/keys", response_class=HTMLResponse)
-async def wizard_keys(request: Request, svc: Svc) -> Response:
-    invalid = apply_keys(svc.settings, svc.secrets, await request.form())
-    if invalid:
-        return render_step(request, svc, "keys", key_invalid=invalid)
+    await run_in_threadpool(svc.runner.scope_changed)
     return RedirectResponse("/wizard/automation", status_code=303)
 
 
@@ -110,7 +108,8 @@ async def wizard_map(request: Request, svc: Svc) -> RedirectResponse:
 
 @router.post("/wizard/employers")
 async def wizard_employers(request: Request, svc: Svc) -> RedirectResponse:
-    apply_employers(svc.settings, await request.form())
+    shown = tuple(n for n in EMPLOYER_SOURCES if n != "google")
+    apply_employers(svc.settings, await request.form(), shown)
     return RedirectResponse("/wizard/done", status_code=303)
 
 

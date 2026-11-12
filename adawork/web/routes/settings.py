@@ -9,6 +9,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi import Path as InPath
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy import func, select
+from starlette.concurrency import run_in_threadpool
 
 from adawork import licenses, paths
 from adawork.config import TIME_OF_DAY, IntervalHours, Language, Settings, Theme, TravelMode
@@ -55,6 +56,7 @@ def save_profile(
         profile.depart_time = depart_time
     svc.settings.save()
     svc.routing.wake()  # a home far away needs a new map area on smaller PCs
+    svc.runner.scope_changed()
 
 
 def apply_automation(settings: Settings, form) -> None:
@@ -69,10 +71,10 @@ def apply_automation(settings: Settings, form) -> None:
     settings.save()
 
 
-def apply_employers(settings: Settings, form) -> None:
+def apply_employers(settings: Settings, form, shown: tuple[str, ...] = EMPLOYER_SOURCES) -> None:
     cfg = settings.employers
     cfg.auto_check = form.get("auto_check") == "on"
-    for name in EMPLOYER_SOURCES:
+    for name in shown:
         setattr(cfg, name, form.get(name) == "on")
     settings.save()
 
@@ -319,4 +321,5 @@ async def keys_save(request: Request, svc: Svc) -> Response:
     invalid = apply_keys(svc.settings, svc.secrets, await request.form())
     if invalid:
         return render_section(request, svc, "keys", key_invalid=invalid)
+    await run_in_threadpool(svc.runner.scope_changed)
     return RedirectResponse("/settings/keys?saved=1", status_code=303)

@@ -57,6 +57,14 @@
     syncSort();
   };
 
+  document.body.addEventListener("htmx:afterSettle", () => {
+    const found = document.getElementById("origin")?.dataset;
+    if (found?.at && !at.value && found.from === from.value.trim()) {
+      at.value = found.at;
+      syncSort();
+    }
+  });
+
   limit.addEventListener("input", () => {
     const value = Number(limit.value);
     limitLabel.textContent = value ? `${value} ${limit.dataset.minutes}` : limitLabel.dataset.none;

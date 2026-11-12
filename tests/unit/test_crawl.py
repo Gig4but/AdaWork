@@ -365,6 +365,40 @@ def test_starting_over_stops_the_running_search_first(sessions, tmp_path):
     assert not finished  # neither run finished
 
 
+def test_a_changed_search_scope_restarts_the_running_search(sessions, tmp_path):
+    site, finished = Site(), []
+    transport = httpx.MockTransport(site)
+    profile, choices = PRAHA, {}
+    runner = ScrapeRunner(
+        sessions,
+        tmp_path / "cache",
+        lambda: httpx.Client(transport=transport),
+        geocode=False,
+        profile=lambda: profile,
+        source_choices=lambda: choices,
+        sources=[prace_cz.SOURCE],
+        fetcher_factory=lambda client: PoliteFetcher(client, delay=30),  # real waits
+        hooks=RunHooks(after_run=lambda: finished.append(True)),
+    )
+    runner.start()
+    deadline = time.monotonic() + 10
+    while not site.requests and time.monotonic() < deadline:
+        time.sleep(0.05)
+    runner.scope_changed()
+    assert not runner.progress.restarting  # the same scope: the run goes on
+    profile, choices = PRAHA.model_copy(update={"depart_time": "05:00"}), {"prace_cz": True}
+    runner.scope_changed()
+    assert not runner.progress.restarting  # the departure and a default made explicit
+    profile = PRAHA.model_copy(update={"kinds_of_work": ["skladník"]})
+    runner.scope_changed()
+    assert runner.progress.restarting
+    while not runner.progress.cleared and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert runner.progress.running and runner.progress.cleared  # the run with the new scope
+    assert runner.stop(timeout=10)
+    assert not finished
+
+
 def test_runs_are_planned_longest_first_and_slow_sites_beside_the_slots(sessions, tmp_path):
     by_id = {s.id: s for s in classifieds.SOURCES}
     annonce = [by_id["annonce_prace"], by_id["annonce_brigady"]]

@@ -1,5 +1,5 @@
 {% from "_icons.html" import icon %}
-{# API keys of the key-based sources; shared by the wizard and Settings. #}
+{# API keys of the key-based sources, in Settings. #}
 <p>{{ t("keys.text") }}</p>
 {% if key_invalid %}<p class="error" role="alert">{{ t("keys.invalid", source=key_invalid) }}</p>{% endif %}
 {% for k in keys %}

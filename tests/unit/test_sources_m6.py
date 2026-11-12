@@ -213,19 +213,23 @@ def test_dobraprace_and_startupjobs_detail_pages(sessions):
             assert job is not None and job.title and job.description and job.employer_name
 
 
+def lastmod(days: int) -> str:
+    return (datetime.now() + timedelta(days=days)).date().isoformat()
+
+
 def test_changed_ads_are_read_again(sessions):
-    def sitemap(day):
+    def sitemap(days):
         return (
             "<urlset><url><loc>https://www.startupjobs.cz/nabidka/1/a</loc>"
-            f"<lastmod>2026-10-{day:02d}</lastmod></url></urlset>"
+            f"<lastmod>{lastmod(days)}</lastmod></url></urlset>"
         ).encode()
 
-    routes = {"/sitemap/offers.xml": sitemap(1), "*": fixture("startupjobs/detail_1.html")}
+    routes = {"/sitemap/offers.xml": sitemap(-30), "*": fixture("startupjobs/detail_1.html")}
     result, requested = run_crawl(sessions, startupjobs.SOURCE, routes)
     assert result.details == 1
     _, requested = run_crawl(sessions, startupjobs.SOURCE, routes)
     assert not any("/nabidka/" in u for u in requested)  # same lastmod: not read again
-    routes["/sitemap/offers.xml"] = sitemap(30)  # the portal changed the ad
+    routes["/sitemap/offers.xml"] = sitemap(1)  # the portal changed the ad
     _, requested = run_crawl(sessions, startupjobs.SOURCE, routes)
     assert any("/nabidka/1/a" in u for u in requested)
 
@@ -234,7 +238,7 @@ def test_changed_ads_are_read_again(sessions):
         for row in s.scalars(select(JobSource)):
             row.last_seen_at -= timedelta(minutes=1)
         s.commit()
-    routes["/sitemap/offers.xml"] = sitemap(30).replace(b"/nabidka/1/a", b"/nabidka/2/b")
+    routes["/sitemap/offers.xml"] = sitemap(1).replace(b"/nabidka/1/a", b"/nabidka/2/b")
     run_crawl(sessions, startupjobs.SOURCE, routes)
     with sessions() as s:
         source = s.scalar(select(JobSource).where(JobSource.external_id == "1"))
@@ -247,13 +251,16 @@ def test_new_ads_are_read_before_changed_ones(sessions):
 
     def sitemap(*ads):
         urls = "".join(
-            f"<url><loc>{url}</loc><lastmod>2026-10-{day:02d}</lastmod></url>" for url, day in ads
+            f"<url><loc>{url}</loc><lastmod>{lastmod(days)}</lastmod></url>" for url, days in ads
         )
         return f"<urlset>{urls}</urlset>".encode()
 
-    routes = {"/sitemap/offers.xml": sitemap((near, 1)), "*": fixture("startupjobs/detail_1.html")}
+    routes = {
+        "/sitemap/offers.xml": sitemap((near, -30)),
+        "*": fixture("startupjobs/detail_1.html"),
+    }
     run_crawl(sessions, startupjobs.SOURCE, routes)
-    routes["/sitemap/offers.xml"] = sitemap((near, 30), (far, 1))
+    routes["/sitemap/offers.xml"] = sitemap((near, 1), (far, -30))
     _, requested = run_crawl(sessions, startupjobs.SOURCE, routes, max_details=1)
     assert [u for u in requested if "/nabidka/" in u] == [far]
     _, requested = run_crawl(sessions, startupjobs.SOURCE, routes, max_details=1)

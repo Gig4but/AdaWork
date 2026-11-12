@@ -31,6 +31,7 @@ class FakeRunner:
         self.progress = Progress()
         self.starts = 0
         self.restarts = 0
+        self.scope_changes = 0
         self.fresh = False
         self.started_at = None
         self.api_key = kwargs.get("api_key")
@@ -49,6 +50,9 @@ class FakeRunner:
         self.restarts += 1
         self.progress = Progress()
         self.start(fresh=True)
+
+    def scope_changed(self) -> None:
+        self.scope_changes += 1
 
     def last_start(self):
         return self.started_at
@@ -136,12 +140,10 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
         data=portals | {"source_linkedin": "on", "consent_linkedin": "on"},
         follow_redirects=False,
     )
-    assert r.headers["location"] == "/wizard/keys"
-    page = client.get("/wizard/keys").text
-    assert "Klíč Jooble" in page and "https://jooble.org/api/about" in page
-    r = client.post("/wizard/keys", data={"key_jooble": ""}, follow_redirects=False)
-    assert r.headers["location"] == "/wizard/automation"  # no key: nothing changes
+    assert r.headers["location"] == "/wizard/automation"
+    assert client.get("/wizard/keys", follow_redirects=False).status_code == 303  # no step
     page = client.get("/wizard/automation").text
+    assert 'href="/wizard/sources"' in page
     assert 'name="enabled" >' in page or 'name="enabled">' in page  # off by default
     assert 'value="12" checked' in page
     form = {"interval_hours": "12", "start_with_windows": "on", "notifications": "on"}
@@ -184,6 +186,30 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
     assert saved.automation.enabled is False
     assert saved.routing_download and saved.routing_area == "home"
     assert saved.employers.auto_check and not saved.employers.mentions
+
+
+def test_wizard_asks_for_no_keys_or_sign_ins_and_keeps_those_sources(app, client):
+    svc = app.state.services
+    svc.settings.wizard_completed = True
+    svc.settings.sources.update(jooble=True, facebook=True)  # set on the Sources page
+    page = client.get("/wizard/sources").text
+    assert 'name="source_prace_cz"' in page and 'name="source_linkedin"' in page
+    for hidden in ("jooble", "careerjet", "facebook", "instagram"):
+        assert f'name="source_{hidden}"' not in page
+    assert "Přihlásit se" not in page and "/settings/keys" not in page
+    r = client.post("/wizard/sources", data={"source_mpsv": "on"}, follow_redirects=False)
+    assert r.headers["location"] == "/wizard/automation"
+    sources = svc.settings.sources
+    assert sources["jooble"] and sources["facebook"] and not sources["prace_cz"]
+    assert sources["instagram"] is False and sources["careerjet"] is False
+    assert svc.runner.scope_changes == 1
+
+    svc.settings.employers.google = True  # needs a key: set in Settings only
+    page = client.get("/wizard/employers").text
+    assert 'name="atmoskop"' in page and 'name="google"' not in page
+    client.post("/wizard/employers", data={"atmoskop": "on"})
+    assert svc.settings.employers.google and not svc.settings.employers.mentions
+    assert 'name="google"' in client.get("/settings/employers").text
 
 
 def test_facebook_and_instagram_need_consent_then_offer_a_login(app, client):
@@ -1002,7 +1028,49 @@ def test_the_bar_takes_a_saved_profile(app, client, municipalities):
     }  # fmt: skip
     client.post("/settings/profile", data=form | {"home_address": "Nikde"})
     assert client.get("/commute/defaults").json()["at"] == ""  # not found: no start point
+    client.post("/settings/profile", data=form | {"home_address": ""})
+    assert client.get("/commute/defaults").json() == {
+        "from": "", "at": "", "mode": "any", "max_min": "0", "depart": "07:00",
+    }  # fmt: skip
     assert "/commute/defaults" in client.get("/static/commute.js").text
+
+
+def test_the_bar_takes_the_wizard_profile_before_the_towns_are_known(app, client, municipalities):
+    app.state.services.settings.wizard_completed = True
+    form = {"home_address": "Kolín", "travel_mode": "car", "max_minutes": "60",
+            "depart_time": "06:30"}  # fmt: skip
+    client.post("/wizard/profile", data=form)
+    page = client.get("/").text  # the first search has not filled the towns yet
+    assert re.search(r'<input name="from"[^>]*value="Kolín"', page)
+    assert 'name="at" value=""' in page
+    assert '<option value="car" selected>' in page
+    assert re.search(r'name="max_min"[^>]*value="60"', page)
+    assert 'name="depart" value="06:30"' in page
+    empty = client.get("/results", headers={"HX-Request": "true"}).text
+    assert "Zatím tu nejsou žádné nabídky" in empty  # no start point yet: not a filter
+    with app.state.services.sessions() as s:
+        municipalities(s)
+    no_start = "Zadejte, odkud dojíždíte"
+    htmx = {"HX-Request": "true"}
+    form = {"from": "Kolín", "at": "", "mode": "car"}  # the bar as the page has it
+    found = client.get("/results", params=form, headers=htmx).text
+    assert no_start not in found
+    assert 'id="origin" hidden data-at="50.0300,15.2000" data-from="Kolín"' in found
+    by_time = client.get("/", params=form | {"sort": "travel"}).text
+    assert 'value="travel" selected' in by_time
+    assert 'name="at" value="50.0300,15.2000"' in client.get("/").text
+    cleared = form | {"from": ""}
+    assert no_start in client.get("/results", params=cleared, headers=htmx).text
+
+
+def test_saving_what_is_searched_for_restarts_a_running_search(app, client):
+    svc = app.state.services
+    svc.settings.wizard_completed = True
+    client.post("/settings/profile", data={"home_address": "Kolín"})
+    client.post("/sources", data={"source_mpsv": "on"})
+    client.post("/settings/keys", data={"key_jooble": ""})
+    client.post("/wizard/profile", data={"home_address": "Kolín"})
+    assert svc.runner.scope_changes == 4
 
 
 def test_profile_keeps_the_departure_time(app, client):

@@ -1,10 +1,11 @@
-{# Employer checks and review sources; shared by the wizard and Settings. #}
+{# Employer checks and review sources; shared by the wizard and Settings. The wizard asks for
+   no keys: Google ratings need one. #}
 <p>{{ t("employers.text") }}</p>
 <label><input type="checkbox" role="switch" name="auto_check" {% if settings.employers.auto_check %}checked{% endif %}>
   <strong>{{ t("employers.auto") }}</strong><br><small class="muted">{{ t("employers.auto.hint") }}</small></label>
 <fieldset>
   <legend>{{ t("employers.sources") }}</legend>
-  {% for name in ("atmoskop", "mentions", "google", "facebook") %}
+  {% for name in ("atmoskop", "mentions", "google", "facebook") if not (name == "google" and path.startswith("/wizard")) %}
     <label><input type="checkbox" name="{{ name }}" {% if settings.employers | attr(name) %}checked{% endif %}>
       {{ t("employers.source." ~ name) }}<br><small class="muted">{{ t("employers.source." ~ name ~ ".hint") }}</small></label>
   {% endfor %}

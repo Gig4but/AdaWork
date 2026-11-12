@@ -1,7 +1,7 @@
 {% from "_icons.html" import icon %}
 {# Source switches; shared by the wizard and the Sources page. #}
 {% if consent_missing %}<p class="error" role="alert">{{ t("sources.consent_missing", source=consent_missing) }}</p>{% endif %}
-{# The wizard asks for the keys in its next step. #}
+{# The wizard asks for no keys or sign-ins: those sources are set on the Sources page. #}
 {% for kind in (("portal", "classifieds") if path.startswith("/wizard") else ("portal", "classifieds", "api")) %}
 <fieldset>
   <legend>{{ t("sources.kind." ~ kind) }}</legend>

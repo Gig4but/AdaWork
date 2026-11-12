@@ -143,6 +143,7 @@ class ScrapeRunner:
         self._thread: threading.Thread | None = None
         self._stopping = threading.Event()  # every site stops at its next page
         self._again = False  # start over when this run stops
+        self._scope: dict | None = None
         # The filters the user's list was last shown with: its ads are checked first.
         self.focus: Filters | None = None
 
@@ -155,7 +156,7 @@ class ScrapeRunner:
         with self._lock:
             if self.progress.running:
                 return False
-            scope = self.scope()
+            scope = self._scope = self.scope()
             with self.sessions() as session:
                 state = self._state(session, SCOPE_ID)
                 before = (state.state or {}).get("scope")
@@ -189,12 +190,19 @@ class ScrapeRunner:
                 return
         self.start(fresh=True)
 
+    def scope_changed(self) -> None:
+        with self._lock:
+            if self.progress.running and self.scope() != self._scope:
+                self._again = self.progress.restarting = True
+                self._stopping.set()
+
     def scope(self) -> dict:
         """What decides which jobs a run finds."""
         profile = self.profile()
+        choices = self.source_choices()
         return {
-            "profile": profile.model_dump() if profile else None,
-            "sources": dict(self.source_choices()),
+            "profile": profile.model_dump(exclude={"depart_time"}) if profile else None,
+            "sources": {s.id: choices.get(s.id, s.default_enabled) for s in SOURCES},
         }
 
     def last_start(self) -> datetime | None:

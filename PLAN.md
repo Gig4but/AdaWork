@@ -29,8 +29,8 @@ Spike results: `docs/spikes.md`. How the code is organized: [ARCHITECTURE.md](AR
 - **As simple as possible for the user:**
   - one installer, no Python, no Ollama, no browser extension, no command line;
   - one **first-run setup wizard** that asks only what the app cannot work out itself
-    (home address, AI model choice, optional logins and API keys), with defaults for
-    everything else;
+    (home address, AI model choice, which sources to read), with defaults for everything
+    else; logins and API keys are set later in Settings and on the Sources page;
   - after setup the app can run **on its own**:
     - scheduled scraping every 6, 12, 24 or 48 h (**off by default**, one switch to turn on);
     - AI processing, employer checks and notifications about new matches run automatically
@@ -315,8 +315,8 @@ request.
   the same search (keywords, home town, radius) on Indeed in the user's browser. Indeed's
   Cloudflare check refuses the app's honest User-Agent, and disguising the app is not done.
 - **Facebook/Instagram `social_reader`:**
-  - **Off by default.** Enabled only by an explicit opt-in in the wizard (step 4) or in
-    Settings, each time after the risk warning.
+  - **Off by default.** Enabled only by an explicit opt-in on the Sources page (not in the
+    wizard, which asks for no logins), each time after the risk warning.
   - The user logs in once in a real Edge window. Only the session is kept, never the password.
   - Automatic discovery:
     - job groups the user is a member of, plus public groups found with generated queries
@@ -461,7 +461,7 @@ The prompt forbids claims not found in the texts; the summary is labelled as AI-
 ### 4.6 Commute module (`CommuteService` + MOTIS)
 
 **Data and updates (automatic once downloaded):**
-- Nothing downloads until the user clicks "Stáhnout mapu" (wizard step 7 or Settings → Mapy).
+- Nothing downloads until the user clicks "Stáhnout mapu" (wizard step 6 or Settings → Mapy).
   Then: download the OSM CZ extract (948 MB) and the Spojenka GTFS (85 MB), sanitize the
   GTFS, and import with MOTIS in the background.
 - **Profile by hardware** (measured in M0):
@@ -667,36 +667,35 @@ Every step has defaults; optional steps have "Skip"; downloads run in the backgr
    volného místa"). Below it: **"Automaticky – nejlepší pro tento počítač"** (preselected),
    then Simple / Good / Excellent with hardware-fit icons (§6.6). The download of the chosen
    model starts in the background.
-4. **Sociální sítě (volitelné, ve výchozím stavu vypnuto)** — social networks, optional, off
-   by default:
-   - Two switches, **Facebook** and **Instagram**, both **off**. "Další" (Next) with both off
-     is the default path.
-   - A **visible warning box** (orange/red frame, warning icon, always shown on this step, not
-     hidden behind a link). In plain Czech it says:
-     - automatic reading breaks Meta's terms of use;
-     - Facebook/Instagram can temporarily block or **permanently disable the account**
-       (lost Messenger, groups, photos);
-     - no limit is guaranteed to be safe;
-     - the app reads slowly (100 / 50 posts a day), stops at the first warning, and never
-       stores the password.
-     - A "Více o rizicích" (more about risks) expander shows the full risk table from
-       §4.3.1.
-   - Turning a switch on opens a confirmation dialog. It repeats the main risk and requires
-     ticking **"Rozumím riziku a chci tuto funkci zapnout"** ("I understand the risk and want to
-     turn this on"). Only then does the "Přihlásit se" button open the Edge login window.
-   - For Instagram, a hint suggests a separate Instagram account.
+4. **Zdroje** (sources) — switches for the job portals and classifieds, all **on** by default:
    - **LinkedIn** switch on the same step, **off** by default, with its own short warning: it
      breaks LinkedIn's rules for robots, the computer's IP can be blocked for a while, no
-     login is used so the account is not at risk.
-   - The same switches, warning and confirmation appear in Settings, so the user can turn
-     either on later or back off any time. A small warning badge stays next to an enabled
-     Facebook/Instagram source on the Sources page.
-5. **Další zdroje (volitelné)** — API keys, each with a "Získat zdarma" link and a short how-to,
-   stored in Windows Credential Manager:
-   - Jooble, Careerjet;
-   - **Google Maps** (customer ratings): Google requires a billing account with a card even
-     for the free 1 000 requests/month; the app never exceeds the free limit.
-6. **Automatika**:
+     login is used so the account is not at risk. Turning it on needs the confirmation tick.
+   - The wizard asks for **no logins and no API keys**. Facebook and Instagram (a login in an
+     Edge window) and Jooble and Careerjet (API keys) are not shown here; they are set on the
+     Sources page and in Settings → Klíče k dalším službám. Running the wizard again keeps their switches.
+   - **Facebook / Instagram** on the Sources page: two switches, both **off** by default.
+     - A **visible warning box** (orange/red frame, warning icon, always shown, not hidden
+       behind a link). In plain Czech it says:
+       - automatic reading breaks Meta's terms of use;
+       - Facebook/Instagram can temporarily block or **permanently disable the account**
+         (lost Messenger, groups, photos);
+       - no limit is guaranteed to be safe;
+       - the app reads slowly (100 / 50 posts a day), stops at the first warning, and never
+         stores the password.
+       - A "Více o rizicích" (more about risks) expander shows the full risk table from
+         §4.3.1.
+     - Turning a switch on requires ticking **"Rozumím riziku a chci tuto funkci zapnout"**
+       ("I understand the risk and want to turn this on"). Only then does the "Přihlásit se"
+       button open the Edge login window.
+     - For Instagram, a hint suggests a separate Instagram account.
+     - A small warning badge stays next to an enabled Facebook/Instagram source.
+   - **API keys** (Settings → Klíče k dalším službám), each with a "Získat zdarma" link and a short how-to,
+     stored in Windows Credential Manager:
+     - Jooble, Careerjet;
+     - **Google Maps** (customer ratings): Google requires a billing account with a card even
+       for the free 1 000 requests/month; the app never exceeds the free limit.
+5. **Automatika**:
    - "Automaticky hledat nové nabídky" (check for new jobs automatically): switch **off by
      default**. When switched on, the interval is **6 h / 12 h / 24 h / 48 h** (12 h
      preselected); social media runs at most twice a day regardless.
@@ -704,11 +703,12 @@ Every step has defaults; optional steps have "Skip"; downloads run in the backgr
    - With automatic checks off, scraping runs when the user clicks "Hledat nové nabídky" on
      the Dashboard or in the tray menu.
    - Automatic checks can be switched on/off or paused any time from the tray or Settings.
-7. **Mapy a jízdní řády** — "Stáhnout mapu" (~1 GB) and the area; "Přeskočit" leaves travel
+6. **Mapy a jízdní řády** — "Stáhnout mapu" (~1 GB) and the area; "Přeskočit" leaves travel
    times off until downloaded from Settings.
-8. **Zaměstnavatelé** — "Ověřovat zaměstnavatele automaticky po každém hledání" (**off** by
-   default: checks and reviews only when a card is opened) and the review sources.
-9. **Hotovo** — summary; "Start" runs MPSV first (fast, all industries).
+7. **Zaměstnavatelé** — "Ověřovat zaměstnavatele automaticky po každém hledání" (**off** by
+   default: checks and reviews only when a card is opened) and the review sources. Google
+   customer ratings are not offered here: they need an API key (Settings → Zaměstnavatelé).
+8. **Hotovo** — summary; "Start" runs MPSV first (fast, all industries).
    - Map/routing data and the model download continue in the background.
    - The dashboard shows their progress ("Mapy a jízdní řády: 60 %").
 
@@ -861,7 +861,7 @@ AdaWork/
 - Notifications after an automatic check: new matches per saved search (or all new jobs when
   none is saved), and a social reader that stopped.
 - Saved searches with a "new" count until opened; CSV/XLSX export of the filtered list.
-- Jooble and Careerjet with the user's key (wizard step 5, Settings), kept in the Windows
+- Jooble and Careerjet with the user's key (Settings → Klíče k dalším službám), kept in the Windows
   Credential Manager. Not tried live: no key.
 - Background downloads, also with checks off: unreliable VAT payers (as DIČ → date) and the
   agency register daily, the Atmoskop sitemap weekly; a failure is retried after an hour.
@@ -922,7 +922,7 @@ AdaWork/
   otherwise (M9: "práce na černo" from a changed job title).
 - Card (dialog from the job's employer name), badges on job cards, filters (satisfaction ≥,
   no warnings, verified, no unlicensed agencies, one employer's jobs), sort by employer,
-  Settings → Zaměstnavatelé, Google key in wizard step 5 with the month's count.
+  Settings → Zaměstnavatelé, Google key in Settings → Klíče k dalším službám with the month's count.
 - **Done when** (61.7k jobs, 20.6k employers, Core Ultra 7 255U, Gemma 4 E2B):
   - ≥ 90 % of 50 sample employers resolve to the right IČO: 47/50 (94 %) of names from ads
     without an IČO, judged by hand (2 not found, 1 sole trader left uncertain with the right

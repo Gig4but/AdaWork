@@ -85,6 +85,7 @@
   </div>
 </form>
 <div id="facets-refresh"></div>
+<div id="origin" hidden data-at="{{ f.origin or '' }}" data-from="{{ f.origin_label }}"></div>
 <dialog id="commute" aria-label="{{ t('commute.title') }}"><article id="commute-body"></article></dialog>
 <dialog id="employer" aria-label="{{ t('employer.title') }}"><article id="employer-body"></article></dialog>
 <dialog id="job-detail" aria-label="{{ t('job.full_text') }}"><article id="job-detail-body"></article></dialog>

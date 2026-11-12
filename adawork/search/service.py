@@ -126,7 +126,10 @@ class Filters:
     sort: Sort = "relevance"
 
     def is_filtered(self) -> bool:
-        return replace(self, sort="relevance", origin_label="") != Filters()
+        plain = replace(self, sort="relevance", origin_label="")
+        if not self.origin:
+            plain = replace(plain, travel_mode="any", travel_max=None, depart="07:00")
+        return plain != Filters()
 
     @property
     def travel_modes(self) -> tuple[str, ...]:

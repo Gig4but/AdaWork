@@ -2,10 +2,12 @@
 Instagram logins, and the API keys some sources need."""
 
 import re
+from collections.abc import Collection
 from datetime import datetime
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from starlette.concurrency import run_in_threadpool
 
 from adawork.config import Settings
 from adawork.db.models import SourceState
@@ -32,10 +34,20 @@ def chosen_sources(form) -> dict[str, bool]:
     return {source_id: form.get(f"source_{source_id}") == "on" for source_id, _ in SWITCHABLE}
 
 
-def apply_source_choices(settings: Settings, form) -> str | None:
-    """Saves the source switches; returns the label of a source that needs consent
-    (LinkedIn, Facebook, Instagram) and was switched on without ticking its confirmation box."""
+def apply_source_choices(
+    settings: Settings, form, shown: Collection[str] | None = None
+) -> str | None:
+    """Saves the source switches (`shown`: only these; the others keep theirs); returns the
+    label of a source that needs consent (LinkedIn, Facebook, Instagram) and was switched on
+    without ticking its confirmation box."""
     chosen = chosen_sources(form)
+    if shown is not None:
+        chosen = {
+            source_id: chosen[source_id]
+            if source_id in shown
+            else settings.sources.get(source_id, on)
+            for source_id, on in SWITCHABLE
+        }
     for source_id, _ in SWITCHABLE:
         newly_on = chosen[source_id] and not settings.sources.get(source_id, False)
         if source_id in NEEDS_CONSENT and newly_on and form.get(f"consent_{source_id}") != "on":
@@ -149,6 +161,7 @@ async def sources_save(request: Request, svc: Svc) -> Response:
     if missing:
         rows = source_rows(svc, form)
         return render(request, "sources.html", sources=rows, consent_missing=missing)
+    await run_in_threadpool(svc.runner.scope_changed)
     return RedirectResponse("/sources?saved=1", status_code=303)
 
 

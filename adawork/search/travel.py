@@ -65,6 +65,8 @@ class TravelFilter:
     def bar(self) -> dict[str, str]:
         """The travel-time bar as the profile sets it ("at" empty: the home is not found)."""
         p = self.profile()
+        if not p.home_address:
+            return {"from": "", "at": "", "mode": "any", "max_min": "0", "depart": "07:00"}
         home = self.home()
         return {
             "from": p.home_address,
@@ -79,13 +81,22 @@ class TravelFilter:
         them."""
         p = self.profile()
         found = {"q": ", ".join(p.kinds_of_work)} if p.kinds_of_work else {}
-        bar = self.bar()
-        return found | bar if bar["at"] else found
+        return found | self.bar()
 
     def filters(self, params: QueryParams) -> Filters:
         """Filters from query parameters; unknown or malformed values are ignored. Travel
         times from the chosen start point are made ready (estimates at first)."""
-        f = filters_from(params, self.defaults())
+        defaults = self.defaults()
+        f = filters_from(params, defaults)
+        if f.origin is None:
+            text = params.get("from", "" if "at" in params else defaults.get("from", ""))
+            text = text.strip()
+            found = self.locator.locate(text) if text else None
+            f.origin_label = text[:200]
+            if found is not None:
+                f.origin = found.key
+                if params.get("sort") == "travel":
+                    f.sort = "travel"
         self.prepare(f)
         return f
 
