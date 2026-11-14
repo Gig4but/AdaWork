@@ -2,8 +2,8 @@
 checked by SHA-256, so a model never changes under the user.
 
 `TIERS` maps the three friendly tiers to models; the other entries can be picked under
-"Pokročilé" (advanced). Models below 2B and 8–14B models were evaluated and removed: they
-were no better than the tiers (docs/spikes.md).
+"Pokročilé" (advanced). 8–14B models were evaluated and removed: they were no better than
+the tiers (docs/spikes.md).
 """
 
 from dataclasses import dataclass
@@ -64,6 +64,25 @@ NO_THINKING = {"enable_thinking": False}
 MODELS: dict[str, ModelSpec] = {
     m.id: m
     for m in (
+        ModelSpec(
+            id="qwen3.5-0.8b",
+            name="Qwen3.5 0.8B",
+            repo="unsloth/Qwen3.5-0.8B-GGUF",
+            revision="6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+            weights=(
+                "Qwen3.5-0.8B-Q4_K_M.gguf",
+                532517120,
+                "bd258782e35f7f458f8aced1adc053e6e92e89bc735ba3be89d38a06121dc517",
+            ),
+            mmproj=(
+                "mmproj-F16.gguf",
+                204987232,
+                "56e4c6cfe73b0c82e3e82bc518d7591997e61d81f723fc41a586f4fa69ea2453",
+            ),
+            params_b=0.8,
+            kv_mb_per_1k=12,
+            chat_kwargs=NO_THINKING,
+        ),
         ModelSpec(
             id="qwen3.5-2b",
             name="Qwen3.5 2B",
@@ -140,55 +159,14 @@ MODELS: dict[str, ModelSpec] = {
             kv_mb_per_1k=144,
             prompt=SHARES,
         ),
-        ModelSpec(
-            id="gemma-4-e2b",
-            name="Gemma 4 E2B",
-            repo="ggml-org/gemma-4-E2B-it-GGUF",
-            revision="b4243c156154b6dca9324415f8c7ccc098b4aed1",
-            weights=(
-                "gemma-4-E2B-it-Q4_0.gguf",
-                2841481184,
-                "8e30dff3ac4c8434c49a7036fa15564bdbb6044e42bf04550bf1a096ad7e6a52",
-            ),
-            mmproj=(
-                "mmproj-gemma-4-E2B-it-Q8_0.gguf",
-                557368064,
-                "9406f99c16d68cda4f1f0552192dcc99021ea1fc6d2fd50b1dc3ccf30d04b292",
-            ),
-            params_b=2.0,
-            kv_mb_per_1k=40,
-        ),
-        ModelSpec(
-            id="gemma-4-e4b",
-            name="Gemma 4 E4B",
-            repo="ggml-org/gemma-4-E4B-it-GGUF",
-            revision="b8093469224f83f5c38f691eb906c380e9e63114",
-            weights=(
-                "gemma-4-E4B-it-Q4_0.gguf",
-                4590807392,
-                "a555b900214b477d8880e7832e0b8925e139b0159640036b09fe472b6f2097f2",
-            ),
-            mmproj=(
-                "mmproj-gemma-4-E4B-it-Q8_0.gguf",
-                559874816,
-                "197f49a93027f9843772bd24a6a9e0be2a32a788de5a3def330e9c585d86edd1",
-            ),
-            params_b=4.0,
-            kv_mb_per_1k=56,
-            prompt=SHARES,
-        ),
     )
 }
 
 TIER_ORDER = ("simple", "good", "excellent")
-# Chosen by the M5 eval on 70 golden ads (docs/spikes.md): Qwen3-VL 2B is the smallest and
-# fastest with good salary and occupation results; Gemma 4 E2B is as fast, reads places and
-# occupation groups best and fills more fields, but needs ~1.5 GB more RAM; Qwen3-VL 4B is the
-# most accurate on details at twice the time. The Qwen3.5 models guessed fields the ads did
-# not state; Gemma 4 E4B was not better than E2B.
+# Evals on 70 golden ads: docs/spikes.md.
 TIERS: dict[str, str] = {
-    "simple": "qwen3-vl-2b",
-    "good": "gemma-4-e2b",
+    "simple": "qwen3.5-0.8b",
+    "good": "qwen3.5-2b",
     "excellent": "qwen3-vl-4b",
 }
 

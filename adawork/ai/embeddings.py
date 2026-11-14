@@ -62,6 +62,10 @@ class Embedder:
         self._tokenizer = tokenizer
         self._inputs = {i.name for i in self._session.get_inputs()}
 
+    def unload(self) -> None:
+        with self._lock:
+            self._session = self._tokenizer = None
+
     def embed(self, texts: Sequence[str], prefix: str = "query: ", batch: int = 64) -> np.ndarray:
         """Unit-length vectors, shape (len(texts), 384). e5 wants "query: " for short search
         texts and "passage: " for documents."""

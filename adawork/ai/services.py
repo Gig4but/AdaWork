@@ -17,6 +17,18 @@ class AiServices:
     manager: ModelManager
     enricher: Enricher
 
+    def delete_models(self, model_id: str | None = None) -> bool:
+        """One model, or all (None); AI work stops first when it uses them."""
+        active = self.manager.active_model()
+        if model_id is None or (active is not None and active.id == model_id):
+            self.enricher.stop()
+            self.manager.server.stop()  # ends a call in progress, so the enricher sees "stop"
+            self.enricher.wait(15)  # it must not load the model again while it is deleted
+        if model_id is None:
+            self.manager.delete_all()
+            return True
+        return self.manager.delete_model(model_id)
+
     def shutdown(self) -> None:
         self.enricher.stop()
         self.manager.shutdown()

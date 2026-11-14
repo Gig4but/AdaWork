@@ -652,15 +652,15 @@ def test_ai_page_saves_the_choice_and_starts_the_download(app, client):
     app.state.services.settings.wizard_completed = True
     page = client.get("/ai").text
     assert "Umělá inteligence" in page and "integrovaná grafika" in page
-    assert "Jednoduchý (Qwen3-VL 2B" in page and "Poběží plynule" in page
+    assert "Jednoduchý (Qwen3.5 0.8B" in page and "Poběží plynule" in page
     form = {"choice": "simple", "model": "", "server_url": "javascript:alert(1)"}
     r = client.post("/ai", data=form, follow_redirects=False)
     assert r.headers["location"] == "/ai?saved=1"
     ai = app.state.services.settings.ai
     assert ai.choice == "simple" and ai.server_url == ""  # only http(s) URLs are kept
     assert app.state.services.ai.manager.downloads_started == 1
-    client.post("/ai", data={"choice": "simple", "model": "gemma-4-e2b", "server_url": ""})
-    assert app.state.services.settings.ai.choice == "gemma-4-e2b"  # "Pokročilé" wins
+    client.post("/ai", data={"choice": "simple", "model": "qwen3-vl-2b", "server_url": ""})
+    assert app.state.services.settings.ai.choice == "qwen3-vl-2b"  # "Pokročilé" wins
     assert "Stahuji" not in client.get("/ai/status").text
 
 
@@ -698,20 +698,45 @@ def test_ask_in_a_sentence(app, client, monkeypatch):
     )
 
 
-def test_downloaded_models_are_listed_and_deleted_only_on_request(app, client):
+def test_downloaded_models_are_listed_and_deleted_on_request(app, client):
     from test_ai import fake_download
 
     app.state.services.settings.wizard_completed = True
     manager = app.state.services.ai.manager
-    fake_download(manager, "qwen3-vl-2b", "gemma-4-e2b")
-    manager.state.active = "gemma-4-e2b"
+    fake_download(manager, "qwen3-vl-2b", "qwen3.5-2b")
+    (manager.models_dir / "gemma-4-e2b").mkdir()  # removed from the catalog
+    manager.state.active = "qwen3.5-2b"
     page = client.get("/ai").text
-    assert "Stažené modely" in page and "používá se" in page
-    assert 'name="model_id" value="qwen3-vl-2b"' in page
-    assert 'name="model_id" value="gemma-4-e2b"' not in page  # in use: no delete button
+    assert "Stažené modely" in page and "používá se" in page and "Smazat vše" in page
+    for model_id in ("qwen3-vl-2b", "qwen3.5-2b", "gemma-4-e2b"):
+        assert f'name="model_id" value="{model_id}"' in page
     client.post("/ai/delete", data={"model_id": "gemma-4-e2b"})
-    client.post("/ai/delete", data={"model_id": "qwen3-vl-2b"})
-    assert manager.downloaded() == {"gemma-4-e2b"}
+    client.post("/ai/delete", data={"model_id": "qwen3.5-2b"})  # in use: deleted too
+    assert manager.downloaded() == {"qwen3-vl-2b"} and manager.stale() == []
+    assert manager.active_model() is None  # Auto's tier is not downloaded
+    (manager.models_dir / "qwen3.5-0.8b").mkdir()  # a download that did not finish
+    assert manager.stale() == ["qwen3.5-0.8b"] and "Qwen3.5 0.8B" in client.get("/ai").text
+    client.post("/ai/delete", data={"model_id": "../x"})  # not a model: nothing happens
+    client.post("/ai/delete", data={})  # no model and no "all": nothing either
+    assert len(list(manager.models_dir.iterdir())) == 2
+    client.post("/ai/delete", data={"all": "1"})
+    assert not any(manager.models_dir.iterdir())
+
+
+def test_own_server_test_lists_its_models(client, monkeypatch):
+    from adawork.ai.client import ServerDown
+    from adawork.web.routes import ai as ai_routes
+
+    monkeypatch.setattr(ai_routes, "list_models", lambda url: ["qwen35-2:32k"])
+    page = client.post("/ai/test", data={"server_url": "https://llm.lan"}).text
+    assert '<option value="qwen35-2:32k">' in page
+    assert "musí začínat" in client.post("/ai/test", data={"server_url": "llm.lan"}).text
+
+    def down(url):
+        raise ServerDown("connection refused")
+
+    monkeypatch.setattr(ai_routes, "list_models", down)
+    assert "connection refused" in client.post("/ai/test", data={"server_url": "http://x"}).text
 
 
 def test_manual_import_of_text_and_of_a_photo(app, client):

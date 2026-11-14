@@ -364,11 +364,6 @@ TEXTS: dict[str, dict[str, str]] = {
         "cs": "Měřím rychlost modelu na tomto počítači…",
         "en": "Measuring the model's speed on this computer…",
     },
-    "ai.download.waiting_metered": {
-        "cs": "Připojení je účtované po datech, model se proto zatím nestahuje.",
-        "en": "The connection is metered, so the model is not downloaded yet.",
-    },
-    "ai.download.metered_ok": {"cs": "Přesto stáhnout", "en": "Download anyway"},
     "ai.download.failed": {
         "cs": "Stažení se nepovedlo: {msg}. Zkusím to znovu při příštím spuštění.",
         "en": "The download failed: {msg}. It will be retried at the next start.",
@@ -411,9 +406,15 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "Own server (e.g. Ollama: http://127.0.0.1:11434)",
     },
     "ai.server_model": {"cs": "Název modelu na serveru", "en": "Model name on the server"},
-    "ai.allow_metered": {
-        "cs": "Stahovat i přes připojení účtované po datech",
-        "en": "Download over metered connections too",
+    "ai.test": {"cs": "Vyzkoušet spojení", "en": "Test connection"},
+    "ai.test.ok": {
+        "cs": "Server odpovídá. Modely: {models}",
+        "en": "The server answers. Models: {models}",
+    },
+    "ai.test.failed": {"cs": "Server neodpovídá: {msg}", "en": "The server does not answer: {msg}"},
+    "ai.test.bad_url": {
+        "cs": "Adresa musí začínat http:// nebo https://",
+        "en": "The address must start with http:// or https://",
     },
     "ai.models": {"cs": "Stažené modely", "en": "Downloaded models"},
     "ai.models.text": {
@@ -427,6 +428,19 @@ TEXTS: dict[str, dict[str, str]] = {
     "ai.delete_confirm": {
         "cs": "Smazat tento model z disku? Kdykoli ho můžete stáhnout znovu.",
         "en": "Delete this model from disk? You can download it again any time.",
+    },
+    "ai.delete_confirm_active": {
+        "cs": "Tento model se právě používá. Smazat ho? AI bude stát, dokud se znovu nestáhne "
+        "(po uložení volby zde nebo při příštím spuštění).",
+        "en": "This model is in use. Delete it? The AI stops until it is downloaded again "
+        "(when a choice is saved here, or at the next start).",
+    },
+    "ai.delete_all": {"cs": "Smazat vše", "en": "Delete all"},
+    "ai.delete_all_confirm": {
+        "cs": "Smazat všechny stažené modely AI? AI bude stát, dokud se znovu nestáhnou "
+        "(po uložení volby zde nebo při příštím spuštění).",
+        "en": "Delete all downloaded AI models? The AI stops until they are downloaded again "
+        "(when a choice is saved here, or at the next start).",
     },
     "ai.save": {"cs": "Uložit", "en": "Save"},
     "ai.saved": {"cs": "Uloženo.", "en": "Saved."},
@@ -442,10 +456,6 @@ TEXTS: dict[str, dict[str, str]] = {
     "ask.wait.benchmark": {
         "cs": "Zkouším AI na tomto počítači, za chvíli se tu můžete zeptat větou…",
         "en": "Trying the AI on this computer, you can ask here in a moment…",
-    },
-    "ask.wait.metered": {
-        "cs": "AI se nestahuje přes účtované připojení (Nastavení → AI)",
-        "en": "The AI is not downloaded over a metered connection (Settings → AI)",
     },
     "ask.wait.failed": {
         "cs": "Stažení AI se nepovedlo (Nastavení → AI)",

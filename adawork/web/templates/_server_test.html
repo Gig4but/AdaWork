@@ -1,0 +1,7 @@
+{# Settings → AI → "Vyzkoušet spojení": the result, and the server's models for the name field. #}
+<div id="server-test">
+  {% if error %}<small class="error">{{ t(error[0], **error[1]) }}</small>
+  {% else %}<small class="ok">{{ t("ai.test.ok", models=models | join(", ")) }}</small>
+    <datalist id="server-models">{% for m in models %}<option value="{{ m }}">{% endfor %}</datalist>
+  {% endif %}
+</div>

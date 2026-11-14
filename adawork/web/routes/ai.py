@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from adawork.ai.ask import ask
 from adawork.ai.catalog import MODELS, TIERS
-from adawork.ai.client import LlmError
+from adawork.ai.client import LlmError, list_models
 from adawork.ai.manager import Busy
 from adawork.ai.runtime import ServerFailed
 from adawork.config import Settings
@@ -33,7 +33,6 @@ def apply_ai_choice(settings: Settings, form) -> None:
         url = (form.get("server_url") or "").strip()
         settings.ai.server_url = url if re.match(r"^https?://", url) else ""
         settings.ai.server_model = (form.get("server_model") or "").strip()[:100]
-        settings.ai.allow_metered = form.get("allow_metered") == "on"
     settings.save()
 
 
@@ -89,7 +88,13 @@ def ai_context(svc: Services) -> dict:
             }
             for spec in MODELS.values()
             if spec.id in downloaded
+        ]
+        + [
+            {"id": name, "name": MODELS[name].name if name in MODELS else name}
+            | {"size": None, "active": False}
+            for name in m.stale()
         ],
+        "has_files": m.models_dir.exists() and any(m.models_dir.iterdir()),
         "ask": ask_context(svc),
     }
 
@@ -106,8 +111,6 @@ def ask_context(svc: Services) -> dict:
         wait = ("ask.wait.downloading", {"percent": d.percent})
     elif d.state in ("benchmark", "failed"):
         wait = (f"ask.wait.{d.state}", {})
-    elif d.state == "waiting_metered":
-        wait = ("ask.wait.metered", {})
     else:
         wait = ("ask.wait.none", {})
     return {"wait": wait}
@@ -126,19 +129,33 @@ async def ai_save(request: Request, svc: Svc) -> RedirectResponse:
 
 
 @router.post("/ai/delete")
-def ai_delete(svc: Svc, model_id: Annotated[str, Form()]) -> RedirectResponse:
-    svc.ai.manager.delete_model(model_id)
+def ai_delete(
+    svc: Svc, model_id: Annotated[str, Form()] = "", all: Annotated[bool, Form()] = False
+) -> RedirectResponse:
+    if all:
+        svc.ai.delete_models()
+    elif model_id:
+        svc.ai.delete_models(model_id)
     return RedirectResponse("/ai", status_code=303)
+
+
+@router.post("/ai/test", response_class=HTMLResponse)
+def ai_test(request: Request, server_url: Annotated[str, Form()] = "") -> HTMLResponse:
+    """Settings → AI → own server: does it answer, and with which models."""
+    models, error = [], None
+    url = server_url.strip()
+    if not re.match(r"^https?://", url):
+        error = ("ai.test.bad_url", {})
+    else:
+        try:
+            models = list_models(url)
+        except LlmError as exc:
+            error = ("ai.test.failed", {"msg": str(exc)[:200]})
+    return render(request, "_server_test.html", models=models, error=error)
 
 
 @router.get("/ai/status", response_class=HTMLResponse)
 def ai_status(request: Request, svc: Svc) -> HTMLResponse:
-    return render(request, "_ai_status.html", ai=ai_context(svc))
-
-
-@router.post("/ai/download", response_class=HTMLResponse)
-def ai_download(request: Request, svc: Svc, metered: bool = False) -> HTMLResponse:
-    svc.ai.manager.start_download(allow_metered=metered or None)
     return render(request, "_ai_status.html", ai=ai_context(svc))
 
 

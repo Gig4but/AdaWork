@@ -55,7 +55,6 @@ class AiSettings(BaseModel):
     # "auto" (best for this PC, follows hardware changes), a tier ("simple", "good",
     # "excellent"), a catalog model id (advanced), or "off" (rules only).
     choice: str = "auto"
-    allow_metered: bool = False  # download models over a metered connection
     # Advanced: an OpenAI-compatible server instead of the bundled one, e.g. Ollama
     # ("http://127.0.0.1:11434") with its model name.
     server_url: str = ""

@@ -25,10 +25,10 @@
         <input name="server_url" value="{{ settings.ai.server_url }}" placeholder="http://127.0.0.1:11434">
       </label>
       <label>{{ t("ai.server_model") }}
-        <input name="server_model" value="{{ settings.ai.server_model }}">
+        <input name="server_model" value="{{ settings.ai.server_model }}" list="server-models">
       </label>
-      <label><input type="checkbox" role="switch" name="allow_metered" {% if settings.ai.allow_metered %}checked{% endif %}>
-        {{ t("ai.allow_metered") }}</label>
+      <button type="button" class="outline secondary small" hx-post="/ai/test" hx-target="#server-test" hx-select="unset" hx-swap="outerHTML">{{ t("ai.test") }}</button>
+      <div id="server-test"></div>
     </details>
     <button type="submit">{{ t("ai.save") }}</button>
   </form>
@@ -43,27 +43,29 @@
       });
     })();
   </script>
-  {% if ai.downloaded %}
+  {% if ai.downloaded or ai.has_files %}
     <h3>{{ t("ai.models") }}</h3>
     <p class="muted small">{{ t("ai.models.text") }}</p>
+    {# On the buttons: a boosted form (static/nav.js) would ignore an onsubmit "no". #}
     <table class="models">
       {% for d in ai.downloaded %}
         <tr>
           <td>{{ d.name }}</td>
-          <td>{{ d.size }} GB</td>
+          <td>{% if d.size is not none %}{{ d.size }} GB{% endif %}</td>
           <td>
-            {% if d.active %}<small class="muted">{{ t("ai.in_use") }}</small>
-            {% else %}
-              {# On the button: a boosted form (static/nav.js) would ignore an onsubmit "no". #}
-              <form method="post" action="/ai/delete">
-                <input type="hidden" name="model_id" value="{{ d.id }}">
-                <button type="submit" class="outline secondary small" onclick='return confirm({{ t("ai.delete_confirm")|tojson }})'>{{ t("ai.delete") }}</button>
-              </form>
-            {% endif %}
+            {% if d.active %}<small class="muted">{{ t("ai.in_use") }}</small>{% endif %}
+            <form method="post" action="/ai/delete">
+              <input type="hidden" name="model_id" value="{{ d.id }}">
+              <button type="submit" class="outline secondary small" onclick='return confirm({{ t("ai.delete_confirm_active" if d.active else "ai.delete_confirm")|tojson }})'>{{ t("ai.delete") }}</button>
+            </form>
           </td>
         </tr>
       {% endfor %}
     </table>
+    <form method="post" action="/ai/delete">
+      <input type="hidden" name="all" value="1">
+      <button type="submit" class="outline secondary small" onclick='return confirm({{ t("ai.delete_all_confirm")|tojson }})'>{{ t("ai.delete_all") }}</button>
+    </form>
   {% endif %}
 </article>
 {% endblock %}

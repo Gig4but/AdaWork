@@ -102,12 +102,11 @@ def make_ai(tmp_path, settings, sessions, hw=None, codebook=None):
         tmp_path / "models",
         LlamaServer(tmp_path / "vendor", tmp_path / "llama.log"),
         probe=lambda: hw,
-        is_metered=lambda: False,
     )
     manager.embedder = FakeEmbedder()
     manager.downloads_started = 0
 
-    def start_download(allow_metered=None):
+    def start_download():
         manager.downloads_started += 1
         return True
 

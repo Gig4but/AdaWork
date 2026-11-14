@@ -12,8 +12,6 @@ import errno
 import hashlib
 import logging
 import shutil
-import subprocess
-import sys
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -157,27 +155,3 @@ def _download_once(
         raise DownloadError(f"{file.name}: size or checksum mismatch, the file was discarded")
     part.replace(target)
     return target
-
-
-def is_metered() -> bool:
-    """Windows "metered connection" flag (mobile hotspot, data cap). Unknown -> False."""
-    if sys.platform != "win32":
-        return False
-    script = (
-        "[void][Windows.Networking.Connectivity.NetworkInformation,"
-        "Windows.Networking.Connectivity,ContentType=WindowsRuntime];"
-        "$p=[Windows.Networking.Connectivity.NetworkInformation]::GetInternetConnectionProfile();"
-        "if ($p) { $p.GetConnectionCost().NetworkCostType } else { 'Unknown' }"
-    )
-    try:
-        out = subprocess.run(
-            ["powershell", "-NoProfile", "-NonInteractive", "-Command", script],
-            capture_output=True,
-            text=True,
-            timeout=10,
-            creationflags=subprocess.CREATE_NO_WINDOW,
-        ).stdout.strip()
-    except (OSError, subprocess.SubprocessError) as exc:
-        log.info("Metered check failed: %s", exc)
-        return False
-    return out in ("Fixed", "Variable")  # "Unrestricted" or "Unknown" otherwise

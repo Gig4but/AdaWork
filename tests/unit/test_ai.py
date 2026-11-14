@@ -18,7 +18,7 @@ from adawork.ai import advisor, vision
 from adawork.ai.advisor import Speed
 from adawork.ai.ask import to_filters
 from adawork.ai.catalog import MODELS, TIERS
-from adawork.ai.client import LlmClient, LlmError, Timing
+from adawork.ai.client import LlmClient, LlmError, ServerDown, Timing, list_models
 from adawork.ai.download import DownloadError, RemoteFile, download
 from adawork.ai.extract import schema, user_message, validate
 from adawork.ai.grammar import compact_grammar
@@ -43,8 +43,8 @@ def icons(advice):
 
 def test_advisor_matches_the_expected_hardware_table():
     minimum = advisor.advise(make_hw(8, "AMD Radeon(TM) Graphics", 0.5, cores=6))
-    assert icons(minimum) == ["green", "yellow", "yellow"]  # Good and Excellent: ~3.3 GB each
-    assert minimum.pick.tier == "simple" and minimum.reason == "ai.reason.igpu"
+    assert icons(minimum) == ["green", "green", "yellow"]  # Excellent: ~3.3 GB
+    assert minimum.pick.tier == "good" and minimum.reason == "ai.reason.igpu"
 
     mid = advisor.advise(make_hw(16, "AMD Radeon(TM) Graphics", 0.5, cores=8))
     assert icons(mid) == ["green", "green", "yellow"]
@@ -240,7 +240,7 @@ def test_the_manager_does_not_start_a_download_that_cannot_fit(tmp_path, monkeyp
     manager = ModelManager(
         lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
         LlamaServer(tmp_path, tmp_path / "log"), probe=lambda: make_hw(16, "Intel(R) Graphics"),
-        http_factory=no_http, is_metered=lambda: False,
+        http_factory=no_http,
     )  # fmt: skip
     assert manager.start_download()
     manager.wait(5)
@@ -305,6 +305,21 @@ def test_client_sends_a_grammar_and_reports_speed():
     ollama = LlmClient("http://ai", native=False, transport=fake_server({"a": 1}, seen))
     ollama.chat([{"role": "user", "content": "x"}], schema=schema(["9333"]))
     assert seen[1]["response_format"]["type"] == "json_schema"
+    assert seen[1]["reasoning_effort"] == "none" and "reasoning_effort" not in seen[0]
+
+
+def test_list_models_of_an_own_server():
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/v1/models"
+        return httpx.Response(200, json={"data": [{"id": "qwen35-2:32k"}, {"id": "a:1"}]})
+
+    assert list_models("https://llm.lan/", httpx.MockTransport(handler)) == ["a:1", "qwen35-2:32k"]
+    with pytest.raises(LlmError):
+        list_models("https://llm.lan", httpx.MockTransport(lambda r: httpx.Response(200, json={})))
+    with pytest.raises(ServerDown):
+        list_models("https://llm.lan", httpx.MockTransport(lambda r: httpx.Response(404)))
+    with pytest.raises(ServerDown):
+        list_models("http://[x")  # passes the http(s) check, but is no address
 
 
 def test_transcribe_sends_a_small_jpeg_and_reads_no_text_as_empty():
@@ -622,11 +637,10 @@ def test_auto_upgrades_after_a_ram_upgrade_and_keeps_the_old_model_until_then(tm
     from adawork.ai.runtime import LlamaServer
 
     settings = Settings.load(tmp_path / "config.json")
-    hw = {"now": make_hw(8, "AMD Radeon(TM) Graphics", 0.5)}
+    hw = {"now": make_hw(8, cores=4)}
     manager = ModelManager(
         lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
         LlamaServer(tmp_path, tmp_path / "log"), probe=lambda: hw["now"],
-        is_metered=lambda: False,
     )  # fmt: skip
     simple, good = TIERS["simple"], TIERS["good"]
     assert manager.target().id == simple and manager.active_model() is None
@@ -635,7 +649,7 @@ def test_auto_upgrades_after_a_ram_upgrade_and_keeps_the_old_model_until_then(tm
     manager._try_switch(MODELS[simple])
     assert manager.active_model().id == simple
 
-    hw["now"] = make_hw(16, "AMD Radeon(TM) Graphics", 0.5, cores=8)  # RAM upgrade
+    hw["now"] = make_hw(16, "AMD Radeon(TM) Graphics", 0.5, cores=8)  # RAM and graphics
     assert manager.refresh_hardware()
     assert manager.target().id == good and not manager.tier_still_right()
     assert manager.active_model().id == simple  # the old model works until the new is ready
@@ -643,7 +657,6 @@ def test_auto_upgrades_after_a_ram_upgrade_and_keeps_the_old_model_until_then(tm
     manager._try_switch(MODELS[good])
     assert manager.active_model().id == good
     assert (tmp_path / "models" / simple).exists()  # kept: only the user deletes models
-    assert not manager.delete_model(good)  # the model in use cannot be deleted
     assert manager.delete_model(simple) and not (tmp_path / "models" / simple).exists()
     assert manager.take_notice() == ("ai.notice.upgraded", {"model": MODELS[good].name})
     assert manager.take_notice() is None
@@ -655,6 +668,27 @@ def test_auto_upgrades_after_a_ram_upgrade_and_keeps_the_old_model_until_then(tm
     for _ in range(40):
         manager.record(Timing(800, 20.0, 60, 30.0, 50.0))
     assert manager.target().id == simple and not manager.tier_still_right()
+    assert manager.delete_model(good) and manager.active_model() is None  # in use: on request
+
+
+def test_deleting_all_stops_the_server_of_a_loaded_model_first(tmp_path, monkeypatch):
+    from adawork.ai.manager import ModelManager
+    from adawork.ai.runtime import LlamaServer
+
+    settings = Settings.load(tmp_path / "config.json")
+    manager = ModelManager(
+        lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
+        LlamaServer(tmp_path, tmp_path / "log"), probe=lambda: make_hw(8, cores=4),
+    )  # fmt: skip
+    simple = TIERS["simple"]
+    fake_download(manager, simple)
+    (manager.models_dir / "e5-small").mkdir()
+    launch = advisor.launch_for(MODELS[simple], manager.hw, manager.models_dir / simple)
+    stopped = []
+    monkeypatch.setattr(LlamaServer, "launch", property(lambda self: launch))
+    monkeypatch.setattr(manager.server, "stop", lambda: stopped.append(True))
+    manager.delete_all()
+    assert stopped and not any(manager.models_dir.iterdir())
 
 
 def test_a_model_is_benchmarked_once_per_pc(tmp_path):
@@ -668,8 +702,7 @@ def test_a_model_is_benchmarked_once_per_pc(tmp_path):
         return ModelManager(
             lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
             LlamaServer(tmp_path, tmp_path / "log"), probe=lambda: hw["now"],
-            is_metered=lambda: False,
-        )  # fmt: skip
+            )  # fmt: skip
 
     runs = []
 
@@ -710,11 +743,7 @@ def test_auto_rejects_a_model_that_benchmarks_too_slow(tmp_path):
         lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
         LlamaServer(tmp_path, tmp_path / "log"),
         probe=lambda: make_hw(16, "AMD Radeon(TM) Graphics", 0.5, cores=8),
-        is_metered=lambda: True,
     )  # fmt: skip
-    assert manager.start_download()  # the metered check runs in the download thread
-    manager.wait(5)
-    assert manager.download.state == "waiting_metered"
     good = TIERS["good"]
     fake_download(manager, good)
     manager.run_benchmark = lambda spec: Speed(20, 1.5, True)  # far too slow
@@ -734,7 +763,6 @@ def test_session_waits_when_memory_is_low(tmp_path):
         lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
         LlamaServer(tmp_path, tmp_path / "log", available_ram=lambda: GIB),
         probe=lambda: make_hw(8, "AMD Radeon(TM) Graphics", 0.5),
-        is_metered=lambda: False,
     )  # fmt: skip
     with pytest.raises(Busy, match="no_model"), manager.session():
         pass
@@ -756,53 +784,6 @@ def test_session_waits_when_memory_is_low(tmp_path):
         pass
 
 
-def test_the_metered_check_does_not_block_and_is_cached(tmp_path):
-    from adawork.ai.manager import ModelManager
-    from adawork.ai.runtime import LlamaServer
-
-    asked, answer = [], threading.Event()
-
-    def is_metered():  # PowerShell takes seconds
-        asked.append(True)
-        answer.wait(5)
-        return True
-
-    settings = Settings.load(tmp_path / "config.json")
-    manager = ModelManager(
-        lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
-        LlamaServer(tmp_path, tmp_path / "log"), probe=lambda: make_hw(16, "Intel(R) Graphics"),
-        is_metered=is_metered,
-    )  # fmt: skip
-    started = time.perf_counter()
-    assert manager.start_download()  # e.g. from the app's start-up, on the event loop
-    assert time.perf_counter() - started < 1
-    answer.set()
-    manager.wait(5)
-    assert manager.download.state == "waiting_metered"
-    assert manager.start_download()
-    manager.wait(5)
-    assert manager.download.state == "waiting_metered" and len(asked) == 1
-
-
-@pytest.mark.parametrize(
-    ("result", "metered"),
-    [("Fixed", True), ("Variable", True), ("Unrestricted", False), ("Unknown", False),
-     (subprocess.TimeoutExpired("powershell", 10), False), (OSError("no powershell"), False)],
-)  # fmt: skip
-def test_is_metered_reads_the_connection_cost(monkeypatch, result, metered):
-    from adawork.ai import download as dl
-
-    def run(args, **kwargs):
-        if isinstance(result, Exception):
-            raise result
-        return subprocess.CompletedProcess(args, 0, stdout=result + "\r\n")
-
-    monkeypatch.setattr(dl.sys, "platform", "win32")
-    monkeypatch.setattr(dl.subprocess, "CREATE_NO_WINDOW", 0x08000000, raising=False)
-    monkeypatch.setattr(dl.subprocess, "run", run)
-    assert dl.is_metered() is metered
-
-
 def test_real_work_changes_the_tier_only_after_enough_calls(tmp_path):
     from adawork.ai.manager import MIN_SAMPLES, ModelManager
     from adawork.ai.runtime import LlamaServer
@@ -811,7 +792,7 @@ def test_real_work_changes_the_tier_only_after_enough_calls(tmp_path):
     manager = ModelManager(
         lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
         LlamaServer(tmp_path, tmp_path / "log"),
-        probe=lambda: make_hw(8, "AMD Radeon(TM) Graphics", 0.5), is_metered=lambda: False,
+        probe=lambda: make_hw(8, "AMD Radeon(TM) Graphics", 0.5),
     )  # fmt: skip
     fake_download(manager, TIERS["simple"])
     manager.state.active = TIERS["simple"]
@@ -1066,7 +1047,7 @@ def test_a_custom_server_does_not_change_the_local_model_speed(tmp_path):
     manager = ModelManager(
         lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
         LlamaServer(tmp_path, tmp_path / "log"),
-        probe=lambda: make_hw(8, "AMD Radeon(TM) Graphics", 0.5), is_metered=lambda: False,
+        probe=lambda: make_hw(8, "AMD Radeon(TM) Graphics", 0.5),
     )  # fmt: skip
     fake_download(manager, TIERS["simple"])
     manager.state.active = TIERS["simple"]

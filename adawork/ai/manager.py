@@ -17,9 +17,8 @@ import json
 import logging
 import shutil
 import threading
-import time
 from collections.abc import Callable, Iterator
-from contextlib import ExitStack, closing, contextmanager
+from contextlib import ExitStack, closing, contextmanager, suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -27,7 +26,7 @@ import httpx
 
 from adawork.ai import advisor, benchmark, download, embeddings
 from adawork.ai.advisor import Advice, Speed
-from adawork.ai.catalog import MODELS, TIERS, ModelSpec, tier_model
+from adawork.ai.catalog import MODELS, NO_THINKING, TIERS, ModelSpec, tier_model
 from adawork.ai.client import LlmClient, Timing
 from adawork.ai.runtime import LlamaServer, NotEnoughMemory
 from adawork.config import AiSettings
@@ -39,7 +38,6 @@ log = logging.getLogger(__name__)
 EMBEDDER_DIR = "e5-small"
 SPEED_WEIGHT = 0.1  # moving average of real calls
 MIN_SAMPLES = 20  # before real work may change the tier
-METERED_CACHE_SECONDS = 60
 
 
 class Busy(Exception):
@@ -52,7 +50,7 @@ class NoModel(Busy):
 
 @dataclass
 class DownloadStatus:
-    state: str = "idle"  # idle | downloading | benchmark | waiting_metered | failed | done
+    state: str = "idle"  # idle | downloading | benchmark | failed | done
     model_id: str | None = None
     done: int = 0
     total: int = 0
@@ -96,7 +94,6 @@ class ModelManager:
         resources: ResourceManager | None = None,
         probe: Callable[[], hardware.HardwareProfile] = hardware.probe,
         http_factory: Callable[[], httpx.Client] = lambda: httpx.Client(timeout=60),
-        is_metered: Callable[[], bool] = download.is_metered,
     ) -> None:
         self.settings = settings
         self.state_path = state_path
@@ -104,8 +101,6 @@ class ModelManager:
         self.server = server
         self.probe = probe
         self.http_factory = http_factory
-        self.is_metered = is_metered
-        self._metered: tuple[float, bool] | None = None  # (when asked, answer)
         self.state = AiState.load(state_path)
         self.hw = probe()
         self.resources = resources or ResourceManager(self.hw)
@@ -196,38 +191,24 @@ class ModelManager:
             return not self.embedder.available
         return target.id not in self.downloaded() or target.id != self.state.active
 
-    def start_download(self, allow_metered: bool | None = None) -> bool:
+    def start_download(self) -> bool:
         """Fetch what the current choice needs, in the background. False if nothing to do
-        or a download is already running. Returns at once (called from async code): the
-        metered check runs in the download thread."""
+        or a download is already running."""
         with self._lock:
             if self._thread and self._thread.is_alive():
                 return False
             if not self.needs_download():
                 return False
-            metered_ok = self.settings().allow_metered if allow_metered is None else allow_metered
             self._cancel.clear()
-            self._thread = threading.Thread(
-                target=self._fetch, args=(metered_ok,), name="model-download", daemon=True
-            )
+            self._thread = threading.Thread(target=self._fetch, name="model-download", daemon=True)
             self._thread.start()
             return True
-
-    def metered(self) -> bool:
-        """`is_metered()`, asked at most once a minute (it starts PowerShell)."""
-        now = time.monotonic()
-        if self._metered is None or now - self._metered[0] > METERED_CACHE_SECONDS:
-            self._metered = (now, self.is_metered())
-        return self._metered[1]
 
     def wait(self, timeout: float | None = None) -> None:
         if self._thread:
             self._thread.join(timeout)
 
-    def _fetch(self, metered_ok: bool = True) -> None:
-        if not metered_ok and self.metered():
-            self.download = DownloadStatus("waiting_metered")
-            return
+    def _fetch(self) -> None:
         target = None if self.custom_server else self.target()
         files: list[tuple[Path, download.RemoteFile]] = [
             (self.models_dir / EMBEDDER_DIR, f) for f in embeddings.FILES
@@ -285,17 +266,49 @@ class ModelManager:
                 self.state.notice_args = {"model": target.name}
             self._save()
 
+    def _downloading(self) -> str | None:
+        busy = self.download.state in ("downloading", "benchmark")
+        return self.download.model_id if busy else None
+
+    def stale(self) -> list[str]:
+        """Folders that hold no usable model: removed from the catalog, or a partial download
+        not running now."""
+        if not self.models_dir.exists():
+            return []
+        unusable = {EMBEDDER_DIR, self._downloading(), *self.downloaded()}
+        return sorted(
+            p.name for p in self.models_dir.iterdir() if p.is_dir() and p.name not in unusable
+        )
+
     def delete_model(self, model_id: str) -> bool:
-        """Removes a downloaded model at the user's request; never the one in use."""
-        active = self.active_model()
-        if model_id not in MODELS or (active and active.id == model_id):
+        """Removes a model at the user's request, also the one in use (AI work stops until
+        a download: Save on the AI page or the next start); not while it is downloading."""
+        if model_id not in MODELS and model_id not in self.stale():
             return False
-        if self.download.state in ("downloading", "benchmark") and (
-            self.download.model_id == model_id
-        ):
+        if self._downloading() == model_id:
             return False
-        shutil.rmtree(self.models_dir / model_id, ignore_errors=True)
-        return True
+        return self._remove(self.models_dir / model_id)
+
+    def delete_all(self) -> None:
+        """Every model and the embedder; a running download is cancelled first."""
+        self._cancel.set()
+        self.wait(30)
+        if self.models_dir.exists():
+            for path in self.models_dir.iterdir():
+                if path.is_dir():
+                    self._remove(path)
+                else:
+                    with suppress(OSError):  # e.g. still locked: left, like rmtree leaves it
+                        path.unlink(missing_ok=True)
+
+    def _remove(self, directory: Path) -> bool:
+        launch = self.server.launch
+        if launch and launch.weights.parent == directory:
+            self.server.stop()  # Windows keeps a loaded model's file locked
+        if directory.name == EMBEDDER_DIR:
+            self.embedder.unload()
+        shutil.rmtree(directory, ignore_errors=True)
+        return not directory.exists()
 
     def run_benchmark(self, spec: ModelSpec) -> Speed:
         launch = advisor.launch_for(spec, self.hw, self.models_dir / spec.id)
@@ -322,7 +335,14 @@ class ModelManager:
         settings = self.settings()
         if settings.server_url:
             with closing(
-                LlmClient(settings.server_url, model=settings.server_model, native=False)
+                # Own server (LAN): self-signed certificates are accepted.
+                LlmClient(
+                    settings.server_url,
+                    model=settings.server_model,
+                    chat_kwargs=NO_THINKING,
+                    native=False,
+                    verify=False,
+                )
             ) as client:
                 yield client
             return

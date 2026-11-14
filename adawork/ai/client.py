@@ -76,12 +76,13 @@ class LlmClient:
         native: bool = True,
         timeout: float = 300,
         transport: httpx.BaseTransport | None = None,
+        verify: bool = True,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.chat_kwargs = chat_kwargs
         self.native = native  # our llama-server (grammar support) vs. Ollama or another server
-        self._client = httpx.Client(timeout=timeout, transport=transport)
+        self._client = httpx.Client(timeout=timeout, transport=transport, verify=verify)
 
     def close(self) -> None:
         self._client.close()
@@ -109,6 +110,8 @@ class LlmClient:
             }
         if self.chat_kwargs:
             body["chat_template_kwargs"] = self.chat_kwargs
+        if not self.native:
+            body["reasoning_effort"] = "none"  # Ollama: thinking would use up max_tokens
         started = time.perf_counter()
         try:
             resp = self._client.post(f"{self.base_url}/v1/chat/completions", json=body)
@@ -136,6 +139,19 @@ class LlmClient:
             if schema.get("type") == "object" and not isinstance(data, dict):
                 raise BadAnswer(f"not a JSON object: {text[:200]}")  # a server without grammar
         return Reply(data, _timing(payload, wall))
+
+
+def list_models(base_url: str, transport: httpx.BaseTransport | None = None) -> list[str]:
+    """Model names an own server offers (`/v1/models`); its certificate is not checked."""
+    try:
+        with httpx.Client(timeout=10, transport=transport, verify=False) as client:
+            resp = client.get(f"{base_url.rstrip('/')}/v1/models")
+            resp.raise_for_status()
+            return sorted(str(m["id"]) for m in resp.json()["data"])
+    except (httpx.HTTPError, httpx.InvalidURL) as exc:
+        raise ServerDown(str(exc) or type(exc).__name__) from exc
+    except (ValueError, KeyError, TypeError) as exc:
+        raise LlmError(f"unexpected reply from the AI server: {exc}") from exc
 
 
 def _timing(payload: dict, wall: float) -> Timing:

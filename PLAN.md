@@ -180,7 +180,7 @@ bigger models, parallel work and larger routing areas automatically.
 
 | Setting | Derived from | Examples |
 |---|---|---|
-| **AI model tier** (Auto mode, default) | RAM, GPU/VRAM, CPU, disk, measured speed | 8 GB iGPU → Simple; 16 GB → Good; 32 GB or a GPU with ≥ 8 GB VRAM → Excellent |
+| **AI model tier** (Auto mode, default) | RAM, GPU/VRAM, CPU, disk, measured speed | 8 GB CPU only → Simple; 8–16 GB iGPU → Good; 32 GB or a GPU with ≥ 8 GB VRAM → Excellent |
 | GPU offload, threads, batch, context size | GPU type and VRAM, CPU cores | Dedicated GPU → all layers on the GPU; iGPU → partial offload; CPU only → threads = physical cores |
 | **Parallel heavy jobs** | free RAM after loading the model | 8 GB → one at a time; 16 GB → model + routing together; 32 GB → model + routing + browser |
 | **Routing area** | RAM and free disk | 8 GB → ~150 km around home; ≥ 16 GB and enough disk → whole Czech Republic (no re-import when the address changes) |
@@ -213,16 +213,16 @@ at the same time**. A `ResourceManager` lets only one heavy job run at a time, i
 |---|---|---|
 | Windows + other apps | ~3–4 GB | always |
 | App (Python, SQLite, UI window) | ~0.4–0.7 GB | always |
-| AI model, **Simple** tier (Qwen3-VL 2B) | 2.1 GB, 3.0 GB with images (measured) | on demand; stopped after 5 min idle |
-| AI model, **Good** tier (Gemma 4 E2B) | 3.6 GB (measured) | on demand; tight next to Windows on 8 GB (yellow icon) |
+| AI model, **Simple** tier (Qwen3.5 0.8B) | ~1.1 GB (est.) | on demand; stopped after 5 min idle |
+| AI model, **Good** tier (Qwen3.5 2B) | ~1.8 GB (est.) | on demand; stopped after 5 min idle |
 | MOTIS routing server (home area) | ~0.5–1.5 GB (to be measured in M0) | on demand for route/commute calls; stopped when idle; results cached |
 | MOTIS import | to be measured in M0 | only when no other heavy job runs, preferably while the PC is idle |
 | Edge (Playwright: social reader only) | ~0.4–0.8 GB | short sessions, never in parallel with the AI model |
 | Embeddings (e5-small) | ~0.15 GB | in short batches |
 
 **Consequences on the minimum machine:**
-- **Recommended model there: Simple (Qwen3-VL 2B).** Expected icons:
-  Simple 🟢, Good 🟡, Excellent 🟡 (both ~3.6 GB). Good can still be chosen; the app then
+- **Recommended model there: Good (Qwen3.5 2B).** Expected icons:
+  Simple 🟢, Good 🟢, Excellent 🟡 (~3.6 GB). Excellent can still be chosen; the app then
   stops the routing server and browser whenever the model runs.
 - **Throughput** (measured in M5 on an Intel iGPU laptop, not yet on the budget Ryzen):
   ~8 s per full ad (6.8 s when only missing fields are asked), 2.5 s per listing card
@@ -564,12 +564,12 @@ The vision part is loaded only for image work. Catalog chosen by the M5 eval
 
 | Friendly name | Shown as | Download | RAM needed (measured) |
 |---|---|---|---|
-| **Jednoduchý / Simple** | `Jednoduchý (Qwen3-VL 2B, 1.6 GB)` | 1.6 GB | 2.1 GB, 3.0 GB with images |
-| **Dobrý / Good** | `Dobrý (Gemma 4 E2B, 3.4 GB)` | 3.4 GB | 3.6 GB |
+| **Jednoduchý / Simple** | `Jednoduchý (Qwen3.5 0.8B, 0.7 GB)` | 0.7 GB | ~1.1 GB (est.) |
+| **Dobrý / Good** | `Dobrý (Qwen3.5 2B, 1.9 GB)` | 1.9 GB | ~1.8 GB (est.) |
 | **Výborný / Excellent** | `Výborný (Qwen3-VL 4B, 3.0 GB)` | 3.0 GB | 3.6 GB |
 
-Qwen3.5 2B/4B and Gemma 4 E4B stay selectable under "Pokročilé". 8–14B models (3–6× slower,
-no more accurate) and models below 2B (miss most salaries) were tested and removed from the
+Qwen3.5 4B and Qwen3-VL 2B stay selectable under "Pokročilé"; Gemma 4 was removed
+(2026-11-14). 8–14B models (3–6× slower, no more accurate) were tested and removed from the
 catalog (`docs/spikes.md`).
 
 **The best model is decided dynamically for each computer.**
@@ -602,9 +602,8 @@ user can pick a tier manually instead; Auto then stops changing it.
      "Model byl vylepšen na Dobrý".
    - The old model stays as a fallback until the new one has passed. **Models are never
      deleted automatically** (decided 2026-10-07): the AI page lists the downloaded models
-     with a "Smazat" button for each one not in use.
+     with a "Smazat" button for each and "Smazat vše".
    - If the current model becomes too slow or memory-starved, switch down to a smaller tier.
-   - Downloads over a metered connection (Windows "metered" flag) wait for permission.
 
 | Icon | Meaning | Rule (initial) |
 |---|---|---|
@@ -613,7 +612,7 @@ user can pick a tier manually instead; Auto then stops changing it.
 | 🔴 (red cross) | "Nedoporučeno" — not enough memory / too slow / not enough disk | otherwise; can still be chosen after a confirmation |
 
 - Icons are SVGs with a text label and a tooltip (not color only), e.g.
-  `🟢 Dobrý (Gemma 4 E2B, 3.4 GB) — ~8 s na inzerát`.
+  `🟢 Dobrý (Qwen3.5 2B, 1.9 GB) — ~9 s na inzerát`.
 - "Automaticky" is preselected. The tier it currently chooses is marked "Doporučeno"
   (recommended) in the list, so the user can see what Auto means on this PC.
 - Settings → AI shows the same list, the measured speed, and the reason for the current
@@ -625,9 +624,9 @@ user can pick a tier manually instead; Auto then stops changing it.
 
 | PC | Simple | Good | Excellent | Auto picks |
 |---|---|---|---|---|
-| 8 GB, budget Ryzen, iGPU (minimum) | 🟢 | 🟡 | 🟡 | Simple |
+| 8 GB, budget Ryzen, iGPU (minimum) | 🟢 | 🟢 | 🟡 | Good |
 | 16 GB, mid-range CPU, iGPU | 🟢 | 🟢 | 🟡 | Good |
-| 32 GB, Intel Core Ultra 7, iGPU (**measured**) | 🟢 7.9 s | 🟢 8.0 s | 🟡 14.5 s | Good |
+| 32 GB, Intel Core Ultra 7, iGPU (**measured**) | 🟢 3.6 s | 🟢 6.4 s | 🟡 14.5 s | Good |
 | 16–32 GB + GPU with ≥ 8 GB VRAM | 🟢 | 🟢 | 🟢 | Excellent |
 
 ### 6.7 Evaluation

@@ -123,6 +123,18 @@ They only repeat what the rules give and fail at salary; no tier below Simple. R
 the catalog on 2026-10-09. Instead, a rule reads the pay stated in the ad text ("Mzda 32 000 –
 38 000 Kč měsíčně", "180 Kč/hod.", "35 tis.", "32-38k").
 
+### Qwen3.5 tiers (2026-11-14)
+
+Gemma removed; Simple = Qwen3.5 0.8B, Good = Qwen3.5 2B (same PC, newer llama.cpp):
+
+| Model | ISCO major / 2-digit / 4-digit | Kraj | Salary | s per ad |
+|---|---|---|---|---|
+| Qwen3.5 0.8B | 71 / 63 / 54 % | 99 % | 30 % | 3.6 |
+| Qwen3.5 2B | 76 / 69 / 61 % | 97 % | 81 % | 6.4 |
+| Similar titles only | – / 69 / – % | 99 % | – | – |
+
+0.8B is below the title vote on occupation; useful only where 2B is too slow.
+
 ### Speed estimates from published measurements
 
 For PCs not tested here, `ai/advisor.py` uses constants per graphics class from published

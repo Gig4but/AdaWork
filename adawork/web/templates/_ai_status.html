@@ -11,9 +11,6 @@
     <progress value="{{ d.done }}" max="{{ d.total or 1 }}"></progress>
   {% elif d.state == "benchmark" %}
     <small aria-busy="true">{{ t("ai.download.benchmark") }}</small>
-  {% elif d.state == "waiting_metered" %}
-    <small>{{ t("ai.download.waiting_metered") }}</small>
-    <button type="button" class="outline small" hx-post="/ai/download?metered=1" hx-target="closest #ai-status" hx-select="unset" hx-swap="outerHTML">{{ t("ai.download.metered_ok") }}</button>
   {% elif d.state == "failed" %}
     <small class="error">{{ t("ai.download.failed", msg=d.error) }}</small>
   {% endif %}
