@@ -1,0 +1,3 @@
+{# Automatic updates; shared by the wizard and Settings → Aktualizace. #}
+<label><input type="checkbox" role="switch" name="auto_update" {% if settings.updates.auto %}checked{% endif %}> {{ t("update.auto") }}</label>
+<p class="muted small">{{ t("update.auto_hint") }}</p>

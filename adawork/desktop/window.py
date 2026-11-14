@@ -92,9 +92,10 @@ def run_desktop(
     keep_in_tray: Callable[[], bool] = lambda: True,
     on_tray: Callable[[TrayIcon], None] = lambda icon: None,
     hidden: bool = False,
+    on_quit: Callable[[Callable[[], None]], None] = lambda quit_app: None,
 ) -> None:
     """`hidden`: starts in the tray only (start with Windows); `on_tray` gets the tray icon,
-    e.g. to show notifications through it."""
+    e.g. to show notifications through it; `on_quit` gets what quits the app."""
     quitting = False
     if sys.platform == "win32":
         import ctypes
@@ -134,6 +135,7 @@ def run_desktop(
     tray = create_tray(on_open=show, on_quit=quit_app, controls=controls)
     tray.run_detached()
     on_tray(tray)
+    on_quit(quit_app)
     try:
         # Blocks on the main thread until the window is destroyed.
         webview.start(

@@ -146,9 +146,11 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
     assert 'href="/wizard/sources"' in page
     assert 'name="enabled" >' in page or 'name="enabled">' in page  # off by default
     assert 'value="12" checked' in page
+    assert 'name="auto_update" >' in page  # automatic updates: off by default
     form = {"interval_hours": "12", "start_with_windows": "on", "notifications": "on"}
-    r = client.post("/wizard/automation", data=form, follow_redirects=False)
+    r = client.post("/wizard/automation", data=form | {"auto_update": "on"}, follow_redirects=False)
     assert r.headers["location"] == "/wizard/map"
+    assert app.state.services.settings.updates.auto
     page = client.get("/wizard/map").text
     assert "Stáhnout mapu" in page and "Přeskočit" in page  # nothing downloads unasked
     r = client.post("/wizard/map", data={"routing_area": "auto"}, follow_redirects=False)
@@ -739,6 +741,32 @@ def test_own_server_test_lists_its_models(client, monkeypatch):
     assert "connection refused" in client.post("/ai/test", data={"server_url": "http://x"}).text
 
 
+def test_updates_page_checks_installs_and_switches_auto(app, client, tmp_path, monkeypatch):
+    from adawork.desktop.update import UpdateStatus
+
+    svc = app.state.services
+    svc.settings.wizard_completed = True
+    page = client.get("/settings/updates").text
+    assert "Nainstalovaná verze: " in page and 'hx-post="/updates/check"' in page
+    asked = []
+    monkeypatch.setattr(svc.updates, "check_now", lambda: asked.append("check"))
+    monkeypatch.setattr(svc.updates, "install_now", lambda: asked.append("install"))
+    client.post("/updates/check")
+    svc.updates.status = UpdateStatus("available", "9.9.9")
+    page = client.get("/updates/status").text
+    assert "9.9.9" in page and "jen nainstalovaná" in page  # a developer's copy: no install
+    monkeypatch.setattr(svc.updates, "can_install", lambda: True)
+    assert 'hx-post="/updates/install"' in client.get("/updates/status").text
+    client.post("/updates/install")
+    assert asked == ["check", "install"]
+    (tmp_path / "data" / "updates").mkdir(parents=True)
+    (tmp_path / "data" / "updates" / "pending.json").write_text("{}")
+    client.post("/settings/updates", data={"auto_update": "on"})
+    assert svc.settings.updates.auto
+    client.post("/settings/updates", data={})  # off: a downloaded installer is not run
+    assert not svc.settings.updates.auto and not any((tmp_path / "data" / "updates").iterdir())
+
+
 def test_manual_import_of_text_and_of_a_photo(app, client):
     from io import BytesIO
 
@@ -836,6 +864,7 @@ def test_settings_list_the_wizard_steps_in_order(app, client):
         "/settings/automation",
         "/settings/map",
         "/settings/employers",
+        "/settings/updates",
     ]
     assert "Čeština · Podle Windows" in page and "domov nezadán" in page
     for href in pages:

@@ -84,6 +84,12 @@ class EmployerSettings(BaseModel):
     facebook: bool = True  # a link to the employer's Facebook page, when the search finds one
 
 
+class UpdateSettings(BaseModel):
+    """Wizard step "Automatické hledání" and Settings → Aktualizace."""
+
+    auto: bool = False  # check daily; a new version is installed at the next start
+
+
 class Settings(BaseModel):
     language: Language = "cs"
     theme: Theme = "system"
@@ -93,6 +99,7 @@ class Settings(BaseModel):
     ai: AiSettings = Field(default_factory=AiSettings)
     social: SocialSettings = Field(default_factory=SocialSettings)
     employers: EmployerSettings = Field(default_factory=EmployerSettings)
+    updates: UpdateSettings = Field(default_factory=UpdateSettings)
     routing_area: RoutingArea = "auto"
     # The map and timetables are downloaded only once the user asks (wizard or Settings →
     # Mapy); until imported, travel times and routes are off.

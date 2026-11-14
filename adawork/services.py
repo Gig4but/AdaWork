@@ -17,7 +17,7 @@ from adawork.ai.services import AiServices, make_ai_services
 from adawork.config import Settings
 from adawork.db.models import Job
 from adawork.db.session import db_file, make_engine, make_sessionmaker, migrate
-from adawork.desktop import autostart
+from adawork.desktop import autostart, update
 from adawork.employers import downloads
 from adawork.employers.service import EmployerService
 from adawork.geo import ruian
@@ -61,6 +61,15 @@ class Services:
     logins: SocialLogins
     autostart_sync: Callable[[bool], object]
     employer_updates: bool  # False in tests: no registers, reviews or web searches
+    updates: update.Updater
+
+    def set_auto_update(self, on: bool) -> None:
+        self.settings.updates.auto = on
+        self.settings.save()
+        if on:
+            self.updates.wake()
+        else:
+            self.updates.discard()
 
     def set_automation(self, on: bool | None = None) -> None:
         """Automatic checks changed (or `on`: switch them): rescheduled at once."""
@@ -83,8 +92,10 @@ class Services:
         self.scheduler.start()
         self.routing.start()
         self.employers.start()
+        self.updates.start()
 
     def stop(self) -> None:
+        self.updates.stop()
         self.scheduler.stop()  # first: it could start a new search meanwhile
         self.runner.stop()
         self.employers.stop()
@@ -219,4 +230,5 @@ def build(
         logins=SocialLogins(sessions, data_dir),
         autostart_sync=autostart_sync or autostart.sync,
         employer_updates=employer_updates,
+        updates=update.Updater(data_dir / update.FOLDER, lambda: settings.updates.auto),
     )

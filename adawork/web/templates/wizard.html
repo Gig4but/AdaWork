@@ -54,6 +54,7 @@
     <h2>{{ t("auto.title") }}</h2>
     <form method="post" action="/wizard/automation">
       {% include "_automation_form.html" %}
+      {% include "_update_form.html" %}
       <div class="wizard-nav">
         <a href="/wizard/sources" class="secondary">{{ icon("back") }}{{ t("wizard.back") }}</a>
         <button type="submit">{{ t("wizard.next") }}</button>

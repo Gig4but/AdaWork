@@ -60,6 +60,14 @@
       {% include "_automation_form.html" %}
       <button type="submit">{{ t("auto.save") }}</button>
     </form>
+
+  {% elif section == "updates" %}
+    <p>{{ t("update.version", version=version) }}</p>
+    {% include "_update_status.html" %}
+    <form method="post" action="/settings/updates">
+      {% include "_update_form.html" %}
+      <button type="submit">{{ t("settings.save") }}</button>
+    </form>
   {% endif %}
 </article>
 {% endblock %}

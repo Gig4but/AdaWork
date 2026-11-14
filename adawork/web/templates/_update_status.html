@@ -1,0 +1,23 @@
+{# Settings → Aktualizace: what the updater is doing; polls while it works. #}
+{% from "_icons.html" import icon %}
+{% set u = update %}
+<div id="update-status" {% if u.busy or u.state == "installing" %}hx-get="/updates/status" hx-trigger="every 2s" hx-target="this" hx-select="unset" hx-swap="outerHTML"{% endif %}>
+  {% if u.state == "checking" %}<p aria-busy="true">{{ t("update.checking") }}</p>
+  {% elif u.state == "current" %}<p class="ok">{{ t("update.current") }}</p>
+  {% elif u.state == "available" %}<p>{{ t("update.available", version=u.version) }}</p>
+  {% elif u.state == "downloading" %}
+    <p aria-busy="true">{{ t("update.downloading", version=u.version, percent=(u.done * 100 // u.total) if u.total else 0) }}</p>
+    <progress value="{{ u.done }}" max="{{ u.total or 1 }}"></progress>
+  {% elif u.state == "ready" %}<p>{{ t("update.ready", version=u.version) }}</p>
+  {% elif u.state == "installing" %}<p aria-busy="true">{{ t("update.installing", version=u.version) }}</p>
+  {% elif u.state == "failed" %}<p class="error">{{ t("update.failed", msg=u.error) }}</p>
+  {% endif %}
+  <div class="wizard-nav">
+    <button type="button" class="secondary outline" hx-post="/updates/check" hx-target="#update-status" hx-select="unset" hx-swap="outerHTML" {% if u.busy or u.state == "installing" %}disabled{% endif %}>{{ icon("refresh") }}{{ t("update.check") }}</button>
+    {% if u.state in ("available", "ready") %}
+      {% if can_install %}
+        <button type="button" hx-post="/updates/install" hx-target="#update-status" hx-select="unset" hx-swap="outerHTML">{{ icon("download") }}{{ t("update.install") }}</button>
+      {% else %}<small class="muted">{{ t("update.dev") }}</small>{% endif %}
+    {% endif %}
+  </div>
+</div>

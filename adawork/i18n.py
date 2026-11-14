@@ -685,6 +685,47 @@ TEXTS: dict[str, dict[str, str]] = {
         "searches only when you click “Refresh jobs”.",
     },
     "auto.save": {"cs": "Uložit", "en": "Save"},
+    "update.title": {"cs": "Aktualizace", "en": "Updates"},
+    "update.version": {
+        "cs": "Nainstalovaná verze: {version}",
+        "en": "Installed version: {version}",
+    },
+    "update.auto": {
+        "cs": "Instalovat aktualizace automaticky",
+        "en": "Install updates automatically",
+    },
+    "update.auto_on": {"cs": "automaticky", "en": "automatic"},
+    "update.auto_hint": {
+        "cs": "Jednou denně se podívá na github.com/Gig4but/AdaWork. Novou verzi stáhne, ověří "
+        "její kontrolní součet a nainstaluje ji při příštím spuštění.",
+        "en": "Looks at github.com/Gig4but/AdaWork once a day. A new version is downloaded, its "
+        "checksum verified, and it is installed at the next start.",
+    },
+    "update.check": {"cs": "Zkontrolovat aktualizace", "en": "Check for updates"},
+    "update.install": {"cs": "Nainstalovat", "en": "Install"},
+    "update.checking": {"cs": "Hledám novou verzi…", "en": "Looking for a new version…"},
+    "update.current": {"cs": "Máte nejnovější verzi.", "en": "You have the latest version."},
+    "update.available": {
+        "cs": "Je k dispozici verze {version}.",
+        "en": "Version {version} is available.",
+    },
+    "update.downloading": {
+        "cs": "Stahuji verzi {version}: {percent} %",
+        "en": "Downloading version {version}: {percent} %",
+    },
+    "update.ready": {
+        "cs": "Verze {version} je stažená a nainstaluje se při příštím spuštění.",
+        "en": "Version {version} is downloaded and is installed at the next start.",
+    },
+    "update.installing": {
+        "cs": "AdaWork se zavře, nainstaluje verzi {version} a znovu se spustí.",
+        "en": "AdaWork closes, installs version {version} and starts again.",
+    },
+    "update.failed": {"cs": "Aktualizace se nepovedla: {msg}", "en": "The update failed: {msg}"},
+    "update.dev": {
+        "cs": "Aktualizovat se dá jen nainstalovaná aplikace.",
+        "en": "Only the installed app can update itself.",
+    },
     "auto.pause": {"cs": "Pozastavit na 24 h", "en": "Pause for 24 h"},
     "auto.resume": {"cs": "Pokračovat", "en": "Resume"},
     "keys.title": {

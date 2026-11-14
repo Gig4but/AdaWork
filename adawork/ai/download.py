@@ -143,6 +143,8 @@ def _download_once(
                         out.write(chunk)
                         digest.update(chunk)
                         done += len(chunk)
+                        if done > file.size:  # a wrong file: not more than expected on disk
+                            raise DownloadError(f"{file.name}: larger than expected")
                         if progress:
                             progress(done, file.size)
             except OSError as exc:  # the .part file is kept and resumed when there is space

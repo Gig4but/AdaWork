@@ -8,7 +8,8 @@ import os
 import sys
 import webbrowser
 
-from adawork import __version__
+from adawork import __version__, paths
+from adawork.desktop import update
 from adawork.desktop.instance import SingleInstance
 from adawork.desktop.server import BackgroundServer, ServerStartError
 from adawork.i18n import translate
@@ -48,6 +49,11 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         report_error("AdaWork už běží, ale neodpovídá. Zkuste to za chvíli znovu.", gui)
         return 1
+    pending = paths.data_dir() / update.FOLDER
+    installer = update.take_pending(pending) if update.installed() else None
+    if installer and update.run_installer(*installer, minimized=args.minimized):
+        instance.release()  # automatic updates: installed before the app starts
+        return 0
     try:
         app = create_app()  # settings, database (migrated), services
     except Exception:
@@ -64,8 +70,10 @@ def main(argv: list[str] | None = None) -> int:
         report_error(f"AdaWork se nepodařilo spustit. Podrobnosti: {log_file}", gui)
         return 1
     instance.publish(server.url)
+    svc = app.state.services
     try:
         if args.browser:
+            svc.updates.quit = server.stop
             instance.on_show = lambda: webbrowser.open(server.url)
             webbrowser.open(server.url)
             print(f"AdaWork běží na {server.url} (ukončete Ctrl+C)")
@@ -73,7 +81,6 @@ def main(argv: list[str] | None = None) -> int:
         else:
             from adawork.desktop.window import run_desktop
 
-            svc = app.state.services
             automation = svc.settings.automation
 
             def on_tray(icon) -> None:
@@ -88,12 +95,15 @@ def main(argv: list[str] | None = None) -> int:
                 keep_in_tray=lambda: automation.enabled,
                 on_tray=on_tray,
                 hidden=args.minimized and automation.enabled,
+                on_quit=lambda quit_app: setattr(svc.updates, "quit", quit_app),
             )
     except KeyboardInterrupt:
         pass
     finally:
         server.stop()
         instance.release()
+    if svc.updates.installer:  # "Nainstalovat" in Settings: the app has quit for it
+        update.run_installer(*svc.updates.installer)
     leave_search(app)
     return 0
 

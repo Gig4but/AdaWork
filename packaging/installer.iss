@@ -68,6 +68,8 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 [Run]
 Filename: "{app}\navod.html"; Description: "{cm:OpenGuide}"; Flags: postinstall shellexec skipifsilent unchecked
 Filename: "{app}\AdaWork.exe"; Description: "{cm:LaunchProgram,AdaWork}"; Flags: postinstall nowait skipifsilent
+; An update from the app (adawork/desktop/update.py): /RELAUNCH=1 [/MINIMIZED=1].
+Filename: "{app}\AdaWork.exe"; Parameters: "{code:RelaunchArgs}"; Flags: nowait; Check: Relaunch
 
 [UninstallRun]
 ; The app and the programs it started (AI model, routing server) hold files in {app}.
@@ -98,6 +100,18 @@ begin
   if (Version = '') or (Version = '0.0.0.0') then
     Version := WebView2Version(HKCU);
   Result := (Version <> '') and (Version <> '0.0.0.0');
+end;
+
+function Relaunch(): Boolean;
+begin
+  Result := ExpandConstant('{param:RELAUNCH|0}') = '1';
+end;
+
+function RelaunchArgs(Param: String): String;
+begin
+  Result := '';
+  if ExpandConstant('{param:MINIMIZED|0}') = '1' then
+    Result := '--minimized';
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);

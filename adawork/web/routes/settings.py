@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy import func, select
 from starlette.concurrency import run_in_threadpool
 
-from adawork import licenses, paths
+from adawork import __version__, licenses, paths
 from adawork.config import TIME_OF_DAY, IntervalHours, Language, Settings, Theme, TravelMode
 from adawork.db.models import Employer
 from adawork.i18n import translate
@@ -31,6 +31,7 @@ SECTIONS = {
     "automation": "auto.title",
     "map": "routing.title",
     "employers": "employers.title",
+    "updates": "update.title",
 }
 EMPLOYER_SOURCES = ("atmoskop", "mentions", "google", "facebook")
 LANGUAGE_NAMES = {"cs": "Čeština", "en": "English"}
@@ -189,8 +190,18 @@ def catalog(svc: Services) -> list[dict]:
         ),
         ("/settings/map", "map", "routing.title", routing_summary(svc)),
         ("/settings/employers", "building", "employers.title", employers_summary(settings)),
+        (
+            "/settings/updates",
+            "download",
+            "update.title",
+            f"{__version__} · {tr('update.auto_on' if settings.updates.auto else 'settings.off')}",
+        ),
     ]
     return [{"href": h, "icon": i, "title": t, "summary": x} for h, i, t, x in rows]
+
+
+def update_context(svc: Services) -> dict:
+    return {"update": svc.updates.status, "can_install": svc.updates.can_install()}
 
 
 def render_section(request: Request, svc: Services, section: str, **context) -> HTMLResponse:
@@ -200,6 +211,8 @@ def render_section(request: Request, svc: Services, section: str, **context) -> 
         context |= map_context(svc)
     if section == "employers":
         context.setdefault("stats", employer_stats(svc))
+    if section == "updates":
+        context |= update_context(svc)
     return render(
         request,
         "settings_section.html",
@@ -288,6 +301,30 @@ def automation_pause(svc: Svc) -> RedirectResponse:
 def automation_resume(svc: Svc) -> RedirectResponse:
     svc.scheduler.resume()
     return RedirectResponse("/settings/automation", status_code=303)
+
+
+@router.post("/settings/updates")
+async def updates_save(request: Request, svc: Svc) -> RedirectResponse:
+    svc.set_auto_update((await request.form()).get("auto_update") == "on")
+    return RedirectResponse("/settings/updates?saved=1", status_code=303)
+
+
+@router.get("/updates/status", response_class=HTMLResponse)
+def updates_status(request: Request, svc: Svc) -> HTMLResponse:
+    return render(request, "_update_status.html", **update_context(svc))
+
+
+@router.post("/updates/check", response_class=HTMLResponse)
+def updates_check(request: Request, svc: Svc) -> HTMLResponse:
+    svc.updates.check_now()
+    return render(request, "_update_status.html", **update_context(svc))
+
+
+@router.post("/updates/install", response_class=HTMLResponse)
+def updates_install(request: Request, svc: Svc) -> HTMLResponse:
+    """Downloads the new version; the app then quits and the installer starts it again."""
+    svc.updates.install_now()
+    return render(request, "_update_status.html", **update_context(svc))
 
 
 @router.post("/settings/map")

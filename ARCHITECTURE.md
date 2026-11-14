@@ -50,7 +50,7 @@ Every source writes through `JobStore` (`scraper/store.py`), which merges duplic
 
 | Thread | Owner | Runs | Stops |
 |---|---|---|---|
-| `scheduler`, `employers`, `routing-data` | `Worker` subclasses (`worker.py`) | a round, then rests; `wake()` starts the next now | `stop()` (the app's shutdown) |
+| `scheduler`, `employers`, `routing-data`, `updates` | `Worker` subclasses (`worker.py`) | a round, then rests; `wake()` starts the next now | `stop()` (the app's shutdown) |
 | `scrape` | `ScrapeRunner.start` | one search | `stop()`: each site at its next request |
 | `enrich`, `model-download` | `ai/enrich.py`, `ai/manager.py` | once, when started | `stop()` / `shutdown()` |
 | `commute`, `employer-<id>`, `login-<platform>`, `routing-update` | the service that starts them | one job | end with it |

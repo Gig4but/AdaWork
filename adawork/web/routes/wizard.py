@@ -90,7 +90,9 @@ async def wizard_sources(request: Request, svc: Svc) -> Response:
 
 @router.post("/wizard/automation")
 async def wizard_automation(request: Request, svc: Svc) -> RedirectResponse:
-    apply_automation(svc.settings, await request.form())
+    form = await request.form()
+    apply_automation(svc.settings, form)
+    svc.set_auto_update(form.get("auto_update") == "on")
     if svc.settings.wizard_completed:  # the wizard again: as if saved in Settings
         svc.set_automation()
     return RedirectResponse("/wizard/map", status_code=303)
