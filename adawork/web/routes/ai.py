@@ -33,6 +33,8 @@ def apply_ai_choice(settings: Settings, form) -> None:
         url = (form.get("server_url") or "").strip()
         settings.ai.server_url = url if re.match(r"^https?://", url) else ""
         settings.ai.server_model = (form.get("server_model") or "").strip()[:100]
+    if choice != "server":  # another option picked: the own server would override it
+        settings.ai.server_url = ""
     settings.save()
 
 
@@ -50,7 +52,7 @@ def ai_context(svc: Services) -> dict:
             "model": f.model.name,
             "size": round(f.model.download_gb, 1),
             "icon": f.icon,
-            "seconds": max(1, round(f.seconds_per_ad)),
+            "seconds": round(f.seconds_per_ad, 1),
             "measured": f.speed.measured,
             "reasons": f.reasons,
             "downloaded": f.downloaded,
@@ -70,7 +72,9 @@ def ai_context(svc: Services) -> dict:
         ),
         "options": options,
         "pick": advice.pick,
-        "choice": svc.settings.ai.choice,
+        # an own server overrides the choice (AiManager.session)
+        "choice": "server" if svc.settings.ai.server_url else svc.settings.ai.choice,
+        "server": svc.settings.ai.server_model or svc.settings.ai.server_url,
         "reason": translate(lang, advice.reason, **reason_args),
         "active": active,
         "download": download,

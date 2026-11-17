@@ -42,17 +42,18 @@ def icons(advice):
 
 
 def test_advisor_matches_the_expected_hardware_table():
+    # Integrated graphics: Simple ~4.5 s per ad, over the red limit: Auto uses rules only.
     minimum = advisor.advise(make_hw(8, "AMD Radeon(TM) Graphics", 0.5, cores=6))
-    assert icons(minimum) == ["green", "green", "yellow"]  # Excellent: ~3.3 GB
-    assert minimum.pick.tier == "good" and minimum.reason == "ai.reason.igpu"
-
-    mid = advisor.advise(make_hw(16, "AMD Radeon(TM) Graphics", 0.5, cores=8))
-    assert icons(mid) == ["green", "green", "yellow"]
-    assert mid.pick.tier == "good"
+    assert icons(minimum) == ["red", "red", "red"]
+    assert minimum.pick is None and minimum.reason == "ai.reason.none"
+    fast = {TIERS["good"]: Speed(prompt_tps=3000, output_tps=200, measured=True)}  # ~0.8 s
+    measured = advisor.advise(make_hw(16, "AMD Radeon(TM) Graphics", 0.5, cores=8), fast)
+    assert icons(measured) == ["red", "green", "red"]
+    assert measured.pick.tier == "good" and measured.reason == "ai.reason.igpu"
 
     gaming = advisor.advise(make_hw(32, "NVIDIA GeForce RTX 4060", 8, cores=8))
-    assert icons(gaming) == ["green", "green", "green"]
-    assert gaming.pick.tier == "excellent" and gaming.reason == "ai.reason.dgpu"
+    assert icons(gaming) == ["green", "yellow", "yellow"]  # ~0.8 / 1.6 / 2.6 s per ad
+    assert gaming.pick.tier == "simple" and gaming.reason == "ai.reason.dgpu"
 
 
 def test_advisor_too_little_memory_or_disk():
@@ -73,7 +74,7 @@ def test_advisor_too_little_memory_or_disk():
 
 
 def test_measured_speed_replaces_the_estimate():
-    hw = make_hw(16, "AMD Radeon(TM) Graphics", 0.5, cores=8)
+    hw = make_hw(32, "NVIDIA GeForce RTX 4060", 8, cores=8)
     slow = {TIERS["good"]: Speed(prompt_tps=40, output_tps=3, measured=True)}
     advice = advisor.advise(hw, measured=slow)
     good = advice.fits[1]
@@ -231,7 +232,7 @@ def test_the_manager_does_not_start_a_download_that_cannot_fit(tmp_path, monkeyp
     from adawork.ai.manager import ModelManager
     from adawork.ai.runtime import LlamaServer
 
-    fake_disk(monkeypatch, {"bytes": 2 * GIB})
+    fake_disk(monkeypatch, {"bytes": GIB // 2})
     settings = Settings.load(tmp_path / "config.json")
 
     def no_http():
@@ -239,8 +240,8 @@ def test_the_manager_does_not_start_a_download_that_cannot_fit(tmp_path, monkeyp
 
     manager = ModelManager(
         lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
-        LlamaServer(tmp_path, tmp_path / "log"), probe=lambda: make_hw(16, "Intel(R) Graphics"),
-        http_factory=no_http,
+        LlamaServer(tmp_path, tmp_path / "log"),
+        probe=lambda: make_hw(16, "NVIDIA GeForce RTX 4060", 8, cores=8), http_factory=no_http,
     )  # fmt: skip
     assert manager.start_download()
     manager.wait(5)
@@ -632,10 +633,15 @@ def fake_download(manager, *model_ids):
             path.write_bytes(b"")
 
 
-def test_auto_upgrades_after_a_ram_upgrade_and_keeps_the_old_model_until_then(tmp_path):
+def test_auto_upgrades_after_a_ram_upgrade_and_keeps_the_old_model_until_then(
+    tmp_path, monkeypatch
+):
     from adawork.ai.manager import ModelManager
     from adawork.ai.runtime import LlamaServer
 
+    # The test PCs' estimates are all red under the real limits; the upgrade steps are the same.
+    monkeypatch.setattr(advisor, "GREEN_SECONDS", 15.0)
+    monkeypatch.setattr(advisor, "YELLOW_SECONDS", 40.0)
     settings = Settings.load(tmp_path / "config.json")
     hw = {"now": make_hw(8, cores=4)}
     manager = ModelManager(
@@ -696,7 +702,7 @@ def test_a_model_is_benchmarked_once_per_pc(tmp_path):
     from adawork.ai.runtime import LlamaServer
 
     settings = Settings.load(tmp_path / "config.json")
-    hw = {"now": make_hw(16, "AMD Radeon(TM) Graphics", 0.5, cores=8)}
+    hw = {"now": make_hw(16, "NVIDIA GeForce RTX 4060", 8, cores=8)}
 
     def manager():
         return ModelManager(
@@ -709,8 +715,8 @@ def test_a_model_is_benchmarked_once_per_pc(tmp_path):
     def with_benchmark(m):
         def run(spec):
             runs.append(spec.id)
-            m._store_speed(spec.id, 300, 15, samples=MIN_SAMPLES)
-            return Speed(300, 15, True)
+            m._store_speed(spec.id, 3000, 200, samples=MIN_SAMPLES)
+            return Speed(3000, 200, True)
 
         m.run_benchmark = run
         return m
@@ -728,7 +734,7 @@ def test_a_model_is_benchmarked_once_per_pc(tmp_path):
     second._try_switch(MODELS[good])
     assert runs == [good] and second.active_model().id == good  # the measured speed is reused
 
-    hw["now"] = make_hw(32, "AMD Radeon(TM) Graphics", 0.5, cores=8)  # new hardware: measured again
+    hw["now"] = make_hw(32, "NVIDIA GeForce RTX 4060", 8, cores=8)  # new hardware: measured again
     third = with_benchmark(manager())
     third._try_switch(MODELS[third.target().id])
     assert len(runs) == 2
@@ -759,6 +765,7 @@ def test_session_waits_when_memory_is_low(tmp_path):
     from adawork.ai.runtime import LlamaServer
 
     settings = Settings.load(tmp_path / "config.json")
+    settings.ai.choice = "simple"  # Auto uses no model on this slow test PC
     manager = ModelManager(
         lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
         LlamaServer(tmp_path, tmp_path / "log", available_ram=lambda: GIB),
@@ -789,6 +796,7 @@ def test_real_work_changes_the_tier_only_after_enough_calls(tmp_path):
     from adawork.ai.runtime import LlamaServer
 
     settings = Settings.load(tmp_path / "config.json")
+    settings.ai.choice = "simple"  # Auto uses no model on this slow test PC
     manager = ModelManager(
         lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
         LlamaServer(tmp_path, tmp_path / "log"),
@@ -1044,6 +1052,7 @@ def test_a_custom_server_does_not_change_the_local_model_speed(tmp_path):
     from adawork.ai.runtime import LlamaServer
 
     settings = Settings.load(tmp_path / "config.json")
+    settings.ai.choice = "simple"  # Auto uses no model on this slow test PC
     manager = ModelManager(
         lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
         LlamaServer(tmp_path, tmp_path / "log"),

@@ -332,6 +332,21 @@ TEXTS: dict[str, dict[str, str]] = {
     "ai.why.slow": {"cs": "příliš pomalé", "en": "too slow"},
     "ai.why.slower": {"cs": "pomalejší", "en": "slower"},
     "ai.why.disk": {"cs": "málo místa na disku", "en": "not enough disk space"},
+    "ai.legend.green": {
+        "cs": "Poběží plynule: do 1 s na inzerát.",
+        "en": "Runs smoothly: up to 1 s per ad.",
+    },
+    "ai.legend.yellow": {
+        "cs": "Poběží, ale pomaleji: 1–4 s na inzerát, doplnění všech nabídek bude trvat dlouho.",
+        "en": "Works, but slower: 1–4 s per ad; filling in all jobs will take a long time.",
+    },
+    "ai.legend.red": {
+        "cs": "Nedoporučeno: přes 4 s na inzerát, nebo málo paměti či místa na disku. "
+        "Doporučujeme umělou inteligenci vypnout.",
+        "en": "Not recommended: over 4 s per ad, or not enough memory or disk space. "
+        "We recommend turning the AI off.",
+    },
+    "ai.server": {"cs": "Vlastní server", "en": "Own server"},
     "ai.off": {
         "cs": "Bez umělé inteligence (jen pravidla)",
         "en": "No AI (rules only)",
@@ -353,8 +368,10 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "{ram} GB RAM, no graphics card → {tier}",
     },
     "ai.reason.none": {
-        "cs": "Model se do paměti tohoto počítače nevejde; aplikace použije jen pravidla.",
-        "en": "No model fits this computer's memory; the app uses rules only.",
+        "cs": "Žádný model na tomto počítači nepoběží dobře (málo paměti nebo příliš pomalé); "
+        "aplikace použije jen pravidla.",
+        "en": "No model runs well on this computer (not enough memory, or too slow); "
+        "the app uses rules only.",
     },
     "ai.download.downloading": {
         "cs": "Stahuji model {model}: {percent} % ({done} z {total} GB)",

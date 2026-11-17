@@ -594,7 +594,8 @@ user can pick a tier manually instead; Auto then stops changing it.
    - After download: a **20-second real benchmark** (prompt + generation tokens/s), which
      replaces the estimate.
 4. **Pick:** the largest tier that is 🟢. If none is green, the largest 🟡. If none is
-   yellow, Simple with a warning, or rules-only if even Simple does not fit.
+   yellow, rules only (decided 2026-11-17: over 4 s per ad, turning the AI off is
+   recommended).
 5. **Keep it right over time (Auto mode only):**
    - Re-check at every start and from the running speed statistics (§3.2.1).
    - If a bigger tier becomes 🟢 (e.g. after a RAM upgrade), download it in the background,
@@ -607,10 +608,13 @@ user can pick a tier manually instead; Auto then stops changing it.
 
 | Icon | Meaning | Rule (initial) |
 |---|---|---|
-| 🟢 (green check) | "Poběží plynule" — runs smoothly | RAM need ≤ 40 % of total RAM **and** estimated ≤ 15 s per ad |
-| 🟡 (yellow gauge) | "Poběží, ale pomaleji" — works, slower | RAM need ≤ 60 % **or** 15–40 s per ad |
+| 🟢 (green check) | "Poběží plynule" — runs smoothly | RAM need ≤ 40 % of total RAM **and** estimated ≤ 1 s per ad |
+| 🟡 (yellow gauge) | "Poběží, ale pomaleji" — works, slower | RAM need ≤ 60 % **or** 1–4 s per ad |
 | 🔴 (red cross) | "Nedoporučeno" — not enough memory / too slow / not enough disk | otherwise; can still be chosen after a confirmation |
 
+- A legend under the list explains the icons; for 🔴 it recommends turning the AI off.
+- An own server (set under "Pokročilé") shows as a selected "Vlastní server" option below the
+  tiers; picking another option turns it off.
 - Icons are SVGs with a text label and a tooltip (not color only), e.g.
   `🟢 Dobrý (Qwen3.5 2B, 1.9 GB) — ~9 s na inzerát`.
 - "Automaticky" is preselected. The tier it currently chooses is marked "Doporučeno"
@@ -624,10 +628,10 @@ user can pick a tier manually instead; Auto then stops changing it.
 
 | PC | Simple | Good | Excellent | Auto picks |
 |---|---|---|---|---|
-| 8 GB, budget Ryzen, iGPU (minimum) | 🟢 | 🟢 | 🟡 | Good |
-| 16 GB, mid-range CPU, iGPU | 🟢 | 🟢 | 🟡 | Good |
-| 32 GB, Intel Core Ultra 7, iGPU (**measured**) | 🟢 3.6 s | 🟢 6.4 s | 🟡 14.5 s | Good |
-| 16–32 GB + GPU with ≥ 8 GB VRAM | 🟢 | 🟢 | 🟢 | Excellent |
+| 8 GB, budget Ryzen, iGPU (minimum) | 🔴 | 🔴 | 🔴 | rules only |
+| 16 GB, mid-range CPU, iGPU | 🔴 | 🔴 | 🔴 | rules only |
+| 32 GB, Intel Core Ultra 7, iGPU (**measured**) | 🟡 3.6 s | 🔴 6.4 s | 🔴 14.5 s | Simple |
+| 16–32 GB + GPU with ≥ 8 GB VRAM | 🟢 | 🟡 | 🟡 | Simple |
 
 ### 6.7 Evaluation
 Golden set: ~60 text ads + ~30 social posts + ~20 image ads + ~20 employer review sets

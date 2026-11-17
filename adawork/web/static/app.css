@@ -389,6 +389,8 @@ body[data-view="map"] #results { display: none; }
 .fit-yellow { color: color-mix(in srgb, var(--aw-accent) 70%, var(--pico-color)); }
 .fit-red { color: var(--pico-del-color); }
 .fit-auto { color: var(--pico-muted-color); }
+.fit-legend { padding: 0; }
+.fit-legend li { list-style: none; display: flex; gap: var(--aw-space-2); align-items: flex-start; }
 #ai-status small { display: block; }
 .layout #ai-status:has(small) { margin-bottom: var(--aw-space-2); }
 #ai-status progress { margin: var(--aw-space-1) 0 0; }

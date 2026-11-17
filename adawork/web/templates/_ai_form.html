@@ -23,11 +23,23 @@
       </span>
     </label>
   {% endfor %}
+  {# Shown while an own server is set (Pokročilé on the AI page fills it in as it is typed). #}
+  <label id="ai-server" {% if not ai.server %}hidden{% endif %}>
+    <input type="radio" name="choice" value="server" {% if ai.choice == "server" %}checked{% endif %}>
+    {{ icon("external", "fit-icon fit-auto") }}
+    <span><strong>{{ t("ai.server") }}</strong>
+    <small class="muted">(<span id="ai-server-name">{{ ai.server }}</span>)</small></span>
+  </label>
   <label>
     <input type="radio" name="choice" value="off" {% if ai.choice == "off" %}checked{% endif %}>
     {{ t("ai.off") }}
   </label>
 </fieldset>
+<ul class="fit-legend muted small">
+  {% for fit in ("green", "yellow", "red") %}
+    <li>{{ fit_icon(fit) }} {{ t("ai.legend." ~ fit) }}</li>
+  {% endfor %}
+</ul>
 <p class="muted small">{{ ai.reason }}</p>
 <script>
   document.querySelectorAll(".ai-choice input[data-confirm]").forEach(function (input) {

@@ -1,11 +1,10 @@
 """Which model suits this computer, and how to run it (PLAN §6.6 `ModelAdvisor`).
 
 For every tier: the RAM it needs, an estimate of seconds per ad, and an icon:
-- green  "Poběží plynule": RAM need ≤ 40 % of total RAM and ≤ 15 s per ad;
-- yellow "Poběží, ale pomaleji": RAM need ≤ 60 % and ≤ 40 s per ad;
+- green  "Poběží plynule": RAM need ≤ 40 % of total RAM and ≤ 1 s per ad;
+- yellow "Poběží, ale pomaleji": RAM need ≤ 60 % and ≤ 4 s per ad;
 - red    "Nedoporučeno": otherwise, or not enough free disk for the download.
-Auto picks the largest green tier, else the largest yellow one, else Simple with a warning,
-or no model (rules only) when even Simple cannot fit.
+Auto picks the largest green tier, else the largest yellow one, else no model (rules only).
 
 The speed estimate starts from a table of hardware classes and is replaced by the measured
 speed once a model has run on this PC (benchmark or real work).
@@ -37,7 +36,7 @@ CACHED_PROMPT_TOKENS = 400  # the shared instructions are processed once per bat
 WALL_FACTOR = 1.6
 
 GREEN_RAM, YELLOW_RAM = 0.40, 0.60
-GREEN_SECONDS, YELLOW_SECONDS = 15.0, 40.0
+GREEN_SECONDS, YELLOW_SECONDS = 1.0, 4.0
 
 # Throughput of the first estimate, before a model has run on this PC. Constants per hardware
 # class come from published llama.cpp measurements of 7B Q4 models (Vulkan and CUDA
@@ -203,9 +202,6 @@ def advise(
     fits = [fit(m, hw, tier, measured.get(m.id), m.id in downloaded) for tier, m in models]
     pick = next((f for f in reversed(fits) if f.icon == "green"), None)
     pick = pick or next((f for f in reversed(fits) if f.icon == "yellow"), None)
-    simple = fits[0]
-    if pick is None and simple.ram_need <= hw.total_ram - OS_RESERVE - APP_RESERVE:
-        pick = simple
     return Advice(fits, pick, *_reason(hw, pick))
 
 

@@ -162,8 +162,10 @@ class ModelManager:
 
     def active_model(self) -> ModelSpec | None:
         """The model AI work uses right now: the target once it is ready, until then the
-        previous model (fallback), else nothing (rules only)."""
-        if self.settings().choice == "off":
+        previous model (fallback), else nothing (rules only). Auto uses no model when every
+        tier is red here."""
+        choice = self.settings().choice
+        if choice == "off" or (choice == "auto" and self.advice().pick is None):
             return None
         ready = self.downloaded()
         target = self.target()

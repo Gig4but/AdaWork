@@ -41,6 +41,24 @@
       model.addEventListener("change", () => {
         if (model.value) radios.forEach((radio) => (radio.checked = false));
       });
+      // An own server typed in shows up in the list above, selected.
+      const option = document.getElementById("ai-server");
+      const radio = option.querySelector("input");
+      const url = document.querySelector('input[name="server_url"]');
+      const name = document.querySelector('input[name="server_model"]');
+      const update = () => {
+        const set = url.value.trim() !== "";
+        document.getElementById("ai-server-name").textContent = name.value.trim() || url.value.trim();
+        if (set && option.hidden) {
+          radio.checked = true;
+          model.value = "";
+        } else if (!set && radio.checked) {
+          document.querySelector('.ai-choice input[value="auto"]').checked = true;
+        }
+        option.hidden = !set;
+      };
+      url.addEventListener("input", update);
+      name.addEventListener("input", update);
     })();
   </script>
   {% if ai.downloaded or ai.has_files %}

@@ -120,7 +120,9 @@ def test_first_start_goes_through_wizard(app, client, tmp_path):
     page = client.get("/wizard/ai").text
     assert "Automaticky – nejlepší pro tento počítač" in page
     assert "Tento počítač: 16 GB RAM · AMD Radeon(TM) Graphics" in page
-    assert 'value="auto" checked' in page and "Doporučeno" in page
+    # every tier is too slow on this PC: Auto uses rules only, the legend says why
+    assert 'value="auto" checked' in page and "teď: jen pravidla" in page
+    assert "Doporučeno" not in page and "Doporučujeme umělou inteligenci vypnout" in page
     r = client.post("/wizard/ai", data={"choice": "auto"}, follow_redirects=False)
     assert r.headers["location"] == "/wizard/sources"
     assert app.state.services.ai.manager.downloads_started == 1  # the model downloads meanwhile
@@ -653,8 +655,9 @@ def test_map_points_follow_filters(app, client, monkeypatch):
 def test_ai_page_saves_the_choice_and_starts_the_download(app, client):
     app.state.services.settings.wizard_completed = True
     page = client.get("/ai").text
-    assert "Umělá inteligence" in page and "integrovaná grafika" in page
-    assert "Jednoduchý (Qwen3.5 0.8B" in page and "Poběží plynule" in page
+    assert "Umělá inteligence" in page and "jen pravidla" in page
+    assert "Jednoduchý (Qwen3.5 0.8B" in page and "Nedoporučeno" in page
+    assert '<label id="ai-server" hidden>' in page  # no own server yet
     form = {"choice": "simple", "model": "", "server_url": "javascript:alert(1)"}
     r = client.post("/ai", data=form, follow_redirects=False)
     assert r.headers["location"] == "/ai?saved=1"
@@ -664,6 +667,16 @@ def test_ai_page_saves_the_choice_and_starts_the_download(app, client):
     client.post("/ai", data={"choice": "simple", "model": "qwen3-vl-2b", "server_url": ""})
     assert app.state.services.settings.ai.choice == "qwen3-vl-2b"  # "Pokročilé" wins
     assert "Stahuji" not in client.get("/ai/status").text
+
+    # An own server shows in the list as the selected option; another option turns it off.
+    form = {"choice": "server", "model": "", "server_url": "http://llm.lan", "server_model": "q"}
+    client.post("/ai", data=form)
+    assert ai.server_url == "http://llm.lan" and ai.choice == "qwen3-vl-2b"
+    page = client.get("/ai").text
+    assert '<label id="ai-server" >' in page and 'value="server" checked' in page
+    assert '<span id="ai-server-name">q</span>' in page and 'value="auto" checked' not in page
+    client.post("/ai", data={"choice": "auto", "model": "", "server_url": "http://llm.lan"})
+    assert ai.server_url == "" and ai.choice == "auto"
 
 
 def test_ask_in_a_sentence(app, client, monkeypatch):
@@ -708,6 +721,7 @@ def test_downloaded_models_are_listed_and_deleted_on_request(app, client):
     fake_download(manager, "qwen3-vl-2b", "qwen3.5-2b")
     (manager.models_dir / "gemma-4-e2b").mkdir()  # removed from the catalog
     manager.state.active = "qwen3.5-2b"
+    app.state.services.settings.ai.choice = "good"
     page = client.get("/ai").text
     assert "Stažené modely" in page and "používá se" in page and "Smazat vše" in page
     for model_id in ("qwen3-vl-2b", "qwen3.5-2b", "gemma-4-e2b"):
@@ -715,7 +729,7 @@ def test_downloaded_models_are_listed_and_deleted_on_request(app, client):
     client.post("/ai/delete", data={"model_id": "gemma-4-e2b"})
     client.post("/ai/delete", data={"model_id": "qwen3.5-2b"})  # in use: deleted too
     assert manager.downloaded() == {"qwen3-vl-2b"} and manager.stale() == []
-    assert manager.active_model() is None  # Auto's tier is not downloaded
+    assert manager.active_model() is None  # the chosen tier is not downloaded
     (manager.models_dir / "qwen3.5-0.8b").mkdir()  # a download that did not finish
     assert manager.stale() == ["qwen3.5-0.8b"] and "Qwen3.5 0.8B" in client.get("/ai").text
     client.post("/ai/delete", data={"model_id": "../x"})  # not a model: nothing happens
