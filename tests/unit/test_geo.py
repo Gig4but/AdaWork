@@ -70,6 +70,16 @@ def test_download_falls_back_to_cached_export_when_offline(tmp_path):
     assert download(client, tmp_path) == tmp_path / FILE_NAME
 
 
+def test_download_tells_how_much_has_arrived(tmp_path):
+    body = b"x" * (3 << 20)
+    client = httpx.Client(
+        transport=httpx.MockTransport(lambda r: httpx.Response(200, content=body))
+    )
+    received: list[int] = []
+    download(client, tmp_path, progress=received.append)
+    assert received[-1] == len(body) and received == sorted(received)
+
+
 def test_lookup(ruian):
     assert sorted(ruian.municipality_codes()) == ["500020", "537683"]
     points, _, centre = ruian.lookup("500020", {"8053332", "9999999"})

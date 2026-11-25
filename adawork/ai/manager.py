@@ -352,6 +352,14 @@ class ModelManager:
         if spec is None:
             raise NoModel("ai.busy.no_model")
         launch = advisor.launch_for(spec, self.hw, self.models_dir / spec.id, vision)
+        running = self.server.launch
+        if (
+            priority == Priority.USER
+            and not vision
+            and running is not None
+            and running.weights == launch.weights
+        ):
+            launch = running  # loaded with its vision part for pictures: it reads text too
         loaded = self.server.launch == launch
         if priority == Priority.USER and loaded:
             with self.server.use(launch) as url, closing(self._client(url, spec)) as c:

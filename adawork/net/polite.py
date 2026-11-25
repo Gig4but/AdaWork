@@ -104,6 +104,8 @@ class PoliteFetcher:
                 if not resp.is_redirect:
                     break
                 resp = self._request(urljoin(str(resp.url), resp.headers["Location"]))
+        except httpx.TransportError:
+            raise  # the site is not answering (or we are offline): not cached, asked again
         except httpx.HTTPError as exc:
             log.warning("robots.txt of %s unavailable (%s): not crawling it", host, exc)
             return RobotsRules.disallow_all()

@@ -59,6 +59,8 @@ Sitemap: https://example.cz/sitemap.xml
     assert rules.allowed("https://example.cz/a/b.pdf?x=1")  # "$" anchors the end
     assert rules.crawl_delay == 4 and rules.sitemaps == ["https://example.cz/sitemap.xml"]
     assert not RobotsRules.parse(text, "googlebot").allowed("https://example.cz/jobs")
+    marked = RobotsRules.parse("﻿" + text.lstrip(), "googlebot")  # a byte order mark
+    assert not marked.allowed("https://example.cz/jobs")
 
 
 class Clock:
@@ -165,6 +167,23 @@ def test_server_errors_are_retried_and_robots_errors_mean_disallowed():
         return httpx.Response(500)
 
     assert fetcher(broken_robots).get("https://b.cz/page") is None
+
+
+def test_robots_txt_of_a_site_not_answering_is_asked_again():
+    offline = [True]
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if offline[0]:
+            raise httpx.ConnectError("offline", request=request)
+        if request.url.path == "/robots.txt":
+            return httpx.Response(200, text="User-agent: *\nAllow: /\n")
+        return httpx.Response(200, text="ok")
+
+    f = fetcher(handler)
+    with pytest.raises(httpx.TransportError):
+        f.get("https://a.cz/page")
+    offline[0] = False
+    assert f.get("https://a.cz/page").text == "ok"
 
 
 def test_redirects_are_followed_hop_by_hop():

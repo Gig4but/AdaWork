@@ -593,7 +593,7 @@ def test_linkedin_only_after_opt_in(sessions, tmp_path):
         assert job.sources[0].url.startswith("https://cz.linkedin.com/jobs/view/")
 
     # Three weeks unseen: gone.
-    site.search = b"<html></html>"
+    site.search = site.search.replace(b"jobPosting:", b"jobPosting:9")
     with sessions() as s:
         for src in s.scalars(select(JobSource)):
             src.last_seen_at -= timedelta(days=22)

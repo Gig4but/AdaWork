@@ -791,6 +791,48 @@ def test_session_waits_when_memory_is_low(tmp_path):
         pass
 
 
+def test_a_question_shares_the_model_loaded_for_pictures(tmp_path):
+    from contextlib import contextmanager
+
+    from adawork.ai.manager import ModelManager
+    from adawork.ai.runtime import LlamaServer
+
+    settings = Settings.load(tmp_path / "config.json")
+    settings.ai.choice = "simple"
+    manager = ModelManager(
+        lambda: settings.ai, tmp_path / "state.json", tmp_path / "models",
+        LlamaServer(tmp_path, tmp_path / "log"),
+        probe=lambda: make_hw(8, "AMD Radeon(TM) Graphics", 0.5),
+    )  # fmt: skip
+    fake_download(manager, TIERS["simple"])
+    manager.state.active = TIERS["simple"]
+    spec = MODELS[TIERS["simple"]]
+    assert spec.mmproj is not None
+    text, pictures = (
+        advisor.launch_for(spec, manager.hw, manager.models_dir / spec.id, with_images)
+        for with_images in (False, True)
+    )
+    used: list[Launch] = []
+
+    class Loaded:
+        def __init__(self, launch: Launch) -> None:
+            self.launch = launch
+
+        @contextmanager
+        def use(self, launch: Launch):
+            used.append(launch)
+            yield "http://127.0.0.1:9"
+
+    manager.server = Loaded(pictures)
+    with manager.session(priority=Priority.USER):
+        pass
+    assert used == [pictures] and pictures != text
+    manager.server = Loaded(text)  # pictures need the vision part: not this one
+    with manager.session(vision=True, priority=Priority.USER):
+        pass
+    assert used[-1] == pictures
+
+
 def test_real_work_changes_the_tier_only_after_enough_calls(tmp_path):
     from adawork.ai.manager import MIN_SAMPLES, ModelManager
     from adawork.ai.runtime import LlamaServer

@@ -45,7 +45,7 @@ class RobotsRules:
         sitemaps: list[str] = []
         current: tuple[set[str], list[tuple[str, str]]] | None = None
         last_was_agent = False
-        for raw in text.splitlines():
+        for raw in text.removeprefix("﻿").splitlines():
             line = raw.split("#", 1)[0].strip()
             if ":" not in line:
                 continue

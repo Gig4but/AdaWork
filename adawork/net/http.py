@@ -61,14 +61,27 @@ def retry_dropped[T](
 
 
 def download_if_changed(
-    client: httpx.Client, url: str, path: Path, *, keep_gzip: bool = False
+    client: httpx.Client,
+    url: str,
+    path: Path,
+    *,
+    keep_gzip: bool = False,
+    progress: Callable[[int], None] | None = None,
 ) -> Download:
-    """`_download_once`, again when the connection drops mid-way."""
-    return retry_dropped(lambda: _download_once(client, url, path, keep_gzip=keep_gzip), url)
+    """`_download_once`, again when the connection drops mid-way. `progress` gets the bytes
+    received so far."""
+    return retry_dropped(
+        lambda: _download_once(client, url, path, keep_gzip=keep_gzip, progress=progress), url
+    )
 
 
 def _download_once(
-    client: httpx.Client, url: str, path: Path, *, keep_gzip: bool = False
+    client: httpx.Client,
+    url: str,
+    path: Path,
+    *,
+    keep_gzip: bool = False,
+    progress: Callable[[int], None] | None = None,
 ) -> Download:
     """GET `url` into `path`, sending the previous ETag/Last-Modified; 304 keeps the old file.
 
@@ -98,6 +111,8 @@ def _download_once(
             chunks = resp.iter_raw(1 << 20) if keep_gzip else resp.iter_bytes(1 << 20)
             for chunk in chunks:
                 f.write(chunk)
+                if progress:
+                    progress(f.tell())
         tmp.replace(path)
         meta = {
             "etag": resp.headers.get("ETag"),

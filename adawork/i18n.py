@@ -589,6 +589,10 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "Downloading ad pictures… ({n})",
     },
     "scrape.geocode": {"cs": "Určuji polohu nabídek…", "en": "Locating jobs…"},
+    "scrape.addresses": {
+        "cs": "Stahuji adresy obcí z RÚIAN (jednou za měsíc, asi 63 MB): {mb} MB…",
+        "en": "Downloading the addresses of towns from RÚIAN (once a month, about 63 MB): {mb} MB…",
+    },
     "scrape.listing": {
         "cs": "Procházím {source}: {n} nabídek",
         "en": "Browsing {source}: {n} jobs",

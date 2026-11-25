@@ -14,6 +14,10 @@ detail page. `crawl` does the rest the same way for every portal:
 Sitemap sources (`SitemapSource`) list every ad of the portal with its last change: leads
 outside the user's regions are skipped when the URL tells the place, changed ads are read
 again, and ads whose URL mentions a place near home are read first.
+
+A newest-first listing stops at the first page with nothing new, so a walk cut short (the
+app closing, the site not answering) would leave its older ads unread for good: such a
+listing is in `unfinished` until a later run has walked it to its end or its `max_pages`.
 """
 
 import logging
@@ -81,6 +85,9 @@ class Lead:
 class ListingPage:
     leads: list[Lead]
     has_next: bool
+    # The site said it has nothing here (an API's total of 0): an empty page that is an
+    # answer, not an error page or a new layout.
+    none_listed: bool = False
 
 
 class CrawlSource:
@@ -300,9 +307,14 @@ def crawl(
     query: ScrapeQuery,
     max_details: int = MAX_DETAILS,
     progress: Callable[[str, int], None] = lambda phase, n: None,
+    unfinished: set[str] | None = None,
 ) -> CrawlResult:
-    """One run of a source, as the module docstring tells."""
-    return _Crawl(source, fetcher, store, places, query, max_details, progress).run()
+    """One run of a source, as the module docstring tells. `unfinished`: the first pages of
+    listings not yet read to the end, updated as they are walked."""
+    crawl = _Crawl(source, fetcher, store, places, query, max_details, progress)
+    if unfinished is not None:
+        crawl.unfinished = unfinished
+    return crawl.run()
 
 
 class _Crawl:
@@ -332,6 +344,9 @@ class _Crawl:
         self.stale: list[Lead] = []  # known, with a detail page read long ago
         self.done_kraje: list[str] = []  # regions whose listing was read to the end
         self.failures = 0  # pages in a row the site did not answer
+        self.unfinished: set[str] = set()  # see the module docstring
+        self.broken = False
+        self.none_listed = False
 
     def run(self) -> CrawlResult:
         source, result = self.source, self.result
@@ -347,7 +362,8 @@ class _Crawl:
                 if complete and kraj is not None:
                     self.done_kraje.append(kraj)
             self.read_details()
-            result.complete = whole and bool(self.seen) and not result.unreachable
+            found = bool(self.seen) or self.none_listed
+            result.complete = whole and found and not result.unreachable
         except SourceBlocked as exc:
             result.blocked = str(exc)
             log.warning("%s blocked: %s", source.id, exc)
@@ -374,22 +390,34 @@ class _Crawl:
 
     def walk(self, listing_url: Callable[[int], str]) -> bool:
         """Reads a listing page by page; True when it was read to its end."""
+        key = listing_url(1)
+        resume = key in self.unfinished
+        self.unfinished.add(key)  # stays when the walk is cut short, also by an exception
+        ended, complete = self._walk(listing_url, resume)
+        if ended:
+            self.unfinished.discard(key)
+        return complete
+
+    def _walk(self, listing_url: Callable[[int], str], resume: bool) -> tuple[bool, bool]:
+        """(the walk ended where the listing or its new ads end, it was read to its end).
+        `resume`: an earlier walk was cut short, so known pages do not end this one."""
         source = self.source
         page = 1
         while True:
             if page > source.max_pages or self.full():
-                return False
+                return True, False  # as far as the source reads, by its own choice
             url = listing_url(page)
             try:
                 resp = self.get(url)
             except httpx.HTTPError as exc:
                 self.unanswered(url, exc)
-                return False  # the rest of this listing waits for the next run
+                self.broken = True
+                return False, False  # the rest of this listing waits for the next run
             self.failures = 0
             if resp is None:
-                return page > 1  # robots.txt or gone
+                return True, page > 1  # robots.txt or gone
             if resp.history and other_page(str(resp.history[0].url), str(resp.url)):
-                return False  # the listing ends before its last page
+                return True, False  # the listing ends before its last page
             self.result.pages += 1
             listing = source.parse_listing(resp.text, page, self.places)
             fresh = 0
@@ -400,19 +428,21 @@ class _Crawl:
             # No ads on a page: an error page or a new layout, not an empty region.
             empty = (
                 not listing.leads
+                and not listing.none_listed
                 and source.expire_after_days is None
                 and not (source.empty_last_page and page > 1)
             )
+            self.none_listed = self.none_listed or listing.none_listed
             if not listing.has_next or not listing.leads:
-                return not empty
-            if source.newest_first and not fresh:
-                return False  # the rest is known already
+                return True, not empty
+            if source.newest_first and not fresh and not resume:
+                return True, False  # the rest is known already
             if (
                 source.newest_first
                 and len(self.new) >= self.limit
                 and not any(x.card for x in self.new)
             ):
-                return False  # enough to read this run; listings give no cards to keep
+                return False, False  # enough to read this run; listings give no cards to keep
             page += 1
 
     def sort(self, lead: Lead) -> bool:
@@ -492,9 +522,11 @@ class _Crawl:
         region only), or when unseen for `expire_after_days`."""
         source, result, store = self.source, self.result, self.store
         with store.lock:
-            if result.unreachable:
+            if result.unreachable or result.blocked:
                 return  # ads unseen because the site was down are not gone
             if source.expire_after_days is not None:
+                if self.broken or not (self.seen or self.none_listed):
+                    return
                 store.expire_unseen(source.expire_after_days)
             elif result.complete or self.done_kraje:
                 # A region read to the end counts even when another one's listing broke off.

@@ -301,7 +301,9 @@ work). Full-dump sources fetch everything and filter locally.
 ### 4.2 Shared HTTP layer
 `net/`: per-domain pace, robots.txt, honest User-Agent, retries/backoff, pause on 403/429,
 ETag, resumable downloads; a stop the app sets when it closes ends a search at its next
-request.
+request. A robots.txt that does not arrive (the site or the network down) is asked for
+again, not taken as "disallow all" for the session; one starting with a byte order mark is
+read (v1.2).
 
 ### 4.3 LinkedIn, Facebook, Instagram, forums
 - **LinkedIn** (`scraper/sources/linkedin.py`): own small adapter on the public guest pages
@@ -395,7 +397,11 @@ partial title matches also need overlapping descriptions (word 3-grams). Image h
 social posts (M6b).
 8. Index (FTS5 + embeddings).
 9. **Employer link**: resolve the employer (§4.5) and queue cheap official checks.
-10. Expire.
+10. Expire: after a complete pass (a region's listing read to its end; not when most known
+ads went unseen at once), or when unseen for N days on sources that expire by time
+(newest-first searches, HitPráce); never after a run the site refused or broke off, or one
+that saw no ads while no listing said it has none. A newest-first listing cut short (also
+by the run's limit of detail pages) is walked to its end on a later run (v1.2).
 11. Notify.
 
 ### 4.5 Module 3 — Employer reviews (`EmployerService`)

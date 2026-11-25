@@ -9,7 +9,7 @@ import csv
 import io
 import statistics
 import zipfile
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import date, timedelta
 from functools import lru_cache
@@ -44,13 +44,19 @@ def export_dates(today: date) -> list[date]:
     return [last_month_end, before]
 
 
-def download(client: httpx.Client, directory: Path, today: date | None = None) -> Path:
-    """Fetch the newest export (conditional GET). Returns the local ZIP path."""
+def download(
+    client: httpx.Client,
+    directory: Path,
+    today: date | None = None,
+    progress: Callable[[int], None] | None = None,
+) -> Path:
+    """Fetch the newest export (conditional GET). Returns the local ZIP path. `progress`
+    gets the bytes received so far."""
     path = directory / FILE_NAME
     error: Exception | None = None
     for day in export_dates(today or date.today()):
         try:
-            download_if_changed(client, EXPORT_URL.format(day=day), path)
+            download_if_changed(client, EXPORT_URL.format(day=day), path, progress=progress)
             return path
         except httpx.HTTPError as exc:  # the newest month may not be published yet, or offline
             error = exc

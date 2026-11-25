@@ -13,6 +13,7 @@
     {% elif progress.phase == "social" %}{{ t("scrape.social", source=progress.source_label) }}
     {% elif progress.phase == "images" %}{{ t("scrape.images", n=progress.processed) }}
     {% elif progress.phase == "geocode" %}{{ t("scrape.geocode") }}
+    {% elif progress.phase == "addresses" %}{{ t("scrape.addresses", mb=progress.processed) }}
     {% else %}{{ t("scrape.start") }}{% endif %}
   </div>
 {% elif progress.phase == "done" %}

@@ -57,8 +57,8 @@ SLOW_PACE = 5.0
 class Progress:
     running: bool = False
     source_id: str | None = None
-    # clear | download | import | check | listing | details | social | images | geocode | done
-    # | failed
+    # clear | download | import | check | listing | details | social | images | addresses
+    # (download, MB) | geocode | done | failed
     phase: str = ""
     cleared: bool = False  # this run deleted the jobs found before
     after_id: int = 0  # the jobs this run stores get higher ids
@@ -457,7 +457,13 @@ class ScrapeRunner:
             self.sessions() as session,
             self._record(session, source.id, make_store) as (run, store),
         ):
-            result = crawl(source, fetcher, store, places, query, self.max_details, progress)
+            unfinished = self._unfinished(source.id)
+            try:
+                result = crawl(
+                    source, fetcher, store, places, query, self.max_details, progress, unfinished
+                )
+            finally:  # also when the app closes mid-walk
+                self._save_unfinished(source.id, unfinished)
             with self._writes:
                 state = self._state(session, source.id)
                 state.last_run_at = utcnow()
@@ -619,7 +625,13 @@ class ScrapeRunner:
             directory = self.cache_dir / "ruian"
             file = directory / ruian.FILE_NAME
             before = file.stat().st_mtime_ns if file.exists() else None
-            path = ruian.download(client, directory)
+
+            # A first download is ~63 MB from a server that can be slow: the user sees it move.
+            def received(n: int) -> None:
+                p.phase, p.processed = "addresses", n >> 20
+
+            path = ruian.download(client, directory, progress=received)
+            p.phase, p.processed = "geocode", 0
             changed = before != path.stat().st_mtime_ns
             addresses = ruian.RuianAddresses(path)
             try:
@@ -655,6 +667,18 @@ class ScrapeRunner:
                 state.state = {k: v for k, v in (state.state or {}).items() if k != "dump"}
             session.commit()
         ImageStore(self.sessions, self.cache_dir / "images").clean_up()  # files now unused
+
+    def _unfinished(self, source_id: str) -> set[str]:
+        """Listings of the source that no run has read to the end yet (crawl.py)."""
+        with self.sessions() as session:
+            state = session.get(SourceState, source_id)
+            return set(((state and state.state) or {}).get("unfinished", []))
+
+    def _save_unfinished(self, source_id: str, unfinished: set[str]) -> None:
+        with self._writes, self.sessions() as session:
+            state = self._state(session, source_id)
+            state.state = (state.state or {}) | {"unfinished": sorted(unfinished)}
+            session.commit()
 
     @staticmethod
     def _state(session: Session, source_id: str) -> SourceState:
